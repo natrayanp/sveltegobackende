@@ -1,4 +1,4 @@
-### Golang API sveltegobackende
+### Golang API sveltegobackend
 
 Step by step instructions can be found in:
 - [Part 1](https://hackernoon.com/how-to-create-golang-rest-api-project-layout-configuration-part-1-am733yi7)

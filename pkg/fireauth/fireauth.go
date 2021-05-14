@@ -10,9 +10,10 @@ import (
 
 	firebase "firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/auth"
-	commonerrors "github.com/ThreeDotsLabs/wild-workouts-go-ddd-example/internal/common/errors"
-	"github.com/ThreeDotsLabs/wild-workouts-go-ddd-example/internal/common/server/httperr"
 	"github.com/sirupsen/logrus"
+	commonerrors "github.com/sveltegobackend/pkg/errors"
+	"github.com/sveltegobackend/pkg/errors/httperr"
+
 	"google.golang.org/api/option"
 )
 
@@ -60,7 +61,7 @@ func get(acjson string) (*auth.Client, error) {
 
 }
 
-func (a FirebaseClient) Middleware(next http.Handler) http.Handler {
+func (a FirebaseClient) fireMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 

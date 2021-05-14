@@ -3,7 +3,7 @@ package models
 import (
 	"context"
 
-	"github.com/sveltegobackende/pkg/application"
+	"github.com/sveltegobackend/pkg/application"
 )
 
 type User struct {

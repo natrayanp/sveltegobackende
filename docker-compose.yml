@@ -1,12 +1,12 @@
 version: "3.7"
 
 volumes:
-  sveltegobackendevolume:
-    name: sveltegobackende-volume
+  sveltegobackendvolume:
+    name: sveltegobackend-volume
 
 networks:
-  sveltegobackendenetwork:
-    name: sveltegobackende-network
+  sveltegobackendnetwork:
+    name: sveltegobackend-network
 
 services:
   pg:
@@ -17,11 +17,11 @@ services:
     ports:
       - "${POSTGRES_PORT}:${POSTGRES_PORT}"
     volumes:
-      - sveltegobackendevolume:/var/lib/postgresql/data
+      - sveltegobackendvolume:/var/lib/postgresql/data
       - ./db/scripts:/docker-entrypoint-initdb.d/
     networks:
-      - sveltegobackendenetwork
-  sveltegobackende_api:
+      - sveltegobackendnetwork
+  sveltegobackend_api:
     build:
       context: .
       dockerfile: Dockerfile.dev
@@ -36,7 +36,7 @@ services:
     ports:
       - "${API_PORT}:${API_PORT}"
     networks:
-      - sveltegobackendenetwork
+      - sveltegobackendnetwork
     env_file:
       - .env
     entrypoint: ["/bin/bash", "./scripts/entrypoint.dev.sh"]

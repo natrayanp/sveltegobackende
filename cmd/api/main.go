@@ -2,11 +2,11 @@ package main
 
 import (
 	"github.com/joho/godotenv"
-	"github.com/sveltegobackende/cmd/api/router"
-	"github.com/sveltegobackende/pkg/application"
-	"github.com/sveltegobackende/pkg/exithandler"
-	"github.com/sveltegobackende/pkg/logger"
-	"github.com/sveltegobackende/pkg/server"
+	"github.com/sveltegobackend/cmd/api/router"
+	"github.com/sveltegobackend/pkg/application"
+	"github.com/sveltegobackend/pkg/exithandler"
+	"github.com/sveltegobackend/pkg/logger"
+	"github.com/sveltegobackend/pkg/server"
 )
 
 func main() {

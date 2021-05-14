@@ -1,9 +1,9 @@
 package application
 
 import (
-	"github.com/sveltegobackende/pkg/config"
-	"github.com/sveltegobackende/pkg/db"
-	"github.com/sveltegobackende/pkg/fireauth"
+	"github.com/sveltegobackend/pkg/config"
+	"github.com/sveltegobackend/pkg/db"
+	"github.com/sveltegobackend/pkg/fireauth"
 )
 
 // Application holds commonly used app wide data, for ease of DI

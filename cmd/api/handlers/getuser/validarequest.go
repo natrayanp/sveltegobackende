@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/sveltegobackende/cmd/api/models"
+	"github.com/sveltegobackend/cmd/api/models"
 )
 
 func validateRequest(f http.HandlerFunc) http.HandlerFunc {

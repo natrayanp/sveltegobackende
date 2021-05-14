@@ -5,9 +5,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/sveltegobackende/cmd/api/handlers/createuser"
-	"github.com/sveltegobackende/cmd/api/handlers/getuser"
-	"github.com/sveltegobackende/pkg/application"
+	"github.com/sveltegobackend/cmd/api/handlers/createuser"
+	"github.com/sveltegobackend/cmd/api/handlers/getuser"
+	"github.com/sveltegobackend/pkg/application"
 
 	//"github.com/julienschmidt/httprouter"
 	"github.com/go-chi/chi"
@@ -26,13 +26,13 @@ func Get(app *application.Application) *chi.Mux {
 	r.Group(func(r chi.Router) {
 		// Seek, verify and validate JWT tokens
 		//r.Use(jwtauth.Verifier(tokenAuth))
-		r.Use(app.FireAuth.Middleware)
+		r.Use(app.FireAuth.)
 
 		// Handle valid / invalid tokens. In this example, we use
 		// the provided authenticator middleware, but you can write your
 		// own very easily, look at the Authenticator method in jwtauth.go
 		// and tweak it, its not scary.
-		r.Use(jwtauth.Authenticator)
+		//r.Use(jwtauth.Authenticator)
 		r.Get("/users/:id", getuser.Do(app))
 		r.Post("/users", createuser.Do(app))
 		/*

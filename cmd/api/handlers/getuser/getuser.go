@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/sveltegobackende/cmd/api/models"
-	"github.com/sveltegobackende/pkg/application"
-	"github.com/sveltegobackende/pkg/middleware"
+	"github.com/sveltegobackend/cmd/api/models"
+	"github.com/sveltegobackend/pkg/application"
+	"github.com/sveltegobackend/pkg/middleware"
 )
 
 func getUser(app *application.Application) http.HandlerFunc {

@@ -5,7 +5,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/sveltegobackende/pkg/logger"
+	"github.com/sirupsen/logrus"
 )
 
 // Init accepts a callback function that will be invoked when program exits
@@ -18,7 +18,8 @@ func Init(cb func()) {
 
 	go func() {
 		sig := <-sigs
-		logger.Error.Println("exit reason: ", sig)
+		logrus.Error("exit reason: ", sig)
+		//log.Error.Println("exit reason: ", sig)
 		close(terminate)
 	}()
 
