@@ -1,13 +1,16 @@
 package db
 
 import (
-	"database/sql"
+	"context"
 
-	_ "github.com/lib/pq"
+	//_ "github.com/lib/pq"
+
+	_ "github.com/jackc/pgx/v4"
+	"github.com/jmoiron/sqlx"
 )
 
 type DB struct {
-	Client *sql.DB
+	Client *sqlx.DB
 }
 
 func Get(connStr string) (*DB, error) {
@@ -25,15 +28,12 @@ func (d *DB) Close() error {
 	return d.Client.Close()
 }
 
-func get(connStr string) (*sql.DB, error) {
-	db, err := sql.Open("postgres", connStr)
+func get(connStr string) (*sqlx.DB, error) {
+	//db, err := sql.Open("postgres", connStr)
+	conn, err := sqlx.ConnectContext(context.Background(), "postgres", connStr)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := db.Ping(); err != nil {
-		return nil, err
-	}
-
-	return db, nil
+	return conn, nil
 }

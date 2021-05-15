@@ -8,9 +8,9 @@ import (
 
 // Application holds commonly used app wide data, for ease of DI
 type Application struct {
-	DB       *db.DB
-	Cfg      *config.Config
-	FireAuth *fireauth.FirebaseClient
+	DB             *db.DB
+	Cfg            *config.Config
+	FireAuthclient *fireauth.FirebaseClient
 }
 
 // Get captures env vars, establishes DB connection and keeps/returns
@@ -26,8 +26,8 @@ func Get() (*Application, error) {
 	client, err := fireauth.Get(cfg.GetFireaccoutn())
 
 	return &Application{
-		DB:       db,
-		Cfg:      cfg,
-		FireAuth: client,
+		DB:             db,
+		Cfg:            cfg,
+		FireAuthclient: client,
 	}, nil
 }

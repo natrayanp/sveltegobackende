@@ -5,9 +5,12 @@ import (
 	"os"
 	"strings"
 
+	"github.com/sirupsen/logrus"
 	"github.com/sveltegobackend/cmd/api/handlers/createuser"
 	"github.com/sveltegobackend/cmd/api/handlers/getuser"
 	"github.com/sveltegobackend/pkg/application"
+	"github.com/sveltegobackend/pkg/fireauth"
+	logs "github.com/sveltegobackend/pkg/logger"
 
 	//"github.com/julienschmidt/httprouter"
 	"github.com/go-chi/chi"
@@ -26,7 +29,8 @@ func Get(app *application.Application) *chi.Mux {
 	r.Group(func(r chi.Router) {
 		// Seek, verify and validate JWT tokens
 		//r.Use(jwtauth.Verifier(tokenAuth))
-		r.Use(app.FireAuth.)
+
+		r.Use(fireauth.FirebaseClient{AuthClient: app.FireAuthclient.AuthClient}.FireMiddleware)
 
 		// Handle valid / invalid tokens. In this example, we use
 		// the provided authenticator middleware, but you can write your
@@ -58,7 +62,7 @@ func setMiddlewares(router *chi.Mux) {
 	//Config
 	router.Use(middleware.RequestID)
 	router.Use(middleware.RealIP)
-	//router.Use(logs.NewStructuredLogger(logrus.StandardLogger()))
+	router.Use(logs.NewStructuredLogger(logrus.StandardLogger()))
 	router.Use(middleware.Recoverer)
 
 	addCorsMiddleware(router)

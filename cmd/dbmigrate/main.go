@@ -3,9 +3,8 @@ package main
 import (
 	"log"
 
-	"github.com/golang-migrate/migrate/v4"
-	_ "github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
+	//_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	//_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/joho/godotenv"
 	"github.com/sveltegobackend/pkg/config"
 )
@@ -20,7 +19,7 @@ func main() {
 		return
 	}
 
-	m, err := migrate.New("file://db/migrations", cfg.GetDBConnStr())
+	/*m, err := migrate.New("file://db/migrations", cfg.GetDBConnStr())
 	if err != nil {
 		log.Printf("%s", err)
 		return
@@ -38,5 +37,5 @@ func main() {
 			log.Printf("failed migrate down: %s", err)
 			return
 		}
-	}
+	}*/
 }

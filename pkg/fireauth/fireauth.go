@@ -17,6 +17,7 @@ import (
 	"google.golang.org/api/option"
 )
 
+//https://github.com/ThreeDotsLabs/wild-workouts-go-ddd-example/blob/c341120778089c13b818b000f8e54891ff4fce6a/internal/common/auth/http.go#L13
 type FirebaseClient struct {
 	AuthClient *auth.Client
 }
@@ -61,7 +62,7 @@ func get(acjson string) (*auth.Client, error) {
 
 }
 
-func (a FirebaseClient) fireMiddleware(next http.Handler) http.Handler {
+func (a FirebaseClient) FireMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
