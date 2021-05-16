@@ -46,6 +46,7 @@ func get(acjson string) (*auth.Client, error) {
 		}
 	*/
 	opt := option.WithCredentialsFile(acjson)
+
 	config := &firebase.Config{ProjectID: "my-project-id"}
 	app, err := firebase.NewApp(context.Background(), config, opt)
 	if err != nil {
@@ -78,14 +79,18 @@ func (a FirebaseClient) FireMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
+		//Get users
+		us, err := a.AuthClient.GetUser(ctx, token.UID)
+		if err != nil {
+			httperr.Unauthorised("unable-to-get-user-details", err, w, r)
+			return
+		}
+
+		Userdetail := GetUserPopulated(us, token)
+
 		// it's always a good idea to use custom type as context value (in this case ctxKey)
 		// because nobody from the outside of the package will be able to override/read this value
-		ctx = context.WithValue(ctx, userContextKey, User{
-			UUID:        token.UID,
-			Email:       token.Claims["email"].(string),
-			Role:        token.Claims["role"].(string),
-			DisplayName: token.Claims["name"].(string),
-		})
+		ctx = context.WithValue(ctx, userContextKey, Userdetail)
 		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)
@@ -103,11 +108,27 @@ func (a FirebaseClient) tokenFromHeader(r *http.Request) string {
 }
 
 type User struct {
-	UUID  string
-	Email string
-	Role  string
+	UUID          string
+	DisplayName   string
+	Email         string
+	PhoneNumber   string
+	PhotoURL      string
+	EmailVerified bool
+	Disabled      bool
+	token         *auth.Token
+}
 
-	DisplayName string
+func GetUserPopulated(us *auth.UserRecord, token *auth.Token) User {
+	return User{
+		UUID:          (*us.UserInfo).UID,
+		DisplayName:   (*us.UserInfo).DisplayName,
+		Email:         (*us.UserInfo).Email,
+		PhoneNumber:   (*us.UserInfo).PhoneNumber,
+		PhotoURL:      (*us.UserInfo).PhotoURL,
+		EmailVerified: us.EmailVerified,
+		Disabled:      us.Disabled,
+		token:         token,
+	}
 }
 
 type ctxKey int

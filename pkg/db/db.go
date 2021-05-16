@@ -3,9 +3,9 @@ package db
 import (
 	"context"
 
-	//_ "github.com/lib/pq"
+	_ "github.com/lib/pq"
 
-	_ "github.com/jackc/pgx/v4"
+	//_ "github.com/jackc/pgx/v4"
 	"github.com/jmoiron/sqlx"
 )
 

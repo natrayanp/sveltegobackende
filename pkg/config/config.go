@@ -3,6 +3,7 @@ package config
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 )
 
@@ -64,5 +65,9 @@ func (c *Config) GetMigration() string {
 }
 
 func (c *Config) GetFireaccoutn() string {
-	return "json file path"
+	path, err := os.Getwd()
+	if err != nil {
+		log.Println(err)
+	}
+	return path + "/pkg/config/firebaseServiceAccount.json"
 }

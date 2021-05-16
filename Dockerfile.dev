@@ -1,5 +1,5 @@
-# Start from golang v1.13.4 base image to have access to go modules
-FROM golang:1.13.4
+# Start from golang v1.16.3 base image to have access to go modules
+FROM golang:1.16.3
 
 # create a working directory
 WORKDIR /app

@@ -25,27 +25,31 @@ func Get(app *application.Application) *chi.Mux {
 	// Config
 	setMiddlewares(r)
 
-	// Protected routes
-	r.Group(func(r chi.Router) {
-		// Seek, verify and validate JWT tokens
-		//r.Use(jwtauth.Verifier(tokenAuth))
+	/*
+		// Protected routes
+		r.Group(func(r chi.Router) {
+			// Seek, verify and validate JWT tokens
+			//r.Use(jwtauth.Verifier(tokenAuth))
 
-		r.Use(fireauth.FirebaseClient{AuthClient: app.FireAuthclient.AuthClient}.FireMiddleware)
+			r.Use(fireauth.FirebaseClient{AuthClient: app.FireAuthclient.AuthClient}.FireMiddleware)
 
-		// Handle valid / invalid tokens. In this example, we use
-		// the provided authenticator middleware, but you can write your
-		// own very easily, look at the Authenticator method in jwtauth.go
-		// and tweak it, its not scary.
-		//r.Use(jwtauth.Authenticator)
-		r.Get("/users/:id", getuser.Do(app))
-		r.Post("/users", createuser.Do(app))
-		/*
-			r.Get("/admin", func(w http.ResponseWriter, r *http.Request) {
-				_, claims, _ := jwtauth.FromContext(r.Context())
-				w.Write([]byte(fmt.Sprintf("protected area. hi %v", claims["user_id"])))
-			})
-		*/
-	})
+			// Handle valid / invalid tokens. In this example, we use
+			// the provided authenticator middleware, but you can write your
+			// own very easily, look at the Authenticator method in jwtauth.go
+			// and tweak it, its not scary.
+			//r.Use(jwtauth.Authenticator)
+			r.Get("/users/:id", getuser.Do(app))
+			r.Post("/users", createuser.Do(app))
+			/*
+				r.Get("/admin", func(w http.ResponseWriter, r *http.Request) {
+					_, claims, _ := jwtauth.FromContext(r.Context())
+					w.Write([]byte(fmt.Sprintf("protected area. hi %v", claims["user_id"])))
+				})
+	*/
+	/*})
+	 */
+
+	r.Mount("/api", authorisedRouter(app))
 
 	// Public routes
 	r.Group(func(r chi.Router) {
@@ -90,4 +94,31 @@ func addCorsMiddleware(router *chi.Mux) {
 		MaxAge:           300,
 	})
 	router.Use(corsMiddleware.Handler)
+}
+
+// A completely separate router for administrator routes
+func authorisedRouter(app *application.Application) chi.Router {
+	r := chi.NewRouter()
+	//setMiddlewares(r)
+	//r.Use(AdminOnly)
+	r.Use(fireauth.FirebaseClient{AuthClient: app.FireAuthclient.AuthClient}.FireMiddleware)
+
+	r.Get("/users/:id", getuser.Do(app))
+	r.Post("/users", createuser.Do(app))
+
+	/*
+
+		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte("admin: index"))
+		})
+		r.Get("/accounts", func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte("admin: list accounts.."))
+		})
+		r.Get("/users/{userId}", func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte(fmt.Sprintf("admin: view user id %v", chi.URLParam(r, "userId"))))
+		})
+
+	*/
+
+	return r
 }

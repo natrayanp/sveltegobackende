@@ -10,7 +10,7 @@ networks:
 
 services:
   pg:
-    image: postgres:12.0
+    image: postgres:13.3
     restart: on-failure
     env_file:
       - .env

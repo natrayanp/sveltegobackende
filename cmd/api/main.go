@@ -22,7 +22,7 @@ func main() {
 		Get().
 		WithAddr(app.Cfg.GetAPIPort()).
 		WithRouter(router.Get(app))
-		//.		WithErrLogger(logs.Error)
+	//.		WithErrLogger(logs.Error)
 
 	go func() {
 		//logs.Info.Printf("starting server at %s", app.Cfg.GetAPIPort())

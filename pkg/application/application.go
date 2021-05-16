@@ -1,6 +1,8 @@
 package application
 
 import (
+	"fmt"
+
 	"github.com/sveltegobackend/pkg/config"
 	"github.com/sveltegobackend/pkg/db"
 	"github.com/sveltegobackend/pkg/fireauth"
@@ -17,6 +19,8 @@ type Application struct {
 // reference to both
 func Get() (*Application, error) {
 	cfg := config.Get()
+
+	fmt.Println(cfg.GetDBConnStr())
 
 	db, err := db.Get(cfg.GetDBConnStr())
 	if err != nil {
