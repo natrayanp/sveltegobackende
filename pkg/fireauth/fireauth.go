@@ -92,6 +92,7 @@ func (a FirebaseClient) FireMiddleware(next http.Handler) http.Handler {
 		// because nobody from the outside of the package will be able to override/read this value
 		ctx = context.WithValue(ctx, userContextKey, Userdetail)
 		r = r.WithContext(ctx)
+		//SetUserInCtx(Userdetail, r)
 
 		next.ServeHTTP(w, r)
 	})
@@ -116,9 +117,13 @@ type User struct {
 	EmailVerified bool
 	Disabled      bool
 	token         *auth.Token
+	session       string
+	siteid        string
+	companyid     string
 }
 
 func GetUserPopulated(us *auth.UserRecord, token *auth.Token) User {
+
 	return User{
 		UUID:          (*us.UserInfo).UID,
 		DisplayName:   (*us.UserInfo).DisplayName,
@@ -128,6 +133,9 @@ func GetUserPopulated(us *auth.UserRecord, token *auth.Token) User {
 		EmailVerified: us.EmailVerified,
 		Disabled:      us.Disabled,
 		token:         token,
+		session:       "",
+		siteid:        "",
+		companyid:     "",
 	}
 }
 
@@ -143,11 +151,19 @@ var (
 	NoUserInContextError = commonerrors.NewAuthorizationError("no user in context", "no-user-found")
 )
 
-func UserFromCtx(ctx context.Context) (User, error) {
+func UserFromCtxs(ctx context.Context) (User, error) {
 	u, ok := ctx.Value(userContextKey).(User)
 	if ok {
 		return u, nil
 	}
 
 	return User{}, NoUserInContextError
+}
+
+func SetUserInCtx(Userdetail User, r *http.Request) {
+	ctx := r.Context()
+	// it's always a good idea to use custom type as context value (in this case ctxKey)
+	// because nobody from the outside of the package will be able to override/read this value
+	ctx = context.WithValue(ctx, userContextKey, Userdetail)
+	r = r.WithContext(ctx)
 }
