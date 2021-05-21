@@ -12,6 +12,8 @@ import (
 	"github.com/sveltegobackend/pkg/fireauth"
 	logs "github.com/sveltegobackend/pkg/logger"
 
+	"github.com/sveltegobackend/pkg/mymiddleware"
+
 	//"github.com/julienschmidt/httprouter"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -23,7 +25,7 @@ func Get(app *application.Application) *chi.Mux {
 	r := chi.NewRouter()
 
 	// Config
-	setMiddlewares(r)
+	setMiddlewares(app, r)
 
 	/*
 		// Protected routes
@@ -61,7 +63,7 @@ func Get(app *application.Application) *chi.Mux {
 	return r
 }
 
-func setMiddlewares(router *chi.Mux) {
+func setMiddlewares(app *application.Application, router *chi.Mux) {
 
 	//Config
 	router.Use(middleware.RequestID)
@@ -71,6 +73,7 @@ func setMiddlewares(router *chi.Mux) {
 
 	addCorsMiddleware(router)
 	//addAuthMiddleware(router)
+	router.Use(mymiddleware.ParseHeadMiddleware(app))
 
 	router.Use(
 		middleware.SetHeader("X-Content-Type-Options", "nosniff"),
@@ -102,7 +105,7 @@ func authorisedRouter(app *application.Application) chi.Router {
 	//setMiddlewares(r)
 	//r.Use(AdminOnly)
 	r.Use(fireauth.FirebaseClient{AuthClient: app.FireAuthclient.AuthClient}.FireMiddleware)
-	r.Use()
+
 	r.Get("/users/:id", getuser.Do(app))
 	r.Post("/users", createuser.Do(app))
 

@@ -7,7 +7,7 @@ import (
 
 	"github.com/sveltegobackend/cmd/api/models"
 	"github.com/sveltegobackend/pkg/application"
-	"github.com/sveltegobackend/pkg/middleware"
+	"github.com/sveltegobackend/pkg/mymiddleware"
 )
 
 func createUser(app *application.Application) http.HandlerFunc {
@@ -30,6 +30,6 @@ func createUser(app *application.Application) http.HandlerFunc {
 }
 
 func Do(app *application.Application) http.HandlerFunc {
-	return middleware.Chain(createUser(app), middleware.LogRequest)
+	return mymiddleware.Chain(createUser(app), mymiddleware.LogRequest)
 	//return createUser(app)
 }
