@@ -2,6 +2,7 @@ package dbtran
 
 import (
 	"context"
+	"fmt"
 
 	//_ "github.com/jackc/pgx/v4"
 	//"github.com/jmoiron/sqlx"
@@ -119,9 +120,9 @@ func (ps *PipelineStmt) Exec(ctx context.Context, typ TranType, db *pgxpool.Pool
 	var err error
 
 	if typ != TranTypeNoTran {
-		ct, err = db.Exec(ctx, ps.query, ps.args...)
-	} else {
 		ct, err = tx.Exec(ctx, ps.query, ps.args...)
+	} else {
+		ct, err = db.Exec(ctx, ps.query, ps.args...)
 	}
 
 	if err != nil {
@@ -136,14 +137,17 @@ func (ps *PipelineStmt) Exec(ctx context.Context, typ TranType, db *pgxpool.Pool
 func (ps *PipelineStmt) Selects(ctx context.Context, typ TranType, db *pgxpool.Pool, tx Transaction) error {
 	var rows pgx.Rows
 	var err error
-
+	fmt.Println(typ)
 	if typ != TranTypeNoTran {
-		rows, err = db.Query(ctx, ps.query, ps.args...)
-	} else {
+
 		rows, err = tx.Query(ctx, ps.query, ps.args...)
+	} else {
+		fmt.Println("+++++++++++++++++++++")
+		rows, err = db.Query(ctx, ps.query, ps.args...)
 	}
 
 	if err != nil {
+
 		return err
 	}
 
@@ -171,6 +175,7 @@ func RunPipeline(ctx context.Context, typ TranType, db *pgxpool.Pool, tx Transac
 			err = ps.Exec(ctx, typ, db, tx)
 			ps.resulterror = err
 		} else if ps.querytype == "select" {
+
 			err = ps.Selects(ctx, typ, db, tx)
 			ps.resulterror = err
 		}
