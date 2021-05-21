@@ -116,10 +116,10 @@ type User struct {
 	PhotoURL      string
 	EmailVerified bool
 	Disabled      bool
-	token         *auth.Token
-	session       string
-	siteid        string
-	companyid     string
+	Token         *auth.Token
+	Session       string
+	Siteid        string
+	Companyid     string
 }
 
 func GetUserPopulated(us *auth.UserRecord, token *auth.Token) User {
@@ -132,10 +132,10 @@ func GetUserPopulated(us *auth.UserRecord, token *auth.Token) User {
 		PhotoURL:      (*us.UserInfo).PhotoURL,
 		EmailVerified: us.EmailVerified,
 		Disabled:      us.Disabled,
-		token:         token,
-		session:       "",
-		siteid:        "",
-		companyid:     "",
+		Token:         token,
+		Session:       "",
+		Siteid:        "",
+		Companyid:     "",
 	}
 }
 

@@ -1,10 +1,11 @@
 package middleware
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
-	"github.com/jmoiron/sqlx"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/sveltegobackend/pkg/application"
 	"github.com/sveltegobackend/pkg/db/dbtran"
 	"github.com/sveltegobackend/pkg/fireauth"
@@ -18,8 +19,8 @@ func ParseHeadMiddleware(next http.Handler, app application.Application) http.Ha
 		sid := r.Header.Get("siteid")
 
 		userinfo, err := fireauth.UserFromCtxs(ctx)
-		userinfo.session = sess
-		userinfo.siteid = sid
+		userinfo.Session = sess
+		userinfo.Siteid = sid
 
 		const qry = `SELECT companyid FROM ac.domainmap WHERE 
 		domainmapid = (SELECT domainmapid FROM ac.userlogin WHERE userid = $1 AND siteid = $2)
@@ -28,14 +29,14 @@ func ParseHeadMiddleware(next http.Handler, app application.Application) http.Ha
 		type cid struct {
 			companyid string
 		}
-		var myc cid
+		var myc []map[string]interface{}
 
 		stmts := []*dbtran.PipelineStmt{
-			dbtran.NewPipelineStmt("select", qry, &myc, userinfo.UUID, userinfo.siteid),
+			dbtran.NewPipelineStmt("select", qry, myc, userinfo.UUID, userinfo.Siteid),
 		}
 
-		_, err = dbtran.WithTransaction(dbtran.TranTypeNoTran, app.DB, nil, func(typ dbtran.TranType, db *sqlx.DB, ttx dbtran.Transaction) error {
-			_, err := dbtran.RunPipeline(typ, db, ttx, stmts...)
+		_, err = dbtran.WithTransaction(ctx, dbtran.TranTypeNoTran, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {
+			err := dbtran.RunPipeline(ctx, typ, db, ttx, stmts...)
 			return err
 		})
 
@@ -45,7 +46,12 @@ func ParseHeadMiddleware(next http.Handler, app application.Application) http.Ha
 		}
 
 		fmt.Println(myc)
-		userinfo.companyid = myc.companyid
+
+		if val, ok := myc[0]["companyid"]; ok {
+			//do something here
+			userinfo.Companyid = fmt.Sprintf("%v", val)
+		}
+
 		fireauth.SetUserInCtx(userinfo, r)
 		next.ServeHTTP(w, r)
 	})

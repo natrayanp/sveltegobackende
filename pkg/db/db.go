@@ -3,14 +3,15 @@ package db
 import (
 	"context"
 
-	_ "github.com/lib/pq"
-
-	//_ "github.com/jackc/pgx/v4"
-	"github.com/jmoiron/sqlx"
+	"github.com/jackc/pgx/v4/pgxpool"
+	//"github.com/jmoiron/sqlx"
+	//_ "github.com/lib/pq"
+	//"github.com/jmoiron/sqlx"
 )
 
 type DB struct {
-	Client *sqlx.DB
+	//Client *sqlx.DB
+	Client *pgxpool.Pool
 }
 
 func Get(connStr string) (*DB, error) {
@@ -25,12 +26,12 @@ func Get(connStr string) (*DB, error) {
 }
 
 func (d *DB) Close() error {
-	return d.Client.Close()
+	return d.Close()
 }
 
-func get(connStr string) (*sqlx.DB, error) {
+func get(connStr string) (*pgxpool.Pool, error) {
 	//db, err := sql.Open("postgres", connStr)
-	conn, err := sqlx.ConnectContext(context.Background(), "postgres", connStr)
+	conn, err := pgxpool.Connect(context.Background(), connStr)
 	if err != nil {
 		return nil, err
 	}

@@ -1,10 +1,15 @@
 package dbtran
 
 import (
-	"database/sql"
+	"context"
 
-	_ "github.com/jackc/pgx/v4"
-	"github.com/jmoiron/sqlx"
+	//_ "github.com/jackc/pgx/v4"
+	//"github.com/jmoiron/sqlx"
+
+	"github.com/georgysavva/scany/pgxscan"
+	"github.com/jackc/pgconn"
+	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 //https://pseudomuto.com/2018/01/clean-sql-transactions-in-golang/
@@ -27,56 +32,62 @@ var (
 // To ensure `TxFn` funcs cannot commit or rollback a transaction (which is
 // handled by `WithTransaction`), those methods are not included here.
 type Transaction interface {
-	Exec(query string, args ...interface{}) (sql.Result, error)
-	Preparex(query string) (*sqlx.Stmt, error)
-	Queryx(query string, args ...interface{}) (*sqlx.Rows, error)
-	QueryRowx(query string, args ...interface{}) *sqlx.Row
-	Select(dest interface{}, query string, args ...interface{}) error
+	//Exec(query string, args ...interface{}) (sql.Result, error)
+	Exec(ctx context.Context, sql string, arguments ...interface{}) (pgconn.CommandTag, error)
+
+	//Preparex(query string) (*sqlx.Stmt, error)
+	Prepare(ctx context.Context, name, sql string) (*pgconn.StatementDescription, error)
+
+	//Queryx(query string, args ...interface{}) (*sqlx.Rows, error)
+	Query(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error)
+
+	//QueryRowx(query string, args ...interface{}) *sqlx.Row
+	QueryRow(ctx context.Context, sql string, args ...interface{}) pgx.Row
+
+	//Select(dest interface{}, query string, args ...interface{}) error
+	//Select(ctx context.Context, db pgxscan.Querier, dst interface{}, query string, args ...interface{}) error
 }
 
 // A Txfn is a function that will be called with an initialized `Transaction` object
 // that can be used for executing statements and queries against a database.
-type TxFn func(TranType, *sqlx.DB, Transaction) error
+type TxFn func(context.Context, TranType, *pgxpool.Pool, Transaction) error
 
 // WithTransaction creates a new transaction and handles rollback/commit based on the
 // error object returned by the `TxFn`
-func WithTransaction(typ TranType, db *sqlx.DB, tra *sqlx.Tx, fn TxFn) (*sqlx.Tx, error) {
-	var txc *sqlx.Tx
+func WithTransaction(ctx context.Context, typ TranType, db *pgxpool.Pool, tra pgx.Tx, fn TxFn) (pgx.Tx, error) {
 	var errc error
 
 	if typ != TranTypeNoTran {
 
 		if typ == TranTypeFullSet || typ == TranTypeFirstSet {
-			tx, err := db.Beginx()
-			errc = err
-			txc = tx
-			if err != nil {
-				return nil, err
+			tra, errc = db.Begin(ctx)
+			if errc != nil {
+				return nil, errc
 			}
 		} else if tra != nil {
-			txc = tra
+			//txc = tra
 		}
 
 		defer func() {
 			if p := recover(); p != nil {
 				// a panic occurred, rollback and repanic
-				txc.Rollback()
+				tra.Rollback(ctx)
 				panic(p)
 			} else if errc != nil {
 				// something went wrong, rollback
-				txc.Rollback()
+				tra.Rollback(ctx)
 			} else {
 				// all good, commit
 				//But only if it is fullset or Lastset
 				if typ == TranTypeFullSet || typ == TranTypeLastSet {
-					errc = txc.Commit()
+					errc = tra.Commit(ctx)
 				}
 			}
 		}()
 	}
 
-	errc = fn(typ, db, txc)
-	return txc, errc
+	errc = fn(ctx, typ, db, tra)
+	return tra, errc
 }
 
 // A PipelineStmt is a simple wrapper for creating a statement consisting of
@@ -84,12 +95,12 @@ func WithTransaction(typ TranType, db *sqlx.DB, tra *sqlx.Tx, fn TxFn) (*sqlx.Tx
 type PipelineStmt struct {
 	querytype   string
 	query       string
-	reultstruct interface{}
+	reultstruct []map[string]interface{}
 	resulterror error
 	args        []interface{}
 }
 
-func NewPipelineStmt(querytype string, query string, reultstruct interface{}, args ...interface{}) *PipelineStmt {
+func NewPipelineStmt(querytype string, query string, reultstruct []map[string]interface{}, args ...interface{}) *PipelineStmt {
 	return &PipelineStmt{querytype, query, reultstruct, nil, args}
 }
 
@@ -103,20 +114,46 @@ func (ps *PipelineStmt) Exec(tx Transaction, lastInsertId int64) (sql.Result, er
 }
 */
 
-func (ps *PipelineStmt) Exec(typ TranType, db *sqlx.DB, tx Transaction) (sql.Result, error) {
+func (ps *PipelineStmt) Exec(ctx context.Context, typ TranType, db *pgxpool.Pool, tx Transaction) error {
+	var ct pgconn.CommandTag
+	var err error
+
 	if typ != TranTypeNoTran {
-		return db.Exec(ps.query, ps.args...)
+		ct, err = db.Exec(ctx, ps.query, ps.args...)
 	} else {
-		return tx.Exec(ps.query, ps.args...)
+		ct, err = tx.Exec(ctx, ps.query, ps.args...)
 	}
+
+	if err != nil {
+		ps.reultstruct[0]["RowsAffected"] = -1
+		return err
+	}
+
+	ps.reultstruct[0]["RowsAffected"] = ct.RowsAffected()
+	return nil
 }
 
-func (ps *PipelineStmt) Selects(typ TranType, db *sqlx.DB, tx Transaction) error {
+func (ps *PipelineStmt) Selects(ctx context.Context, typ TranType, db *pgxpool.Pool, tx Transaction) error {
+	var rows pgx.Rows
+	var err error
+
 	if typ != TranTypeNoTran {
-		return db.Select(ps.reultstruct, ps.query, ps.args...)
+		rows, err = db.Query(ctx, ps.query, ps.args...)
 	} else {
-		return tx.Select(ps.reultstruct, ps.query, ps.args...)
+		rows, err = tx.Query(ctx, ps.query, ps.args...)
 	}
+
+	if err != nil {
+		return err
+	}
+
+	err = pgxscan.ScanAll(&ps.reultstruct, rows)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Runs the supplied statements within the transaction. If any statement fails, the transaction
@@ -124,43 +161,30 @@ func (ps *PipelineStmt) Selects(typ TranType, db *sqlx.DB, tx Transaction) error
 //
 // The `LastInsertId` from the previous statement will be passed to `Exec`. The zero-value (0) is
 // used initially.
-func RunPipeline(typ TranType, db *sqlx.DB, tx Transaction, stmts ...*PipelineStmt) (sql.Result, error) {
-	var res sql.Result
+func RunPipeline(ctx context.Context, typ TranType, db *pgxpool.Pool, tx Transaction, stmts ...*PipelineStmt) error {
 	var err error
 	//var lastInsId int64
 	var ps *PipelineStmt
 
 	for _, ps = range stmts {
 		if ps.querytype != "select" {
-			res, err = ps.Exec(typ, db, tx)
+			err = ps.Exec(ctx, typ, db, tx)
 			ps.resulterror = err
 		} else if ps.querytype == "select" {
-			err = ps.Selects(typ, db, tx)
+			err = ps.Selects(ctx, typ, db, tx)
 			ps.resulterror = err
 		}
 
 		if err != nil {
-			return nil, err
+			return err
 		}
-		/*
-			if ps.querytype != "select" {
-				lastInsId, err = res.LastInsertId()
-				if err != nil {
-					return nil, err
-				}
-			}
-		*/
 	}
 
-	if ps.querytype != "select" {
-		return res, nil
-	} else {
-		return nil, nil
-	}
+	return nil
 }
 
 /*
-func RunSolo(db sqlx.DB, stmt *PipelineStmt) error {
+func RunSolo(db pgxpool.Pool, stmt *PipelineStmt) error {
 	ps := stmt
 
 	err := ps.Selects(db)
