@@ -1,4 +1,4 @@
-package middleware
+package mymiddleware
 
 import (
 	"net/http"

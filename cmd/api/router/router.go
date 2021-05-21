@@ -102,7 +102,7 @@ func authorisedRouter(app *application.Application) chi.Router {
 	//setMiddlewares(r)
 	//r.Use(AdminOnly)
 	r.Use(fireauth.FirebaseClient{AuthClient: app.FireAuthclient.AuthClient}.FireMiddleware)
-
+	r.Use()
 	r.Get("/users/:id", getuser.Do(app))
 	r.Post("/users", createuser.Do(app))
 
