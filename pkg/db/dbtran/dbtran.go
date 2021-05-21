@@ -144,15 +144,18 @@ func (ps *PipelineStmt) Selects(ctx context.Context, typ TranType, db *pgxpool.P
 	} else {
 		fmt.Println("+++++++++++++++++++++")
 		rows, err = db.Query(ctx, ps.query, ps.args...)
+		fmt.Println(rows)
+		fmt.Println(err)
+		fmt.Println("+++++++++++++++++++++")
 	}
 
 	if err != nil {
-
 		return err
 	}
-
+	fmt.Println("+++++++++++++++++++++")
 	err = pgxscan.ScanAll(&ps.reultstruct, rows)
-
+	fmt.Println(ps.reultstruct)
+	fmt.Println("+++++++++++++++++++++")
 	if err != nil {
 		return err
 	}

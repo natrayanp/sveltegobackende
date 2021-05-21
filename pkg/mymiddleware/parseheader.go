@@ -46,14 +46,19 @@ func ParseHeadMiddleware(app *application.Application) func(next http.Handler) h
 				fmt.Println(err)
 				//TODO: implement error response
 			}
-
+			fmt.Println("+++++++++++++++++++++")
 			fmt.Println(myc)
-
-			if val, ok := myc[0]["companyid"]; ok {
-				//do something here
-				userinfo.Companyid = fmt.Sprintf("%v", val)
+			fmt.Println(len(myc))
+			fmt.Println("+++++++++++++++++++++")
+			if len(myc) > 0 {
+				if val, ok := myc[0]["companyid"]; ok {
+					//do something here
+					userinfo.Companyid = fmt.Sprintf("%v", val)
+				}
+			} else {
+				userinfo.Companyid = ""
 			}
-
+			fmt.Println(userinfo)
 			fireauth.SetUserInCtx(userinfo, r)
 			next.ServeHTTP(w, r)
 		}

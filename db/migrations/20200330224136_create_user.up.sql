@@ -8,7 +8,8 @@ CREATE TABLE ac.userlogin (
     userpassword               varchar(1000),
     userstatus		           varchar(2) NOT NULL, --> (A- Active, B-Blocked, D-Deleted) 
     emailverified              boolean,
-    siteid                     varchar(100) NOT NULL,  --> This tobe depricated
+    siteid                     varchar(100) NOT NULL,
+    domainmapid                varchar(100),
     userstatlstupdt	           timestamptz NOT NULL,    
     octime			           timestamptz NOT NULL,
     lmtime			           timestamptz NOT NULL,
@@ -28,6 +29,7 @@ CREATE SEQUENCE companyid_seq START 1;
 --- Domain map table which allow user to user their own URL
 
 CREATE TABLE ac.domainmap (
+    domainmapid varchar(100) NOT NULL DEFAULT 'CPYID'||nextval('companyid_seq'::regclass)::varchar(100),
     hostname    text NOT NULL UNIQUE,    
     siteid      text NOT NULL,
     companyid   varchar(100) NOT NULL DEFAULT 'CPYID'||nextval('companyid_seq'::regclass)::varchar(100),
