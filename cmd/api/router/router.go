@@ -1,11 +1,13 @@
 package router
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
 
 	"github.com/sirupsen/logrus"
+	"github.com/sveltegobackend/cmd/api/handlers/auth/signup"
 	"github.com/sveltegobackend/cmd/api/handlers/createuser"
 	"github.com/sveltegobackend/cmd/api/handlers/getuser"
 	"github.com/sveltegobackend/pkg/application"
@@ -51,7 +53,7 @@ func Get(app *application.Application) *chi.Mux {
 	/*})
 	 */
 
-	r.Mount("/api", authorisedRouter(app))
+	r.Mount("/auth", authorisedRouter(app))
 
 	// Public routes
 	r.Group(func(r chi.Router) {
@@ -73,7 +75,7 @@ func setMiddlewares(app *application.Application, router *chi.Mux) {
 
 	addCorsMiddleware(router)
 	//addAuthMiddleware(router)
-	router.Use(mymiddleware.ParseHeadMiddleware(app))
+	//router.Use(mymiddleware.ParseHeadMiddleware(app))
 
 	router.Use(
 		middleware.SetHeader("X-Content-Type-Options", "nosniff"),
@@ -84,14 +86,16 @@ func setMiddlewares(app *application.Application, router *chi.Mux) {
 
 func addCorsMiddleware(router *chi.Mux) {
 	allowedOrigins := strings.Split(os.Getenv("CORS_ALLOWED_ORIGINS"), ";")
+	fmt.Println(len(allowedOrigins))
 	if len(allowedOrigins) == 0 {
 		return
 	}
-
 	corsMiddleware := cors.New(cors.Options{
-		AllowedOrigins:   allowedOrigins,
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		//AllowedOrigins:   allowedOrigins,
+		AllowedOrigins: []string{"*"},
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		//AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		AllowedHeaders:   []string{"*"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
 		MaxAge:           300,
@@ -104,8 +108,10 @@ func authorisedRouter(app *application.Application) chi.Router {
 	r := chi.NewRouter()
 	//setMiddlewares(r)
 	//r.Use(AdminOnly)
+	setMiddlewares(app, r)
 	r.Use(fireauth.FirebaseClient{AuthClient: app.FireAuthclient.AuthClient}.FireMiddleware)
-
+	r.Use(mymiddleware.ParseHeadMiddleware(app))
+	r.Post("/signuptoken", signup.Do(app))
 	r.Get("/users/:id", getuser.Do(app))
 	r.Post("/users", createuser.Do(app))
 

@@ -47,7 +47,7 @@ func get(acjson string) (*auth.Client, error) {
 	*/
 	opt := option.WithCredentialsFile(acjson)
 
-	config := &firebase.Config{ProjectID: "my-project-id"}
+	config := &firebase.Config{ProjectID: "natauth-c532d"}
 	app, err := firebase.NewApp(context.Background(), config, opt)
 	if err != nil {
 		logrus.Fatalf("error initializing app: %v\n", err)
@@ -69,25 +69,25 @@ func (a FirebaseClient) FireMiddleware(next http.Handler) http.Handler {
 
 		bearerToken := a.tokenFromHeader(r)
 		if bearerToken == "" {
-			httperr.Unauthorised("empty-bearer-token", nil, w, r)
+			httperr.Unauthorised("empty-bearer-token", "", nil, w, r)
 			return
 		}
 
 		token, err := a.AuthClient.VerifyIDToken(ctx, bearerToken)
 		if err != nil {
-			httperr.Unauthorised("unable-to-verify-jwt", err, w, r)
+			httperr.Unauthorised("unable-to-verify-jwt", "", err, w, r)
 			return
 		}
 
 		//Get users
 		us, err := a.AuthClient.GetUser(ctx, token.UID)
 		if err != nil {
-			httperr.Unauthorised("unable-to-get-user-details", err, w, r)
+			httperr.Unauthorised("unable-to-get-user-details", "", err, w, r)
 			return
 		}
-
+		fmt.Println("getuserpopulated")
 		Userdetail := GetUserPopulated(us, token)
-
+		fmt.Println("getuserpopulated")
 		// it's always a good idea to use custom type as context value (in this case ctxKey)
 		// because nobody from the outside of the package will be able to override/read this value
 		ctx = context.WithValue(ctx, userContextKey, Userdetail)
@@ -160,10 +160,17 @@ func UserFromCtxs(ctx context.Context) (User, error) {
 	return User{}, NoUserInContextError
 }
 
-func SetUserInCtx(Userdetail User, r *http.Request) {
+func SetUserInCtx(Userdetail User, r *http.Request) context.Context {
+	fmt.Println("**(*(*(")
+	fmt.Println(Userdetail)
 	ctx := r.Context()
 	// it's always a good idea to use custom type as context value (in this case ctxKey)
 	// because nobody from the outside of the package will be able to override/read this value
 	ctx = context.WithValue(ctx, userContextKey, Userdetail)
-	r = r.WithContext(ctx)
+	return ctx
+	//r = r.WithContext(ctx)
+}
+
+func GetUserCtxKey() ctxKey {
+	return userContextKey
 }

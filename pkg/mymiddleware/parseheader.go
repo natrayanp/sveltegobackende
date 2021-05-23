@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/sveltegobackend/pkg/application"
 	"github.com/sveltegobackend/pkg/db/dbtran"
+	"github.com/sveltegobackend/pkg/errors/httperr"
 	"github.com/sveltegobackend/pkg/fireauth"
 )
 
@@ -19,22 +20,26 @@ func ParseHeadMiddleware(app *application.Application) func(next http.Handler) h
 
 			sess := r.Header.Get("session")
 			sid := r.Header.Get("siteid")
+			fmt.Println(sess)
+			fmt.Println(sid)
 
 			userinfo, err := fireauth.UserFromCtxs(ctx)
 			userinfo.Session = sess
 			userinfo.Siteid = sid
-			fmt.Println(userinfo)
-			const qry = `SELECT companyid FROM ac.domainmap WHERE 
-			domainmapid = (SELECT domainmapid FROM ac.userlogin WHERE userid = $1 AND siteid = $2)
-			AND status = 'A'`
 
-			type cid struct {
-				companyid string
+			const qry = `SELECT companyid FROM ac.domainmap WHERE
+				domainmapid = (SELECT domainmapid FROM ac.userlogin WHERE userid = $1 AND siteid = $2)
+				AND status = 'A'`
+
+			type Cid struct {
+				Companyid string
 			}
-			var myc []map[string]interface{}
+			var myc []Cid
 
 			stmts := []*dbtran.PipelineStmt{
-				dbtran.NewPipelineStmt("select", qry, myc, userinfo.UUID, userinfo.Siteid),
+				dbtran.NewPipelineStmt("select", qry, &myc, userinfo.UUID, userinfo.Siteid),
+				//dbtran.NewPipelineStmt("select", qry, &myc),
+				//dbtran.NewPipelineStmt("delete", qry, nil),
 			}
 
 			_, err = dbtran.WithTransaction(ctx, dbtran.TranTypeNoTran, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {
@@ -45,21 +50,23 @@ func ParseHeadMiddleware(app *application.Application) func(next http.Handler) h
 			if err != nil {
 				fmt.Println(err)
 				//TODO: implement error response
+				httperr.InternalError("Database error", "", err, w, r)
 			}
-			fmt.Println("+++++++++++++++++++++")
-			fmt.Println(myc)
-			fmt.Println(len(myc))
-			fmt.Println("+++++++++++++++++++++")
-			if len(myc) > 0 {
-				if val, ok := myc[0]["companyid"]; ok {
-					//do something here
-					userinfo.Companyid = fmt.Sprintf("%v", val)
-				}
-			} else {
-				userinfo.Companyid = ""
-			}
+			/*
+				fmt.Println("+++++++++++++++++++++res")
+				fmt.Println(myc)
+				fmt.Println(len(myc))
+				fmt.Println("+++++++++++++++++++++res")
+
+				fmt.Println("+++++++++++++++++++++res non select")
+				fmt.Println(stmts)
+				fmt.Println((*stmts[0]).Resultstruct)
+				fmt.Println("+++++++++++++++++++++res non select")
+			*/
 			fmt.Println(userinfo)
-			fireauth.SetUserInCtx(userinfo, r)
+			userinfo.Companyid = ""
+			ctx = context.WithValue(ctx, fireauth.GetUserCtxKey(), userinfo)
+			r = r.WithContext(ctx)
 			next.ServeHTTP(w, r)
 		}
 		return http.HandlerFunc(fn)

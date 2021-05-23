@@ -3,6 +3,7 @@ package dbtran
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	//_ "github.com/jackc/pgx/v4"
 	//"github.com/jmoiron/sqlx"
@@ -91,17 +92,22 @@ func WithTransaction(ctx context.Context, typ TranType, db *pgxpool.Pool, tra pg
 	return tra, errc
 }
 
+// Result set of non select queries
+type Resultset struct {
+	RowsAffected int64
+}
+
 // A PipelineStmt is a simple wrapper for creating a statement consisting of
 // a query and a set of arguments to be passed to that query.
 type PipelineStmt struct {
-	querytype   string
-	query       string
-	reultstruct []map[string]interface{}
-	resulterror error
-	args        []interface{}
+	querytype    string
+	query        string
+	Resultstruct interface{}
+	Resulterror  error
+	args         []interface{}
 }
 
-func NewPipelineStmt(querytype string, query string, reultstruct []map[string]interface{}, args ...interface{}) *PipelineStmt {
+func NewPipelineStmt(querytype string, query string, reultstruct interface{}, args ...interface{}) *PipelineStmt {
 	return &PipelineStmt{querytype, query, reultstruct, nil, args}
 }
 
@@ -125,12 +131,12 @@ func (ps *PipelineStmt) Exec(ctx context.Context, typ TranType, db *pgxpool.Pool
 		ct, err = db.Exec(ctx, ps.query, ps.args...)
 	}
 
+	dd := (ps.Resultstruct).(*Resultset)
 	if err != nil {
-		ps.reultstruct[0]["RowsAffected"] = -1
+		dd.RowsAffected = -1
 		return err
 	}
-
-	ps.reultstruct[0]["RowsAffected"] = ct.RowsAffected()
+	dd.RowsAffected = ct.RowsAffected()
 	return nil
 }
 
@@ -138,24 +144,28 @@ func (ps *PipelineStmt) Selects(ctx context.Context, typ TranType, db *pgxpool.P
 	var rows pgx.Rows
 	var err error
 	fmt.Println(typ)
+	fmt.Println(reflect.TypeOf(ps.Resultstruct).Elem())
 	if typ != TranTypeNoTran {
-
 		rows, err = tx.Query(ctx, ps.query, ps.args...)
 	} else {
-		fmt.Println("+++++++++++++++++++++")
+		fmt.Println("+++++++++++++++++++++qq")
 		rows, err = db.Query(ctx, ps.query, ps.args...)
-		fmt.Println(rows)
-		fmt.Println(err)
-		fmt.Println("+++++++++++++++++++++")
+		fmt.Println("printrow:", rows)
+		fmt.Println("error:", err)
+		fmt.Println("+++++++++++++++++++++qq")
 	}
 
 	if err != nil {
 		return err
 	}
-	fmt.Println("+++++++++++++++++++++")
-	err = pgxscan.ScanAll(&ps.reultstruct, rows)
-	fmt.Println(ps.reultstruct)
-	fmt.Println("+++++++++++++++++++++")
+	fmt.Println("+++++++++++++++++++++$$$")
+	err = pgxscan.ScanAll(ps.Resultstruct, rows)
+	fmt.Println(ps.Resultstruct)
+	//fmt.Println(len(ps.reultstruct))
+	//fmt.Println(ps.reultstruct[0])
+	//fmt.Println(ps.reultstruct[0]["companyid"])
+	//fmt.Println(reflect.TypeOf(ps.reultstruct[0]["companyid"]))
+	fmt.Println("+++++++++++++++++++++$$$")
 	if err != nil {
 		return err
 	}
@@ -175,12 +185,15 @@ func RunPipeline(ctx context.Context, typ TranType, db *pgxpool.Pool, tx Transac
 
 	for _, ps = range stmts {
 		if ps.querytype != "select" {
+			if ps.Resultstruct == nil {
+				fmt.Println("assigned resulstset")
+				ps.Resultstruct = &Resultset{}
+			}
 			err = ps.Exec(ctx, typ, db, tx)
-			ps.resulterror = err
+			ps.Resulterror = err
 		} else if ps.querytype == "select" {
-
 			err = ps.Selects(ctx, typ, db, tx)
-			ps.resulterror = err
+			ps.Resulterror = err
 		}
 
 		if err != nil {
