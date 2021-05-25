@@ -41,24 +41,23 @@ func (s SlugError) ErrorType() ErrorType {
 }
 
 func (s SlugError) HttpRespondWithError() {
-	log.GetLogEntry(s.r).WithError(s.error).WithField("error-slug", s.slug).Warn(s.logMsg)
-	resp := ErrorResponse{s.slug, s.slugCode, s.getStatucode()}
+	log.GetLogEntry(s.Request).WithError(s.Err).WithField("error-slug", s.Slug).Warn(s.LogMsg)
+	resp := ErrorResponse{s.Slug, s.SlugCode, s.getStatucode()}
 
-	if err := render.Render(s.w, s.r, resp); err != nil {
+	if err := render.Render(s.RespWriter, s.Request, resp); err != nil {
 		panic(err)
-
 	}
 }
 
 func NewSlugError(err error, errorType ErrorType, w http.ResponseWriter, r *http.Request, slug string, slugcode string, logmsg string) SlugError {
 	return SlugError{
-		error:     err,
-		errorType: errorType,
-		w:         w,
-		r:         r,
-		slug:      slug,
-		slugCode:  slugcode,
-		logMsg:    logmsg,
+		Err:        err,
+		ErrType:    errorType,
+		RespWriter: w,
+		Request:    r,
+		Slug:       slug,
+		SlugCode:   slugcode,
+		LogMsg:     logmsg,
 	}
 }
 

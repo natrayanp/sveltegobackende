@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/sveltegobackend/pkg/application"
 	"github.com/sveltegobackend/pkg/db/dbtran"
+	"github.com/sveltegobackend/pkg/errors"
 	"github.com/sveltegobackend/pkg/errors/httperr"
 	"github.com/sveltegobackend/pkg/fireauth"
 )
@@ -23,7 +24,19 @@ func ParseHeadMiddleware(app *application.Application) func(next http.Handler) h
 			fmt.Println(sess)
 			fmt.Println(sid)
 
-			userinfo, err := fireauth.UserFromCtxs(ctx)
+			userinfo, ctxfetchok := ctx.Value(fireauth.UserContextKey).(fireauth.User)
+			if !ctxfetchok {
+				dd := errors.SlugError{
+					ErrType:    errors.ErrorTypeDatabase,
+					RespWriter: w,
+					Request:    r,
+					Slug:       "Technical issue. Please contact support",
+					SlugCode:   "PARSEHEADER-CTXFETCHFAIL",
+					LogMsg:     "Context fetch Failed",
+				}
+				dd.HttpRespondWithError()
+			}
+
 			userinfo.Session = sess
 			userinfo.Siteid = sid
 
@@ -42,7 +55,7 @@ func ParseHeadMiddleware(app *application.Application) func(next http.Handler) h
 				//dbtran.NewPipelineStmt("delete", qry, nil),
 			}
 
-			_, err = dbtran.WithTransaction(ctx, dbtran.TranTypeNoTran, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {
+			_, err := dbtran.WithTransaction(ctx, dbtran.TranTypeNoTran, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {
 				err := dbtran.RunPipeline(ctx, typ, db, ttx, stmts...)
 				return err
 			})

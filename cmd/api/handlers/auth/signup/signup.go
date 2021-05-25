@@ -1,17 +1,15 @@
 package signup
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 
-	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/sveltegobackend/cmd/api/models"
+	"github.com/sveltegobackend/cmd/api/commonfuncs"
 	"github.com/sveltegobackend/pkg/application"
-	"github.com/sveltegobackend/pkg/db/dbtran"
 	"github.com/sveltegobackend/pkg/errors"
 	"github.com/sveltegobackend/pkg/fireauth"
+	"github.com/sveltegobackend/pkg/httpresponse"
 	"github.com/sveltegobackend/pkg/mymiddleware"
 )
 
@@ -20,68 +18,58 @@ func userSignup(app *application.Application) http.HandlerFunc {
 		fmt.Println("-------------------\n signuptoken Start \n-------------------")
 		defer r.Body.Close()
 		ctx := r.Context()
-		userinfo, err := fireauth.UserFromCtxs(ctx)
 
 		//Check user registered Start
+		var ctxfetchok bool
+		var userinfo fireauth.User
+		var data string
 
-		qry := `SELECT * FROM ac.userlogins
-		WHERE userid = $1
-		AND  siteid = $2;`
+		isregis := commonfuncs.CheckUserRegistered(app, w, r)
+		//Check user registered END
 
-		var myc []models.TblUserlogin
+		userinfo, ctxfetchok = ctx.Value(fireauth.UserContextKey).(fireauth.User)
 
-		stmts := []*dbtran.PipelineStmt{
-			dbtran.NewPipelineStmt("select", qry, &myc, userinfo.UUID, userinfo.Siteid),
-		}
-
-		_, err = dbtran.WithTransaction(ctx, dbtran.TranTypeNoTran, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {
-			err := dbtran.RunPipeline(ctx, typ, db, ttx, stmts...)
-			return err
-		})
-
-		if err != nil {
+		if !ctxfetchok {
 			dd := errors.SlugError{
-				Err:        err,
 				ErrType:    errors.ErrorTypeDatabase,
 				RespWriter: w,
 				Request:    r,
-				Slug:       "Database error",
-				SlugCode:   "INT",
-				LogMsg:     "Database error",
+				Slug:       "Technical issue. Please contact support",
+				SlugCode:   "AUTH-USRREGCHKFAIL",
+				LogMsg:     "Logic Failed",
 			}
 			dd.HttpRespondWithError()
-			return
 		}
-
-		fmt.Println(myc)
-
-		if len(myc) == 0 || len(myc) > 1 {
-			dd := errors.SlugError{
-				Err:        err,
-				ErrType:    errors.ErrorTypeDatabase,
-				RespWriter: w,
-				Request:    r,
-				Slug:       "Invalid Company Profile Setup Exists.  Contact Support",
-				SlugCode:   "NOMULCPY",
-				LogMsg:     "Company Details Not set or Have multiple Company; sql:" + qry,
+		fmt.Println(isregis)
+		if isregis {
+			data = userinfo.Email + "Already a registered user"
+			if !userinfo.EmailVerified {
+				data = data + ". Verify your email before login."
 			}
-			dd.HttpRespondWithError()
-			return
+		} else {
+			//User registration Start
+			registersuccess := commonfuncs.RegisterUser(app, w, r)
+			if !registersuccess {
+				dd := errors.SlugError{
+					ErrType:    errors.ErrorTypeDatabase,
+					RespWriter: w,
+					Request:    r,
+					Slug:       "User Registration Failed. Please contact support",
+					SlugCode:   "AUTH-USRREGFAIL",
+					LogMsg:     "Logic Failed",
+				}
+				dd.HttpRespondWithError()
+			}
+			data = "Registration successful for " + userinfo.Email + ". Verify your email before login."
+			//User registration End
 		}
 
-		//Check user registered end
-
-		user := &models.User{}
-		json.NewDecoder(r.Body).Decode(user)
-
-		if err := user.Create(r.Context(), app); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, "Oops")
-			return
-		}
+		myd := httpresponse.SucessResponse{Data: data, Respcode: ""}
 
 		w.Header().Set("Content-Type", "application/json")
-		response, _ := json.Marshal(user)
+		w.WriteHeader(http.StatusOK)
+		response, _ := json.Marshal(myd)
+		fmt.Println(response)
 		fmt.Println("-------------------\n signuptoken Stop \n-------------------")
 		w.Write(response)
 	}

@@ -1,11 +1,9 @@
 package httperr
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/go-chi/render"
-	"github.com/sveltegobackend/pkg/errors"
 	logs "github.com/sveltegobackend/pkg/logger"
 )
 
@@ -49,6 +47,7 @@ func DataBaseError(slug string, logMSg string, err error, w http.ResponseWriter,
 	InternalError(slug, logMSg, err, w, r)
 }
 
+/*
 func RespondWithSlugError(err error, w http.ResponseWriter, r *http.Request) {
 	fmt.Println("******* indise slug")
 	slugError, ok := err.(errors.SlugError)
@@ -69,7 +68,7 @@ func RespondWithSlugError(err error, w http.ResponseWriter, r *http.Request) {
 		InternalError(slugError.Slug(), "", slugError, w, r)
 	}
 }
-
+*/
 func httpRespondWithError(err error, slug string, w http.ResponseWriter, r *http.Request, logMSg string, status int) {
 	//logs.GetLogEntry(r).WithError(err).WithField("error-slug", slug).Warn(logMSg)
 	resp := ErrorResponse{slug, status}

@@ -11,7 +11,6 @@ import (
 	firebase "firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/auth"
 	"github.com/sirupsen/logrus"
-	commonerrors "github.com/sveltegobackend/pkg/errors"
 	"github.com/sveltegobackend/pkg/errors/httperr"
 
 	"google.golang.org/api/option"
@@ -90,7 +89,7 @@ func (a FirebaseClient) FireMiddleware(next http.Handler) http.Handler {
 		fmt.Println("getuserpopulated")
 		// it's always a good idea to use custom type as context value (in this case ctxKey)
 		// because nobody from the outside of the package will be able to override/read this value
-		ctx = context.WithValue(ctx, userContextKey, Userdetail)
+		ctx = context.WithValue(ctx, UserContextKey, Userdetail)
 		r = r.WithContext(ctx)
 		//SetUserInCtx(Userdetail, r)
 
@@ -142,35 +141,36 @@ func GetUserPopulated(us *auth.UserRecord, token *auth.Token) User {
 type ctxKey int
 
 const (
-	userContextKey ctxKey = iota
+	UserContextKey ctxKey = iota
 )
 
 var (
-	// if we expect that the user of the function may be interested with concrete error,
-	// it's a good idea to provide variable with this error
-	NoUserInContextError = commonerrors.NewAuthorizationError("no user in context", "no-user-found")
+// if we expect that the user of the function may be interested with concrete error,
+// it's a good idea to provide variable with this error
+//NoUserInContextError = errors.NewAuthorizationError("no user in context", "no-user-found")
 )
 
+/*
 func UserFromCtxs(ctx context.Context) (User, error) {
-	u, ok := ctx.Value(userContextKey).(User)
+	u, ok := ctx.Value(UserContextKey).(User)
 	if ok {
 		return u, nil
 	}
 
 	return User{}, NoUserInContextError
 }
-
+*/
 func SetUserInCtx(Userdetail User, r *http.Request) context.Context {
 	fmt.Println("**(*(*(")
 	fmt.Println(Userdetail)
 	ctx := r.Context()
 	// it's always a good idea to use custom type as context value (in this case ctxKey)
 	// because nobody from the outside of the package will be able to override/read this value
-	ctx = context.WithValue(ctx, userContextKey, Userdetail)
+	ctx = context.WithValue(ctx, UserContextKey, Userdetail)
 	return ctx
 	//r = r.WithContext(ctx)
 }
 
 func GetUserCtxKey() ctxKey {
-	return userContextKey
+	return UserContextKey
 }
