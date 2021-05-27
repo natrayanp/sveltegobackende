@@ -13,13 +13,25 @@ import (
 	"github.com/sveltegobackend/pkg/fireauth"
 )
 
-func CheckUserRegistered(app *application.Application, w http.ResponseWriter, r *http.Request) bool {
+func CheckUserRegistered(app *application.Application, w http.ResponseWriter, r *http.Request) (bool, error) {
 	//Check user registered Start
 
 	ctx := r.Context()
 	userinfo, ok := ctx.Value(fireauth.UserContextKey).(fireauth.User)
+
 	if !ok {
-		return ok
+		err := fmt.Errorf("Empty context")
+		dd := errors.SlugError{
+			Err:        err,
+			ErrType:    errors.ErrorTypeDatabase,
+			RespWriter: w,
+			Request:    r,
+			Data:       map[string]interface{}{"message": "Technical Error.  Please contact support"},
+			SlugCode:   "AUTH-CHKCTX",
+			LogMsg:     "Context fetch error",
+		}
+		dd.HttpRespondWithError()
+		return false, err
 	}
 
 	qry := `SELECT * FROM ac.userlogin
@@ -38,17 +50,19 @@ func CheckUserRegistered(app *application.Application, w http.ResponseWriter, r 
 	})
 
 	if err != nil {
+
 		dd := errors.SlugError{
 			Err:        err,
 			ErrType:    errors.ErrorTypeDatabase,
 			RespWriter: w,
 			Request:    r,
-			Slug:       "Database error",
+			Data:       map[string]interface{}{"message": "Database error"},
 			SlugCode:   "AUTH-INT",
 			LogMsg:     "Database error",
 		}
 		dd.HttpRespondWithError()
-		return false
+
+		return false, err
 	}
 	fmt.Println("ddsds")
 	fmt.Println(myc)
@@ -59,27 +73,38 @@ func CheckUserRegistered(app *application.Application, w http.ResponseWriter, r 
 			ErrType:    errors.ErrorTypeDatabase,
 			RespWriter: w,
 			Request:    r,
-			Slug:       "Invalid Company Profile Setup Exists.  Contact Support",
+			Data:       map[string]interface{}{"message": "Invalid Company Profile Setup Exists.  Contact Support"},
 			SlugCode:   "AUTH-NOMULCPY",
 			LogMsg:     "Company Details Not set or Have multiple Company; sql:" + qry,
 		}
 		dd.HttpRespondWithError()
-		return false
+		return false, fmt.Errorf("Invalid Company Profile Setup Exists.  Contact Support")
 	} else if len(myc) == 0 {
 		fmt.Println("no record db success")
-		return false
+		return false, nil
 	}
 
 	//Check user registered end
-	return true
+	return true, nil
 }
 
-func RegisterUser(app *application.Application, w http.ResponseWriter, r *http.Request) bool {
+func RegisterUser(app *application.Application, w http.ResponseWriter, r *http.Request) (bool, error) {
 
 	ctx := r.Context()
 	userinfo, ok := ctx.Value(fireauth.UserContextKey).(fireauth.User)
 	if !ok {
-		return ok
+		err := fmt.Errorf("Empty context")
+		dd := errors.SlugError{
+			Err:        err,
+			ErrType:    errors.ErrorTypeDatabase,
+			RespWriter: w,
+			Request:    r,
+			Data:       map[string]interface{}{"message": "Technical Error.  Please contact support"},
+			SlugCode:   "AUTH-REGCTX",
+			LogMsg:     "Context fetch error",
+		}
+		dd.HttpRespondWithError()
+		return false, err
 	}
 
 	const qry = `INSERT INTO ac.userlogin (userid, username, useremail, userpassword, userstatus, emailverified, siteid, userstatlstupdt, octime, lmtime) 
@@ -87,12 +112,12 @@ func RegisterUser(app *application.Application, w http.ResponseWriter, r *http.R
 
 	//uspass := ""
 
-	var myc []dbtran.Resultset
+	var myc dbtran.Resultset
 
 	stmts := []*dbtran.PipelineStmt{
-		dbtran.NewPipelineStmt("select", qry, &myc, userinfo.UUID, userinfo.DisplayName, userinfo.Email, "", "A", userinfo.EmailVerified, userinfo.Siteid),
+		dbtran.NewPipelineStmt("insert", qry, &myc, userinfo.UUID, userinfo.DisplayName, userinfo.Email, "", "A", userinfo.EmailVerified, userinfo.Siteid),
 	}
-
+	fmt.Println("calling tran")
 	_, err := dbtran.WithTransaction(ctx, dbtran.TranTypeNoTran, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {
 		err := dbtran.RunPipeline(ctx, typ, db, ttx, stmts...)
 		return err
@@ -104,15 +129,17 @@ func RegisterUser(app *application.Application, w http.ResponseWriter, r *http.R
 			ErrType:    errors.ErrorTypeDatabase,
 			RespWriter: w,
 			Request:    r,
-			Slug:       "Database error",
-			SlugCode:   "AUTH-INT",
+			Data:       map[string]interface{}{"message": "Database error"},
+			SlugCode:   "ERROR",
 			LogMsg:     "Database error",
 		}
-		dd.HttpRespondWithError()
-		return false
+		//	dd.HttpRespondWithError()
+		fmt.Println(dd)
+		return false, err
 	}
+	fmt.Println("calling tran end")
 
 	fmt.Println(myc)
 
-	return true
+	return true, nil
 }

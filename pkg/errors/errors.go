@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/render"
@@ -23,7 +24,17 @@ type SlugError struct {
 	ErrType    ErrorType
 	RespWriter http.ResponseWriter
 	Request    *http.Request
-	Slug       string
+	Data       map[string]interface{}
+	SlugCode   string
+	LogMsg     string
+}
+
+type SlugError1 struct {
+	Err        error
+	ErrType    ErrorType
+	RespWriter http.ResponseWriter
+	Request    *http.Request
+	Data       string
 	SlugCode   string
 	LogMsg     string
 }
@@ -32,38 +43,59 @@ func (s SlugError) Error() error {
 	return s.Err
 }
 
-func (s SlugError) GSlug() string {
-	return s.Slug
+func (s SlugError) GData() map[string]interface{} {
+	return s.Data
 }
 
 func (s SlugError) ErrorType() ErrorType {
 	return s.ErrType
 }
 
-func (s SlugError) HttpRespondWithError() {
-	log.GetLogEntry(s.Request).WithError(s.Err).WithField("error-slug", s.Slug).Warn(s.LogMsg)
-	resp := ErrorResponse{s.Slug, s.SlugCode, s.getStatucode()}
+func (s SlugError1) ErrorType() ErrorType {
+	return s.ErrType
+}
 
-	if err := render.Render(s.RespWriter, s.Request, resp); err != nil {
+func (s SlugError) HttpRespondWithError() {
+	log.GetLogEntry(s.Request).WithError(s.Err).WithField("error-slug", map[string]interface{}{"error": s.Data, "slugcode": s.SlugCode}).Warn(s.LogMsg)
+	resp := ErrorResponse{s.Data, "ERROR", s.getStatucode()}
+	fmt.Println("chek data resp")
+	fmt.Println(resp)
+	if err := render.Render(s.RespWriter, s.Request, &resp); err != nil {
 		panic(err)
 	}
 }
 
-func NewSlugError(err error, errorType ErrorType, w http.ResponseWriter, r *http.Request, slug string, slugcode string, logmsg string) SlugError {
+func (s SlugError1) HttpRespondWithError() {
+	log.GetLogEntry(s.Request).WithError(s.Err).WithField("error-slug", map[string]interface{}{"error": s.Data, "slugcode": s.SlugCode}).Warn(s.LogMsg)
+	resp := ErrorResponse1{s.Data, "ERROR", s.getStatucode()}
+	fmt.Println("chek data resp")
+	fmt.Println(resp)
+	if err := render.Render(s.RespWriter, s.Request, &resp); err != nil {
+		panic(err)
+	}
+}
+
+func NewSlugError(err error, errorType ErrorType, w http.ResponseWriter, r *http.Request, slug map[string]interface{}, slugcode string, logmsg string) SlugError {
 	return SlugError{
 		Err:        err,
 		ErrType:    errorType,
 		RespWriter: w,
 		Request:    r,
-		Slug:       slug,
+		Data:       slug,
 		SlugCode:   slugcode,
 		LogMsg:     logmsg,
 	}
 }
 
 type ErrorResponse struct {
-	Slug       string `json:"slug"`
-	Slugcode   string `json:"slugcode"`
+	Data       map[string]interface{} `json:"data"`
+	Status     string                 `json:"status"`
+	httpStatus int
+}
+
+type ErrorResponse1 struct {
+	Data       string `json:"data"`
+	Status     string `json:"status"`
 	httpStatus int
 }
 
@@ -72,7 +104,25 @@ func (e ErrorResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
+func (e ErrorResponse1) Render(w http.ResponseWriter, r *http.Request) error {
+	w.WriteHeader(e.httpStatus)
+	return nil
+}
+
 func (s SlugError) getStatucode() int {
+	switch s.ErrorType() {
+	case ErrorTypeAuthorization:
+		return http.StatusUnauthorized
+	case ErrorTypeIncorrectInput:
+		return http.StatusBadRequest
+	case ErrorTypeDatabase:
+		return http.StatusInternalServerError
+	default:
+		return http.StatusInternalServerError
+	}
+}
+
+func (s SlugError1) getStatucode() int {
 	switch s.ErrorType() {
 	case ErrorTypeAuthorization:
 		return http.StatusUnauthorized

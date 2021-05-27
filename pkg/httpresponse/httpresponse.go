@@ -1,7 +1,11 @@
 package httpresponse
 
 import (
+	"fmt"
 	"net/http"
+	"reflect"
+
+	log "github.com/sveltegobackend/pkg/logger"
 )
 
 /*
@@ -27,12 +31,63 @@ func (s SlugResp) HttpRespondWithError() {
 */
 
 type SucessResponse struct {
-	Data       string `json:"data"`
-	Respcode   string `json:"respcode"`
-	httpStatus int
+	Data   map[string]interface{} `json:"data"`
+	Status string                 `json:"status"`
 }
 
-func (e SucessResponse) Render(w http.ResponseWriter, r *http.Request) error {
-	w.WriteHeader(e.httpStatus)
-	return nil
+type SlugSuccess struct {
+	RespWriter http.ResponseWriter
+	Request    *http.Request
+	Data       interface{}
+	Status     string
+	SlugCode   string
+	LogMsg     string
+}
+
+//s.Data can be stuct pointer or a map[string]interface}{} type for it to work
+func (s SlugSuccess) RespData() (SucessResponse, int) {
+	log.GetLogEntry(s.Request).WithField("slugcode", s.SlugCode).Info(s.LogMsg)
+
+	resp := SucessResponse{structToMap(s.Data), s.Status}
+	fmt.Println(resp)
+	return resp, http.StatusOK
+}
+
+func structToMap(item interface{}) map[string]interface{} {
+
+	res := map[string]interface{}{}
+	if item == nil {
+		return res
+	}
+
+	v := reflect.TypeOf(item)
+	reflectValue := reflect.ValueOf(item)
+	reflectValue = reflect.Indirect(reflectValue)
+
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+
+		fmt.Println(v.Kind())
+
+		for i := 0; i < v.NumField(); i++ {
+			tag := v.Field(i).Tag.Get("json")
+			field := reflectValue.Field(i).Interface()
+			if tag != "" && tag != "-" {
+				if v.Field(i).Type.Kind() == reflect.Struct {
+					res[tag] = structToMap(field)
+				} else {
+					res[tag] = field
+				}
+			}
+		}
+	} else if v.Kind() == reflect.Map {
+		var ok bool
+		res, ok = item.(map[string]interface{})
+		if !ok {
+			return map[string]interface{}{}
+		}
+	}
+
+	fmt.Println(res)
+	return res
 }

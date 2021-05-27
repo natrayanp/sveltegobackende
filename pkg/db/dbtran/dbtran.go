@@ -130,9 +130,12 @@ func (ps *PipelineStmt) Exec(ctx context.Context, typ TranType, db *pgxpool.Pool
 	} else {
 		ct, err = db.Exec(ctx, ps.query, ps.args...)
 	}
+	fmt.Println("Peieiei")
 
 	dd := (ps.Resultstruct).(*Resultset)
+	fmt.Println(ps.Resultstruct)
 	if err != nil {
+
 		dd.RowsAffected = -1
 		return err
 	}

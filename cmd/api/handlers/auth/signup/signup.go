@@ -24,9 +24,13 @@ func userSignup(app *application.Application) http.HandlerFunc {
 		var userinfo fireauth.User
 		var data string
 
-		isregis := commonfuncs.CheckUserRegistered(app, w, r)
-		//Check user registered END
+		isregis, errs := commonfuncs.CheckUserRegistered(app, w, r)
 
+		if errs != nil {
+			return
+		}
+
+		//Check user registered END
 		userinfo, ctxfetchok = ctx.Value(fireauth.UserContextKey).(fireauth.User)
 
 		if !ctxfetchok {
@@ -34,12 +38,14 @@ func userSignup(app *application.Application) http.HandlerFunc {
 				ErrType:    errors.ErrorTypeDatabase,
 				RespWriter: w,
 				Request:    r,
-				Slug:       "Technical issue. Please contact support",
+				Data:       map[string]interface{}{"message": "Technical issue. Please contact support"},
 				SlugCode:   "AUTH-USRREGCHKFAIL",
 				LogMsg:     "Logic Failed",
 			}
 			dd.HttpRespondWithError()
+			return
 		}
+
 		fmt.Println(isregis)
 		if isregis {
 			data = userinfo.Email + "Already a registered user"
@@ -48,27 +54,55 @@ func userSignup(app *application.Application) http.HandlerFunc {
 			}
 		} else {
 			//User registration Start
-			registersuccess := commonfuncs.RegisterUser(app, w, r)
+			fmt.Println("calling regis")
+
+			registersuccess, err := commonfuncs.RegisterUser(app, w, r)
+
+			if err != nil {
+				return
+			}
+
+			fmt.Println("registration completed")
+
 			if !registersuccess {
 				dd := errors.SlugError{
 					ErrType:    errors.ErrorTypeDatabase,
 					RespWriter: w,
 					Request:    r,
-					Slug:       "User Registration Failed. Please contact support",
-					SlugCode:   "AUTH-USRREGFAIL",
-					LogMsg:     "Logic Failed",
+					Data:       map[string]interface{}{"message": "User Registration Failed. Please contact support"},
+
+					SlugCode: "AUTH-USRREGFAIL",
+					LogMsg:   "Logic Failed",
 				}
 				dd.HttpRespondWithError()
+				return
 			}
 			data = "Registration successful for " + userinfo.Email + ". Verify your email before login."
 			//User registration End
 		}
 
-		myd := httpresponse.SucessResponse{Data: data, Respcode: ""}
+		type nat struct {
+			Field1 string `json:"field1"`
+			Field2 string
+		}
+
+		//ssd := map[string]interface{}{"das": "kuk"}
+		//&nat{"nat1", "nat2"},
+		fmt.Println("registration completed ss sent")
+		ss := httpresponse.SlugSuccess{
+			RespWriter: w,
+			Request:    r,
+			Data:       &nat{"nat1", "nat2"},
+			Status:     "SUCCESS",
+			SlugCode:   "AUTH-RES",
+			LogMsg:     "testing",
+		}
+
+		dds, stat := ss.RespData()
 
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		response, _ := json.Marshal(myd)
+		w.WriteHeader(stat)
+		response, _ := json.Marshal(dds)
 		fmt.Println(response)
 		fmt.Println("-------------------\n signuptoken Stop \n-------------------")
 		w.Write(response)

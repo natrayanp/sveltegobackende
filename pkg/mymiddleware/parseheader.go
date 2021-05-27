@@ -30,7 +30,7 @@ func ParseHeadMiddleware(app *application.Application) func(next http.Handler) h
 					ErrType:    errors.ErrorTypeDatabase,
 					RespWriter: w,
 					Request:    r,
-					Slug:       "Technical issue. Please contact support",
+					Data:       map[string]interface{}{"message": "Technical issue. Please contact support"},
 					SlugCode:   "PARSEHEADER-CTXFETCHFAIL",
 					LogMsg:     "Context fetch Failed",
 				}
