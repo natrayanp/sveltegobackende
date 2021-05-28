@@ -1,13 +1,11 @@
 package signup
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/sveltegobackend/cmd/api/commonfuncs"
 	"github.com/sveltegobackend/pkg/application"
-	"github.com/sveltegobackend/pkg/errors"
 	"github.com/sveltegobackend/pkg/fireauth"
 	"github.com/sveltegobackend/pkg/httpresponse"
 	"github.com/sveltegobackend/pkg/mymiddleware"
@@ -34,15 +32,17 @@ func userSignup(app *application.Application) http.HandlerFunc {
 		userinfo, ctxfetchok = ctx.Value(fireauth.UserContextKey).(fireauth.User)
 
 		if !ctxfetchok {
-			dd := errors.SlugError{
-				ErrType:    errors.ErrorTypeDatabase,
+			dd := httpresponse.SlugResponse{
+				Err:        fmt.Errorf("User Context Fetch error"),
+				ErrType:    httpresponse.ErrorTypeContexFetchFail,
 				RespWriter: w,
 				Request:    r,
 				Data:       map[string]interface{}{"message": "Technical issue. Please contact support"},
 				SlugCode:   "AUTH-USRREGCHKFAIL",
 				LogMsg:     "Logic Failed",
 			}
-			dd.HttpRespondWithError()
+			dd.HttpRespond()
+			//dd.HttpRespondWithError()
 			return
 		}
 
@@ -65,47 +65,46 @@ func userSignup(app *application.Application) http.HandlerFunc {
 			fmt.Println("registration completed")
 
 			if !registersuccess {
-				dd := errors.SlugError{
-					ErrType:    errors.ErrorTypeDatabase,
+				dd := httpresponse.SlugResponse{
+					ErrType:    httpresponse.ErrorTypeDatabase,
 					RespWriter: w,
 					Request:    r,
 					Data:       map[string]interface{}{"message": "User Registration Failed. Please contact support"},
-
-					SlugCode: "AUTH-USRREGFAIL",
-					LogMsg:   "Logic Failed",
+					SlugCode:   "AUTH-USRREGFAIL",
+					LogMsg:     "Logic Failed",
 				}
-				dd.HttpRespondWithError()
+				dd.HttpRespond()
 				return
 			}
 			data = "Registration successful for " + userinfo.Email + ". Verify your email before login."
 			//User registration End
 		}
 
-		type nat struct {
-			Field1 string `json:"field1"`
-			Field2 string
-		}
-
-		//ssd := map[string]interface{}{"das": "kuk"}
+		ssd := map[string]interface{}{"message": data}
 		//&nat{"nat1", "nat2"},
 		fmt.Println("registration completed ss sent")
-		ss := httpresponse.SlugSuccess{
+		ss := httpresponse.SlugResponse{
 			RespWriter: w,
 			Request:    r,
-			Data:       &nat{"nat1", "nat2"},
+			Data:       ssd,
 			Status:     "SUCCESS",
 			SlugCode:   "AUTH-RES",
 			LogMsg:     "testing",
 		}
 
-		dds, stat := ss.RespData()
+		ss.HttpRespond()
+		return
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(stat)
-		response, _ := json.Marshal(dds)
-		fmt.Println(response)
-		fmt.Println("-------------------\n signuptoken Stop \n-------------------")
-		w.Write(response)
+		/*
+			dds, stat := ss.RespData()
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(stat)
+			response, _ := json.Marshal(dds)
+			fmt.Println(response)
+			fmt.Println("-------------------\n signuptoken Stop \n-------------------")
+			w.Write(response)
+		*/
 	}
 }
 

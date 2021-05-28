@@ -18,5 +18,7 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stamblerre/gocode v1.0.0 // indirect
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
+	github.com/jackc/pgtype v1.7.0
 	google.golang.org/api v0.46.0 // indirect
+	
 )

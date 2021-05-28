@@ -8,9 +8,9 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/sveltegobackend/pkg/application"
 	"github.com/sveltegobackend/pkg/db/dbtran"
-	"github.com/sveltegobackend/pkg/errors"
 	"github.com/sveltegobackend/pkg/errors/httperr"
 	"github.com/sveltegobackend/pkg/fireauth"
+	"github.com/sveltegobackend/pkg/httpresponse"
 )
 
 func ParseHeadMiddleware(app *application.Application) func(next http.Handler) http.Handler {
@@ -26,15 +26,17 @@ func ParseHeadMiddleware(app *application.Application) func(next http.Handler) h
 
 			userinfo, ctxfetchok := ctx.Value(fireauth.UserContextKey).(fireauth.User)
 			if !ctxfetchok {
-				dd := errors.SlugError{
-					ErrType:    errors.ErrorTypeDatabase,
+				dd := httpresponse.SlugResponse{
+					ErrType:    httpresponse.ErrorTypeDatabase,
 					RespWriter: w,
 					Request:    r,
 					Data:       map[string]interface{}{"message": "Technical issue. Please contact support"},
 					SlugCode:   "PARSEHEADER-CTXFETCHFAIL",
 					LogMsg:     "Context fetch Failed",
 				}
-				dd.HttpRespondWithError()
+				//dd.HttpRespondWithError()
+				dd.HttpRespond()
+				return
 			}
 
 			userinfo.Session = sess
