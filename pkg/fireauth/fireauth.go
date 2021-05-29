@@ -82,6 +82,18 @@ func (a FirebaseClient) FireMiddleware(next http.Handler) http.Handler {
 		us, err := a.AuthClient.GetUser(ctx, token.UID)
 		if err != nil {
 			httperr.Unauthorised("unable-to-get-user-details", "", err, w, r)
+			/*
+				dd := httpresponse.SlugResponse{
+					Err:        fmt.Errorf("unable-to-get-user-details"),
+					ErrType:    httpresponse.ErrorTypeDatabase,
+					RespWriter: w,
+					Request:    r,
+					Data:       map[string]interface{}{"message": "Database error"},
+					SlugCode:   "AUTH-INT",
+					LogMsg:     "Database error",
+				}
+				dd.HttpRespond()
+			*/
 			return
 		}
 		fmt.Println("getuserpopulated")

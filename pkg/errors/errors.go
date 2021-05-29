@@ -1,6 +1,13 @@
 package errors
 
-/*
+import (
+	"fmt"
+	"net/http"
+
+	"github.com/go-chi/render"
+	log "github.com/sveltegobackend/pkg/logger"
+)
+
 type ErrorType struct {
 	t string
 }

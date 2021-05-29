@@ -6,7 +6,7 @@ import (
 	"reflect"
 
 	"github.com/go-chi/render"
-
+	"github.com/sveltegobackend/pkg/fireauth"
 	log "github.com/sveltegobackend/pkg/logger"
 )
 
@@ -22,31 +22,10 @@ var (
 	ErrorTypeContexFetchFail = ErrorType{"usercontext-fetch-fail"}
 )
 
-/*
-type SlugResp struct {
-	RespWriter http.ResponseWriter
-	Request    *http.Request
-	Respdata   interface{}
-	RespCode   string
-	Statuscode int
-}
-
-func (s SlugResp) HttpRespondWithError() {
-	if s.statuscode == 0 {
-		s.statuscode = http.StatusOK
-	}
-
-	resp := SucessResponse{s.Respdata, s.RespCode, s.statuscode}
-
-	if err := render.Render(s.RespWriter, s.Request, resp); err != nil {
-		panic(err)
-	}
-}
-*/
-
 type finalResponse struct {
 	Data       map[string]interface{} `json:"data"`
 	Status     string                 `json:"status"`
+	Sessionid  string                 `json:"sessionid"`
 	httpStatus int
 }
 
@@ -55,6 +34,7 @@ type SlugResponse struct {
 	ErrType    ErrorType
 	RespWriter http.ResponseWriter
 	Request    *http.Request
+	Userinfo   fireauth.User
 	Data       interface{}
 	Status     string
 	SlugCode   string
@@ -66,20 +46,6 @@ func (s SlugResponse) ErrorType() ErrorType {
 }
 
 //s.Data can be stuct pointer or a map[string]interface}{} type for it to work
-/*
-func (s SlugResponse) RespData() (FinalResponse, int) {
-	if s.Err != nil {
-		log.GetLogEntry(s.Request).WithError(s.Err).WithField("error-slug", map[string]interface{}{"error": s.Data, "slugcode": s.SlugCode}).Warn(s.LogMsg)
-	} else {
-		log.GetLogEntry(s.Request).WithField("slugcode", s.SlugCode).Info(s.LogMsg)
-	}
-
-	resp := FinalResponse{structToMap(s.Data), s.Status, s.getStatucode()}
-	fmt.Println(resp)
-	return resp, http.StatusOK
-}
-*/
-
 func (s SlugResponse) HttpRespond() {
 	if s.Err != nil {
 		log.GetLogEntry(s.Request).WithError(s.Err).WithField("error-slug", map[string]interface{}{"error": s.Data, "slugcode": s.SlugCode}).Warn(s.LogMsg)
@@ -87,7 +53,7 @@ func (s SlugResponse) HttpRespond() {
 		log.GetLogEntry(s.Request).WithField("slugcode", s.SlugCode).Info(s.LogMsg)
 	}
 
-	resp := finalResponse{structToMap(s.Data), s.Status, s.getStatucode()}
+	resp := finalResponse{structToMap(s.Data), s.Status, s.Userinfo.Session, s.getStatucode()}
 	fmt.Println("chek data resp")
 	fmt.Println(resp)
 	if err := render.Render(s.RespWriter, s.Request, &resp); err != nil {
@@ -115,7 +81,6 @@ func (s SlugResponse) getStatucode() int {
 
 func (e finalResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	w.WriteHeader(e.httpStatus)
-	//w.Header().Set("Content-Type", "application/json")
 	return nil
 }
 
@@ -129,7 +94,7 @@ func structToMap(item interface{}) map[string]interface{} {
 	v := reflect.TypeOf(item)
 	reflectValue := reflect.ValueOf(item)
 	reflectValue = reflect.Indirect(reflectValue)
-
+	fmt.Println("type", v)
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
 
@@ -146,6 +111,7 @@ func structToMap(item interface{}) map[string]interface{} {
 				}
 			}
 		}
+
 	} else if v.Kind() == reflect.Map {
 		var ok bool
 		res, ok = item.(map[string]interface{})

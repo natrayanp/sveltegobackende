@@ -69,6 +69,7 @@ func userSignup(app *application.Application) http.HandlerFunc {
 					ErrType:    httpresponse.ErrorTypeDatabase,
 					RespWriter: w,
 					Request:    r,
+					Userinfo:   userinfo,
 					Data:       map[string]interface{}{"message": "User Registration Failed. Please contact support"},
 					SlugCode:   "AUTH-USRREGFAIL",
 					LogMsg:     "Logic Failed",
