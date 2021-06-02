@@ -21,6 +21,7 @@ func ParseHeadMiddleware(app *application.Application) func(next http.Handler) h
 
 			sess := r.Header.Get("session")
 			sid := r.Header.Get("siteid")
+
 			fmt.Println(sess)
 			fmt.Println(sid)
 

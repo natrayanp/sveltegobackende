@@ -11,14 +11,13 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/sveltegobackend/cmd/api/models"
 	"github.com/sveltegobackend/pkg/application"
 	"github.com/sveltegobackend/pkg/db/dbtran"
 	"github.com/sveltegobackend/pkg/fireauth"
 	"github.com/sveltegobackend/pkg/httpresponse"
 )
 
-func SessionOperation(app *application.Application, w http.ResponseWriter, r *http.Request) (bool, error) {
+func SessionOps(app *application.Application, w http.ResponseWriter, r *http.Request) error {
 	//Check user registered Start
 
 	ctx := r.Context()
@@ -36,29 +35,30 @@ func SessionOperation(app *application.Application, w http.ResponseWriter, r *ht
 			LogMsg:     "Context fetch error",
 		}
 		dd.HttpRespond()
-		return false, err
+		return err
 	}
 
-	qry := `SELECT * FROM ac.userlogin
+	qry := `UPDATE ac.loginh SET logoutime = CURRENT_TIMESTAMP
 			WHERE userid = $1
-			AND  siteid = $2;`
-
-	const qry = `UPDATE ac.loginh SET logoutime = CURRENT_TIMESTAMP
-			WHERE userid = $1
-			AND siteid = $2
+			AND companyid = $2
 			AND logoutime IS NULL`
+
+	qry1 := `INSERT INTO ac.loginh (userid, ipaddress, sessionid, companyid, logintime) 
+			VALUES ($1, $2, $3,$4 ,CURRENT_TIMESTAMP) RETURNING *;`
 
 	currentTime := time.Now().String()
 	mysess := getHash(userinfo.UUID+currentTime, "")
 	fmt.Println(mysess)
 
-	var myc []models.TblUserlogin
+	var myc dbtran.Resultset
+	var myc1 dbtran.Resultset
 
 	stmts := []*dbtran.PipelineStmt{
-		dbtran.NewPipelineStmt("select", qry, &myc, userinfo.UUID, userinfo.Siteid),
+		dbtran.NewPipelineStmt("update", qry, &myc, userinfo.UUID, userinfo.Companyid),
+		dbtran.NewPipelineStmt("insert", qry1, &myc1, userinfo.UUID, "", mysess, userinfo.Companyid),
 	}
 
-	_, err := dbtran.WithTransaction(ctx, dbtran.TranTypeNoTran, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {
+	_, err := dbtran.WithTransaction(ctx, dbtran.TranTypeFullSet, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {
 		err := dbtran.RunPipeline(ctx, typ, db, ttx, stmts...)
 		return err
 	})
@@ -72,36 +72,22 @@ func SessionOperation(app *application.Application, w http.ResponseWriter, r *ht
 			RespWriter: w,
 			Request:    r,
 			Data:       map[string]interface{}{"message": "Database error"},
-			SlugCode:   "AUTH-INT",
+			SlugCode:   "SESSION-CREAT",
 			LogMsg:     "Database error",
 		}
 		//dd.HttpRespondWithError()
 		dd.HttpRespond()
-		return false, err
+		return err
 	}
+
+	userinfo.Session = mysess
+	ctx1 := context.WithValue(ctx, fireauth.GetUserCtxKey(), userinfo)
+	r = r.WithContext(ctx1)
+
 	fmt.Println("ddsds")
 	fmt.Println(myc)
 
-	if len(myc) > 1 {
-		dd := httpresponse.SlugResponse{
-			Err:        err,
-			ErrType:    httpresponse.ErrorTypeDatabase,
-			RespWriter: w,
-			Request:    r,
-			Data:       map[string]interface{}{"message": "Invalid Company Profile Setup Exists.  Contact Support"},
-			SlugCode:   "AUTH-NOMULCPY",
-			LogMsg:     "Company Details Not set or Have multiple Company; sql:" + qry,
-		}
-
-		dd.HttpRespond()
-		return false, fmt.Errorf("Invalid Company Profile Setup Exists.  Contact Support")
-	} else if len(myc) == 0 {
-		fmt.Println("no record db success")
-		return false, nil
-	}
-
-	//Check user registered end
-	return true, nil
+	return nil
 }
 
 func getHash(data string, secret string) string {

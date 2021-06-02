@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/sirupsen/logrus"
+	"github.com/sveltegobackend/cmd/api/handlers/auth/login"
 	"github.com/sveltegobackend/cmd/api/handlers/auth/signup"
 	"github.com/sveltegobackend/cmd/api/handlers/createuser"
 	"github.com/sveltegobackend/cmd/api/handlers/getuser"
@@ -111,7 +112,9 @@ func authorisedRouter(app *application.Application) chi.Router {
 	setMiddlewares(app, r)
 	r.Use(fireauth.FirebaseClient{AuthClient: app.FireAuthclient.AuthClient}.FireMiddleware)
 	r.Use(mymiddleware.ParseHeadMiddleware(app))
+	r.Get("/test", signup.Do(app))
 	r.Post("/signuptoken", signup.Do(app))
+	r.Post("/logintoken", login.Do(app))
 	r.Get("/users/:id", getuser.Do(app))
 	r.Post("/users", createuser.Do(app))
 

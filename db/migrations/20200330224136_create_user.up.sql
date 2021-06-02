@@ -29,7 +29,7 @@ CREATE SEQUENCE companyid_seq START 1;
 --- Domain map table which allow user to user their own URL
 
 CREATE TABLE ac.domainmap (
-    domainmapid varchar(100) NOT NULL DEFAULT 'CPYID'||nextval('companyid_seq'::regclass)::varchar(100),
+    domainmapid varchar(100) NOT NULL DEFAULT 'DMAPID'||nextval('companyid_seq'::regclass)::varchar(100),
     hostname    text NOT NULL UNIQUE,    
     siteid      text NOT NULL,
     companyid   varchar(100) NOT NULL DEFAULT 'CPYID'||nextval('companyid_seq'::regclass)::varchar(100),
@@ -162,3 +162,239 @@ CREATE TABLE ac.rolemaster (
 insert into ac.ROLEMASTER values ('ROLMA1','SignupAdmin','SignupAdmin','This is the role given to users when they sign up','PUBLIC','PUBLIC','PUBLIC','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 insert into ac.ROLEMASTER values ('ROLMA2','defaultadmin','defaultadmin','This is the role given to users when they completed creation of their first Company and branch','PUBLIC','PUBLIC','PUBLIC','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 */
+
+
+--defaultRoleMaster
+
+    CREATE TABLE ac.defaultrolemaster (    
+        id                    varchar(20) NOT NULL CONSTRAINT defaultrolemasterid PRIMARY KEY, 
+        name                  varchar(100) NOT NULL,
+        displayname           varchar(50) NOT NULL,
+        description           varchar NOT NULL,
+        companyid             varchar(30) NOT NULL,
+        branchid              varchar(30) NOT NULL,        
+        status                varchar(3) NOT NULL,
+        octime			      timestamptz NOT NULL,
+        lmtime			      timestamptz NOT NULL
+    );
+
+/*
+insert into ac.defaultrolemaster values ('DROLMA1','SignupAdmin','SignupAdmin','This is the role given to users when they sign up','PUBLIC','PUBLIC','PUBLIC','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.defaultrolemaster values ('DROLMA2','defaultadmin','defaultadmin','This is the role given to users when they completed creation of their first Company and branch','PUBLIC','PUBLIC','PUBLIC','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+*/
+
+--RoleDetails
+
+CREATE TABLE ac.roledetails (    
+    id                    varchar(20) NOT NULL CONSTRAINT roledetailsid PRIMARY KEY, 
+    rolemasterid          varchar(100) NOT NULL,    
+    packfuncid            varchar(20) NOT NULL,  --> This can have only function type from pack table
+    packid            varchar(30) NOT NULL,
+    companyid             varchar(30) NOT NULL,
+    branchid              varchar(30) NOT NULL,    
+    octime			      timestamptz NOT NULL,
+    lmtime			      timestamptz NOT NULL
+);
+
+/*
+insert into ac.Roledetails values ('ROLDET1','ROLMA1','PKS8','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.Roledetails values ('ROLDET2','ROLMA1','PKS9','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.Roledetails values ('ROLDET3','ROLMA2','PKS8','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.Roledetails values ('ROLDET4','ROLMA2','PKS9','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.Roledetails values ('ROLDET5','ROLMA2','PKS11','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.Roledetails values ('ROLDET6','ROLMA2','PKS12','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+*/
+
+--defaultRoleDetails
+
+CREATE TABLE ac.defaultroledetails (    
+    id                    varchar(20) NOT NULL CONSTRAINT droledetailsid PRIMARY KEY, 
+    rolemasterid          varchar(100) NOT NULL,    
+    packid                varchar(20) NOT NULL,  --> This can have only function type from pack table
+    companyid             varchar(30) NOT NULL,
+    branchid              varchar(30) NOT NULL,       
+    octime			      timestamptz NOT NULL,
+    lmtime			      timestamptz NOT NULL
+);
+/*
+insert into ac.defaultroledetails values ('DROLDET1','ROLMA1','PKS8','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.defaultroledetails values ('DROLDET2','ROLMA1','PKS9','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.defaultroledetails values ('DROLDET3','ROLMA2','PKS8','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.defaultroledetails values ('DROLDET4','ROLMA2','PKS9','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.defaultroledetails values ('DROLDET5','ROLMA2','PKS11','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.defaultroledetails values ('DROLDET6','ROLMA2','PKS12','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+*/
+
+--userrole
+
+CREATE TABLE ac.userrole ( 
+    userid 		          varchar(100) NOT NULL,
+    rolemasterid          varchar(20) NOT NULL,       
+    companyid             varchar(30) NOT NULL,
+    branchid              varchar(30) NOT NULL,      
+    status                varchar(3) NOT NULL,  --> D -Delete / A - Active
+    isdefault             varchar(3) NOT NULL,  --> Y/N
+    octime			      timestamptz NOT NULL,
+    lmtime			      timestamptz NOT NULL
+);
+
+
+
+---
+CREATE TABLE ac.company (
+        companyId               varchar(100) NOT NULL UNIQUE,        
+        companyName             text NOT NULL,
+        companyShortName        varchar(100) NOT NULL,
+        companyCategory         varchar(100) NOT NULL,
+        companyStatus           varchar(3) NOT NULL,  --> D -Delete / A - Active
+        companyDescription      text NOT NULL,
+        companyImageUrl         text,
+        companyLogo             text,
+        companyIndustry         varchar(100) NOT NULL,
+        companyTaxID            varchar(100) NOT NULL,
+        companyAddLine1         varchar(100) NOT NULL,
+        companyAddLine2         varchar(100) NOT NULL,
+        companyCity             varchar(100) NOT NULL,
+        companyState            varchar(100) NOT NULL,
+        companyCountry          varchar(100) NOT NULL,
+        companyPinCode          integer NOT NULL,
+        companyPhone            text,
+        companyFax              text,
+        companyMobile           text,
+        companyWebsite          text,
+        companyEmail            text,
+        companyStartDate        date NOT NULL,
+        companyFiscalYear       integer NOT NULL,
+        companyTimeZone         text,
+        companyBaseCurency      varchar(3) NOT NULL,
+        companysParent          text,        
+        isdefault               varchar(3) NOT NULL,  --> Y/N
+        lmuserid                varchar(100) NOT NULL,                  
+        octime			        timestamptz NOT NULL,
+        lmtime			        timestamptz NOT NULL
+);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+---Entity details
+create table entity
+(
+    entityid          varchar(100)  default (('EN'::text || to_char(CURRENT_TIMESTAMP, 'DDMMYYYY'::text)) ||
+                                            nextval('unihot.entityid_sequence'::regclass)) not null
+                                             constraint enity_pkey primary key,
+    entityname        varchar(100)  not null,
+    entityshortname   varchar(100),
+    entitycategory    varchar(100),
+    entitystatus      varchar(1),    
+    entityimageurl    varchar(100),
+    entitylogo        varchar(100),
+    entityindustry    varchar(100),
+    entitytaxid       varchar(100),
+    entityaddline1    varchar(100),
+    entityaddline2    varchar(100),
+    entitycity        varchar(100),
+    entitystate       varchar(100),
+    entitycountry     varchar(100),
+    entitypincode     varchar(100),
+    entityphone       varchar(100),
+    entityfax         varchar(100),
+    entitymobile      varchar(100),
+    entitywebsite     varchar(100),
+    entityemail       varchar(100),
+    entitystartdate   varchar(100),
+    entityfiscalyear  varchar(100),
+    entitytimezone    varchar(100),
+    octime            timestamp with time zone                                             not null,
+    lmtime            timestamp with time zone                                             not null
+);
+
+
+
+--INSERT for public entity
+
+---Entity details
+create table entitybranch
+(
+    entitybranchid          varchar(100) default (('BR'::text || to_char(CURRENT_TIMESTAMP, 'DDMMYYYY'::text)) ||
+                                                  nextval('unihot.entitybranchid_sequence'::regclass)) not null
+        constraint enitybranch_pkey
+            primary key,
+    entityid                varchar(100)                                                               not null
+        constraint entitybranch_entityid_fkey
+            references entity,
+    entitybranchname        varchar(100),
+    entitybranchshortname   varchar(100),
+    entitybranchcategory    varchar(100),
+    entitybranchstatus      varchar(100),
+    entitybranchdescription varchar(100),
+    entitybranchimageurl    varchar(100),
+    entitybranchaddline1    varchar(100),
+    entitybranchaddline2    varchar(100),
+    entitybranchcity        varchar(100),
+    entitybranchstate       varchar(100),
+    entitybranchcountry     varchar(100),
+    entitybranchpincode     varchar(100),
+    entitybranchphone       varchar(100),
+    entitybranchfax         varchar(100),
+    entitybranchmobile      varchar(100),
+    entitybranchwebsite     varchar(100),
+    entitybranchemail       varchar(100),
+    entitybranchstartdate   varchar(100),
+    octime                  timestamp with time zone                                                   not null,
+    lmtime                  timestamp with time zone                                                   not null
+);
+--INSERT for public entity
+
+---user access permission table
+CREATE TABLE unihot.useraccess (
+    userid 		               varchar(100) NOT NULL,
+    logintype                  varchar(2) NOT NULL,  --> based on admin user (T - Thirdparty, S - Standalone)
+    usertype                   varchar(2) NOT NULL, --> based on admin user (C - Thirdparty COMPANY, I - Thirdparty individual, S - Standalone Company)
+    entity                     varchar(20) NOT NULL ,
+    entitybranch               varchar(10) NOT NULL ,
+    defaultindicator           varchar(1) NOT NULL,
+    roleid                     varchar(100),  --> from role setup table ADMIN,READONLY,WRITE,NODELETE
+    site                       varchar(100),  --> nc - Nawalcube, dv - developer, au - auth
+    accessstatus	           varchar(2) NOT NULL, --> (A- Active, B-Blocked) for the site
+    octime			           timestamptz NOT NULL,
+    lmtime			           timestamptz NOT NULL,
+    CONSTRAINT usac PRIMARY KEY (userid, logintype, usertype, entity, entitybranch, site)  
+    );
+
+--INSERT for public entity
+INSERT INTO unihot.useraccess VALUES ('01','PUBLIC','01','nc','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+
+---role id table
+CREATE TABLE unihot.roledetails (
+    roleid 		               varchar(100) NOT NULL,
+    rolename                   varchar(100) NOT NULL,
+    entity                     varchar(20) NOT NULL REFERENCES unihot.enity(entityid),
+    site                       varchar(100),  --> nc - Nawalcube, dv - developer, au - auth
+    roleidstatus	           varchar(2) NOT NULL, --> (A- Active, B-Blocked) for the site
+    octime			           timestamptz NOT NULL,
+    lmtime			           timestamptz NOT NULL,
+    CONSTRAINT us PRIMARY KEY (roleid, entity, site)  
+    );
+
+--INSERT for public entity
+INSERT INTO unihot.roledetails VALUES ('01','PUBLIC','01','nc','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);

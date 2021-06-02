@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/sveltegobackend/cmd/api/commonfuncs"
+	"github.com/sveltegobackend/cmd/api/models"
 	"github.com/sveltegobackend/pkg/application"
 	"github.com/sveltegobackend/pkg/fireauth"
 	"github.com/sveltegobackend/pkg/httpresponse"
@@ -13,14 +14,16 @@ import (
 
 func userLogin(app *application.Application) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("-------------------\n signuptoken Start \n-------------------")
+		fmt.Println("-------------------\n logintoken Start \n-------------------")
 		defer r.Body.Close()
 		ctx := r.Context()
 
 		//Check user registered Start
-		var ctxfetchok bool
-		var userinfo fireauth.User
+		//var ctxfetchok bool
+		//var userinfo fireauth.User
 		var data string
+		var myc []models.TblMytree
+		havdom := false
 
 		isregis, errs := commonfuncs.CheckUserRegistered(app, w, r)
 
@@ -29,7 +32,7 @@ func userLogin(app *application.Application) http.HandlerFunc {
 		}
 
 		//Check user registered END
-		userinfo, ctxfetchok = ctx.Value(fireauth.UserContextKey).(fireauth.User)
+		userinfo, ctxfetchok := ctx.Value(fireauth.UserContextKey).(fireauth.User)
 
 		if !ctxfetchok {
 			dd := httpresponse.SlugResponse{
@@ -49,40 +52,54 @@ func userLogin(app *application.Application) http.HandlerFunc {
 		fmt.Println(isregis)
 		if isregis {
 
-			isregis, errs := commonfuncs.SessionOps(app, w, r)
+			// Check for domain registration
 
+			if userinfo.Companyid != "" {
+				havdom = true
 
+				if errs := commonfuncs.SessionOps(app, w, r); errs != nil {
+					return
+				}
+				data = ""
+
+				//TODO fecth menu tree
+				myc = []models.TblMytree{}
+
+			} else {
+
+				fmt.Println("else loop in login tblmytre")
+				data = "Subdomain not registered"
+				myc = []models.TblMytree{}
+
+			}
+
+			// Return menu
 
 		} else {
 			//User registration Start
 			fmt.Println("calling regis")
 
-			registersuccess, err := commonfuncs.RegisterUser(app, w, r)
-
-			if err != nil {
-				return
-			}
-
-			fmt.Println("registration completed")
-
-			if !registersuccess {
-				dd := httpresponse.SlugResponse{
-					ErrType:    httpresponse.ErrorTypeDatabase,
-					RespWriter: w,
-					Request:    r,
-					Userinfo:   userinfo,
-					Data:       map[string]interface{}{"message": "User Registration Failed. Please contact support"},
-					SlugCode:   "AUTH-USRREGFAIL",
-					LogMsg:     "Logic Failed",
-				}
-				dd.HttpRespond()
-				return
-			}
-			data = "Registration successful for " + userinfo.Email + ". Verify your email before login."
+			data = "Not a Registered user. Register to continue."
+			myc = []models.TblMytree{}
 			//User registration End
+
+			cc := httpresponse.SlugResponse{
+				Err:        fmt.Errorf("Not a Registered user"),
+				ErrType:    httpresponse.ErrorTypeIncorrectInput,
+				RespWriter: w,
+				Request:    r,
+				Data:       map[string]interface{}{"message": data},
+				Status:     "ERROR",
+				SlugCode:   "AUTH-USRNOTREG",
+				LogMsg:     "User trying to login with non registered user",
+			}
+			cc.HttpRespond()
+			//dd.HttpRespondWithError()
+			return
+
 		}
 
-		ssd := map[string]interface{}{"message": data}
+		ssd := map[string]interface{}{"message": data, "isregistered": isregis, "havedomain": havdom, "menu": &myc}
 		//&nat{"nat1", "nat2"},
 		fmt.Println("registration completed ss sent")
 		ss := httpresponse.SlugResponse{
@@ -95,6 +112,7 @@ func userLogin(app *application.Application) http.HandlerFunc {
 		}
 
 		ss.HttpRespond()
+		fmt.Println("-------------------\n logintoken Stop \n-------------------")
 		return
 
 		/*
@@ -104,7 +122,7 @@ func userLogin(app *application.Application) http.HandlerFunc {
 			w.WriteHeader(stat)
 			response, _ := json.Marshal(dds)
 			fmt.Println(response)
-			fmt.Println("-------------------\n signuptoken Stop \n-------------------")
+
 			w.Write(response)
 		*/
 	}

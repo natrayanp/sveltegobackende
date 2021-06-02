@@ -16,6 +16,9 @@ import (
 func CheckUserRegistered(app *application.Application, w http.ResponseWriter, r *http.Request) (bool, error) {
 	//Check user registered Start
 
+	//havesubdomain := false
+	isregistered := false
+
 	ctx := r.Context()
 	userinfo, ok := ctx.Value(fireauth.UserContextKey).(fireauth.User)
 
@@ -31,7 +34,7 @@ func CheckUserRegistered(app *application.Application, w http.ResponseWriter, r 
 			LogMsg:     "Context fetch error",
 		}
 		dd.HttpRespond()
-		return false, err
+		return isregistered, err
 	}
 
 	qry := `SELECT * FROM ac.userlogin
@@ -63,12 +66,14 @@ func CheckUserRegistered(app *application.Application, w http.ResponseWriter, r 
 		}
 		//dd.HttpRespondWithError()
 		dd.HttpRespond()
-		return false, err
+		return isregistered, err
+
 	}
 	fmt.Println("ddsds")
 	fmt.Println(myc)
 
 	if len(myc) > 1 {
+		err = fmt.Errorf("Invalid Company Profile Setup Exists.  Contact Support")
 		dd := httpresponse.SlugResponse{
 			Err:        err,
 			ErrType:    httpresponse.ErrorTypeDatabase,
@@ -80,14 +85,20 @@ func CheckUserRegistered(app *application.Application, w http.ResponseWriter, r 
 		}
 
 		dd.HttpRespond()
-		return false, fmt.Errorf("Invalid Company Profile Setup Exists.  Contact Support")
+		return isregistered, err
+
 	} else if len(myc) == 0 {
 		fmt.Println("no record db success")
-		return false, nil
+		return isregistered, err
+	} else if len(myc) == 1 {
+		isregistered = true
+		/*		if myc[0].Domainmapid.String != "" {
+				havesubdomain = true
+			}*/
 	}
 
 	//Check user registered end
-	return true, nil
+	return isregistered, err
 }
 
 func RegisterUser(app *application.Application, w http.ResponseWriter, r *http.Request) (bool, error) {
@@ -145,5 +156,9 @@ func RegisterUser(app *application.Application, w http.ResponseWriter, r *http.R
 
 	fmt.Println(myc)
 
+	return true, nil
+}
+
+func GetPacksMenu(app *application.Application, w http.ResponseWriter, r *http.Request) (bool, error) {
 	return true, nil
 }
