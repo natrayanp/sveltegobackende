@@ -89,6 +89,7 @@ func WithTransaction(ctx context.Context, typ TranType, db *pgxpool.Pool, tra pg
 	}
 
 	errc = fn(ctx, typ, db, tra)
+	fmt.Println("+++++++++++++++++++++$$$end3")
 	return tra, errc
 }
 
@@ -146,10 +147,15 @@ func (ps *PipelineStmt) Exec(ctx context.Context, typ TranType, db *pgxpool.Pool
 func (ps *PipelineStmt) Selects(ctx context.Context, typ TranType, db *pgxpool.Pool, tx Transaction) error {
 	var rows pgx.Rows
 	var err error
+	fmt.Println("+++++ selects +++++")
 	fmt.Println(typ)
 	fmt.Println(reflect.TypeOf(ps.Resultstruct).Elem())
 	if typ != TranTypeNoTran {
+		fmt.Println("+++++++++++++++++++++qq1")
 		rows, err = tx.Query(ctx, ps.query, ps.args...)
+		fmt.Println("printrow:", rows)
+		fmt.Println("error:", err)
+		fmt.Println("+++++++++++++++++++++qq1")
 	} else {
 		fmt.Println("+++++++++++++++++++++qq")
 		rows, err = db.Query(ctx, ps.query, ps.args...)
@@ -164,6 +170,7 @@ func (ps *PipelineStmt) Selects(ctx context.Context, typ TranType, db *pgxpool.P
 	fmt.Println("+++++++++++++++++++++$$$")
 	err = pgxscan.ScanAll(ps.Resultstruct, rows)
 	fmt.Println(ps.Resultstruct)
+	fmt.Println(err)
 	//fmt.Println(len(ps.reultstruct))
 	//fmt.Println(ps.reultstruct[0])
 	//fmt.Println(ps.reultstruct[0]["companyid"])
@@ -172,6 +179,7 @@ func (ps *PipelineStmt) Selects(ctx context.Context, typ TranType, db *pgxpool.P
 	if err != nil {
 		return err
 	}
+	fmt.Println("+++++++++++++++++++++$$$end")
 
 	return nil
 }
@@ -196,14 +204,17 @@ func RunPipeline(ctx context.Context, typ TranType, db *pgxpool.Pool, tx Transac
 			ps.Resulterror = err
 		} else if ps.querytype == "select" {
 			err = ps.Selects(ctx, typ, db, tx)
+			fmt.Println(err)
+			fmt.Println(ps)
 			ps.Resulterror = err
+			fmt.Println("+++++++++++++++++++++$$$end1")
 		}
 
 		if err != nil {
 			return err
 		}
 	}
-
+	fmt.Println("+++++++++++++++++++++$$$end2")
 	return nil
 }
 

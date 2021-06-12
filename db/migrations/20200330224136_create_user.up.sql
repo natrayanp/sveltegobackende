@@ -1,3 +1,26 @@
+CREATE TABLE IF NOT EXISTS gue_jobs
+(
+    job_id      bigserial   NOT NULL PRIMARY KEY,
+    priority    smallint    NOT NULL,
+    run_at      timestamptz NOT NULL,
+    job_type    text        NOT NULL,
+    args        json        NOT NULL,
+    error_count integer     NOT NULL DEFAULT 0,
+    last_error  text,
+    queue       text        NOT NULL,
+    created_at  timestamptz NOT NULL,
+    updated_at  timestamptz NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS "idx_gue_jobs_selector" ON "gue_jobs" ("queue", "run_at", "priority");
+
+COMMENT ON TABLE gue_jobs IS '1';
+
+
+
+
+
+
 CREATE SCHEMA ac;
 
 ---Login table
@@ -9,11 +32,12 @@ CREATE TABLE ac.userlogin (
     userstatus		           varchar(2) NOT NULL, --> (A- Active, B-Blocked, D-Deleted) 
     emailverified              boolean,
     siteid                     varchar(100) NOT NULL,
-    domainmapid                varchar(100),
+    hostname    text NOT NULL UNIQUE,          
+    companyid   varchar(100),
     userstatlstupdt	           timestamptz NOT NULL,    
     octime			           timestamptz NOT NULL,
     lmtime			           timestamptz NOT NULL,
-    CONSTRAINT uid PRIMARY KEY (userid, siteid)  
+    CONSTRAINT uid PRIMARY KEY (userid, hostname,siteid)  
     );
 
 -- Creation of Admin user

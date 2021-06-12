@@ -59,6 +59,7 @@ func Get(app *application.Application) *chi.Mux {
 	// Public routes
 	r.Group(func(r chi.Router) {
 		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+
 			w.Write([]byte("welcome anonymous"))
 		})
 	})
@@ -115,6 +116,7 @@ func authorisedRouter(app *application.Application) chi.Router {
 	r.Get("/test", signup.Do(app))
 	r.Post("/signuptoken", signup.Do(app))
 	r.Post("/logintoken", login.Do(app))
+	r.Post("/regisdomain", login.DoRegisDomain(app))
 	r.Get("/users/:id", getuser.Do(app))
 	r.Post("/users", createuser.Do(app))
 
@@ -134,3 +136,4 @@ func authorisedRouter(app *application.Application) chi.Router {
 
 	return r
 }
+

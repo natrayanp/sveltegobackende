@@ -2,19 +2,21 @@ package commonfuncs
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/sveltegobackend/cmd/api/models"
+	"github.com/vgarvardt/gue/v2"
+
+	//"github.com/sveltegobackend/cmd/api/models"
 	"github.com/sveltegobackend/pkg/application"
 	"github.com/sveltegobackend/pkg/db/dbtran"
 	"github.com/sveltegobackend/pkg/fireauth"
 	"github.com/sveltegobackend/pkg/httpresponse"
 )
 
-func ChkSubdomain(app *application.Application, w http.ResponseWriter, r *http.Request) error {
-	//Check user registered Start
+func DomRegis(app *application.Application, w http.ResponseWriter, r *http.Request, dom string) error {
 
 	ctx := r.Context()
 	userinfo, ok := ctx.Value(fireauth.UserContextKey).(fireauth.User)
@@ -34,38 +36,38 @@ func ChkSubdomain(app *application.Application, w http.ResponseWriter, r *http.R
 		return err
 	}
 
-	qry := `SELECT * FROM ac.userlogin WHERE userid = $1 AND siteid = $2 AND hostname = $3`
+	const qry1 = `UPDATE ac.userlogin SET companyid = 'CPYID'||nextval('companyid_seq'::regclass), lmtime = CURRENT_TIMESTAMP, hostname = $1
+					WHERE userid = $2`
 
-	var myc models.TblUserlogin
+	var myc1 dbtran.Resultset
 
-	stmts := []*dbtran.PipelineStmt{
-		dbtran.NewPipelineStmt("select", qry, &myc, userinfo.UUID, userinfo.Siteid, userinfo.Hostname),
+	stmts1 := []*dbtran.PipelineStmt{
+
+		dbtran.NewPipelineStmt("update", qry1, &myc1, dom, userinfo.UUID),
 	}
 
 	_, err := dbtran.WithTransaction(ctx, dbtran.TranTypeFullSet, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {
-		err := dbtran.RunPipeline(ctx, typ, db, ttx, stmts...)
+		err := dbtran.RunPipeline(ctx, typ, db, ttx, stmts1...)
 		return err
 	})
 
 	if err != nil {
+		return err
+	}
+	type assingrole struct {
+		UUID string
+	}
+	args, err := json.Marshal(assingrole{UUID: userinfo.UUID})
 
-		//		dd := errors.SlugError{
-		dd := httpresponse.SlugResponse{
-			Err:        err,
-			ErrType:    httpresponse.ErrorTypeDatabase,
-			RespWriter: w,
-			Request:    r,
-			Data:       map[string]interface{}{"message": "Database error"},
-			SlugCode:   "SUBDOMAIN-CHK",
-			LogMsg:     "Database error",
-		}
-		//dd.HttpRespondWithError()
-		dd.HttpRespond()
+	if err != nil {
 		return err
 	}
 
-	fmt.Println("ddsds")
-	fmt.Println(myc)
+	err = app.Que.Enquejob(&gue.Job{Type: "AssignRole", Args: args})
 
+	if err != nil {
+		return err
+	}
 	return nil
+
 }

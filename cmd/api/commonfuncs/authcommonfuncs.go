@@ -39,12 +39,13 @@ func CheckUserRegistered(app *application.Application, w http.ResponseWriter, r 
 
 	qry := `SELECT * FROM ac.userlogin
 			WHERE userid = $1
-			AND  siteid = $2;`
+			AND  siteid = $2
+			AND hostname = $3;`
 
 	var myc []models.TblUserlogin
 
 	stmts := []*dbtran.PipelineStmt{
-		dbtran.NewPipelineStmt("select", qry, &myc, userinfo.UUID, userinfo.Siteid),
+		dbtran.NewPipelineStmt("select", qry, &myc, userinfo.UUID, userinfo.Siteid, userinfo.Hostname),
 	}
 
 	_, err := dbtran.WithTransaction(ctx, dbtran.TranTypeNoTran, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {
@@ -121,7 +122,7 @@ func RegisterUser(app *application.Application, w http.ResponseWriter, r *http.R
 		return false, err
 	}
 
-	const qry = `INSERT INTO ac.userlogin (userid, username, useremail, userpassword, userstatus, emailverified, siteid, domainmapid, userstatlstupdt, octime, lmtime) 
+	const qry = `INSERT INTO ac.userlogin (userid, username, useremail, userpassword, userstatus, emailverified, siteid, hostname, userstatlstupdt, octime, lmtime) 
 	VALUES ($1, $2, $3, $4, $5,$6,$7,$8,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);`
 
 	//uspass := ""
@@ -129,7 +130,7 @@ func RegisterUser(app *application.Application, w http.ResponseWriter, r *http.R
 	var myc dbtran.Resultset
 
 	stmts := []*dbtran.PipelineStmt{
-		dbtran.NewPipelineStmt("insert", qry, &myc, userinfo.UUID, userinfo.DisplayName, userinfo.Email, "", "A", userinfo.EmailVerified, userinfo.Siteid, ""),
+		dbtran.NewPipelineStmt("insert", qry, &myc, userinfo.UUID, userinfo.DisplayName, userinfo.Email, "", "A", userinfo.EmailVerified, userinfo.Siteid, userinfo.Hostname),
 	}
 	fmt.Println("calling tran")
 	_, err := dbtran.WithTransaction(ctx, dbtran.TranTypeNoTran, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {

@@ -10,7 +10,8 @@ type TblUserlogin struct {
 	Userstatus      pgtype.Varchar     `json:"userstatus"`
 	Emailverified   pgtype.Bool        `json:"emailverified"`
 	Siteid          pgtype.Varchar     `json:"siteid"`
-	Domainmapid     pgtype.Varchar     `json:"domainmapid"`
+	Hostname		pgtype.Text	     `json:"hostname"`
+	Companyid     pgtype.Varchar     `json:"companyid"`
 	Userstatlstupdt pgtype.Timestamptz `json:"userstatuslastupdate"`
 	Octime          pgtype.Timestamptz `json:"creattime"`
 	Lmtime          pgtype.Timestamptz `json:"lasmodifytime"`
@@ -30,3 +31,6 @@ type TblMytree struct {
 	Lmtime      pgtype.Timestamptz `json:"lasmodifytime"`
 	Open        pgtype.Bool        `json:"open"`
 }
+
+
+

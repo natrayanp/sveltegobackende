@@ -65,11 +65,6 @@ func get(acjson string) (*auth.Client, error) {
 func (a FirebaseClient) FireMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		fmt.Println("----------------pare host")
-		fmt.Println(r.Host)
-		fmt.Println(r.URL)
-		fmt.Println(r.URL.Host)
-		fmt.Println("----------------pare host")
 		bearerToken := a.tokenFromHeader(r)
 		if bearerToken == "" {
 			httperr.Unauthorised("empty-bearer-token", "", nil, w, r)
@@ -133,6 +128,7 @@ type User struct {
 	Disabled      bool
 	Token         *auth.Token
 	Session       string
+	Hostname		string
 	Siteid        string
 	Companyid     string
 }

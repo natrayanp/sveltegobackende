@@ -31,7 +31,14 @@ func main() {
 		}
 	}()
 
+	go func() {
+		if err := app.Que.StartWorkerPool(); err != nil {
+			//	logs.Error.Fatal(err.Error())
+		}
+	}()
+
 	exithandler.Init(func() {
+
 		if err := srv.Close(); err != nil {
 			//logs.Error.Println(err.Error())
 		}
