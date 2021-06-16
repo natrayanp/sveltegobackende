@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-"strings"
+	"strings"
 
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/sveltegobackend/pkg/application"
 	"github.com/sveltegobackend/pkg/db/dbtran"
+
 	//"github.com/sveltegobackend/pkg/errors/httperr"
 	"github.com/sveltegobackend/cmd/api/models"
 	"github.com/sveltegobackend/pkg/fireauth"
@@ -20,7 +21,7 @@ func ParseHeadMiddleware(app *application.Application) func(next http.Handler) h
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
-			org:= r.Header.Get("Origin")
+			org := r.Header.Get("Origin")
 			sess := r.Header.Get("session")
 			sid := r.Header.Get("siteid")
 
@@ -41,7 +42,7 @@ func ParseHeadMiddleware(app *application.Application) func(next http.Handler) h
 				dd.HttpRespond()
 				return
 			}
-			dd:=strings.SplitAfter(org, "://")
+			dd := strings.SplitAfter(org, "://")
 			//ss:=strings.Split(dd[1], ".")
 			fmt.Println(dd[1])
 
@@ -49,21 +50,16 @@ func ParseHeadMiddleware(app *application.Application) func(next http.Handler) h
 			userinfo.Session = sess
 			userinfo.Siteid = sid
 
-			const qry = `SELECT * FROM ac.userlogin WHERE
-				--domainmapid = (SELECT domainmapid FROM ac.userlogin WHERE userid = $1 AND siteid = $2)
+			const qry = `SELECT * FROM ac.userlogin WHERE				
 				userid = $1
 				AND siteid = $2
 				AND hostname = $3
 				AND userstatus = 'A'`
-			
-			type Cid struct {
-				Companyid string
-			}
-			//var myc []Cid
+
 			var myc []models.TblUserlogin
 
 			stmts := []*dbtran.PipelineStmt{
-				dbtran.NewPipelineStmt("select", qry, &myc, userinfo.UUID, userinfo.Siteid,userinfo.Hostname),
+				dbtran.NewPipelineStmt("select", qry, &myc, userinfo.UUID, userinfo.Siteid, userinfo.Hostname),
 				//dbtran.NewPipelineStmt("select", qry, &myc),
 				//dbtran.NewPipelineStmt("delete", qry, nil),
 			}
@@ -101,13 +97,13 @@ func ParseHeadMiddleware(app *application.Application) func(next http.Handler) h
 				fmt.Println("+++++++++++++++++++++res non select")
 			*/
 
-			if(len(myc) == 1) {
+			if len(myc) == 1 {
 				userinfo.Companyid = myc[0].Companyid.String
 			} else {
 				userinfo.Companyid = ""
 			}
 			fmt.Println(userinfo)
-			fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@userinfo@@@@@@@@@@@@@@@@@@")			
+			fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@userinfo@@@@@@@@@@@@@@@@@@")
 			ctx = context.WithValue(ctx, fireauth.GetUserCtxKey(), userinfo)
 			r = r.WithContext(ctx)
 			next.ServeHTTP(w, r)
@@ -164,4 +160,3 @@ func ParseHeadMiddleware1(next http.Handler, app application.Application) http.H
 
 }
 */
-

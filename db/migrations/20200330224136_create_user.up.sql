@@ -32,7 +32,8 @@ CREATE TABLE ac.userlogin (
     userstatus		           varchar(2) NOT NULL, --> (A- Active, B-Blocked, D-Deleted) 
     emailverified              boolean,
     siteid                     varchar(100) NOT NULL,
-    hostname    text NOT NULL UNIQUE,          
+    hostname    text NOT NULL,          
+    selecthostname    text UNIQUE,          
     companyid   varchar(100),
     userstatlstupdt	           timestamptz NOT NULL,    
     octime			           timestamptz NOT NULL,
@@ -102,19 +103,25 @@ CREATE TABLE ac.packs (
 );
 
 /*
-insert into ac.packs values ('PKS1','POS','POS','POS has all the POS functionalities','pack','null','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS2','POS Function','POS Function','Functions related to POS','module',ARRAY[‘PKS1’],'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS3','POS Reports','POS Reports','Reports related to POS','module',ARRAY[‘PKS1’],'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS4','POS Settings','POS Settings','Setting for POS module','module',ARRAY['PKS1’,’PKS6'],'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS5','POS Generic Settings','Generic Settings','Generic settings for POS','function',ARRAY['PKS4'],'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS6','Settings','Settings','Settings','pack','null','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS7','Entity Settings','Entity Configuration','This module has all the entity level settings','module',ARRAY['PKS6'],'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS8','companysettigs','Company','This has the functions for company set up','function',ARRAY['PKS7'],'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS9','branchsettings','Branch','This has the functions for Branch set up','function',ARRAY['PKS7'],'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS10','User Settings','User Config','This module has all the user level settings','module',ARRAY['PKS6'],'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS11','user role','Roles','This has the functions for user role set up','function',ARRAY['PKS10'],'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS12','User Settings','Users','This has the functions for user set up','function',ARRAY['PKS10'],'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS1','POS','POS','POS has all the POS functionalities','pack',ARRAY['NULL'],'','radio_button_checked','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS2','POS Function','POS Function','Functions related to POS','module',ARRAY['PKS1'],'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS3','POS Reports','POS Reports','Reports related to POS','module',ARRAY['PKS1'],'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS4','POS Settings','POS Settings','Setting for POS module','module',ARRAY['PKS1’,’PKS6'],'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS5','POS Generic Settings','Generic Settings','Generic settings for POS','function',ARRAY['PKS4'],'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS6','Settings','Settings','Settings','pack',ARRAY['NULL'],'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS7','Entity Settings','Entity Configuration','This module has all the entity level settings','module',ARRAY['PKS6'],'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS8','companysettigs','Company','This has the functions for company set up','function',ARRAY['PKS7'],'./settings/companysettings','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS9','branchsettings','Branch','This has the functions for Branch set up','function',ARRAY['PKS7'],'./settings/branchsettings','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS10','User Settings','User Config','This module has all the user level settings','module',ARRAY['PKS6'],'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS11','user role','Roles','This has the functions for user role set up','function',ARRAY['PKS10'],'./settings/userroles','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS12','User Settings','Users','This has the functions for user set up','function',ARRAY['PKS10'],'./settings/usersettings','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+
+insert into ac.packs values ('PKS13','Pricing','Pricing','Pricing plans avaialble','pack',ARRAY['NULL'],'./landing/pricing','fa-hand-holding-heart','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS14','Pricing','Pricing','Pricing plans avaialble','module',ARRAY['PKS13'],'','','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS15','Pricing','Pricing','Pricing plans avaialble','function',ARRAY['PKS14'],'','','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 */
+
+
 
 
 CREATE SEQUENCE companypacksid_seq START 1;
@@ -152,6 +159,9 @@ CREATE TABLE ac.plan (
     lmtime			      timestamptz NOT NULL
 );
 
+--insert into ac.plan values ('PLANID1','Free','Free','Free plan available for all','SGD',0,0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+
+
 -- SITE Plan PACKs  (This is the plan card)
 CREATE TABLE ac.planpacks (
     id                    varchar(20) NOT NULL CONSTRAINT planpackid PRIMARY KEY,    
@@ -166,6 +176,12 @@ CREATE TABLE ac.planpacks (
     lmtime			      timestamptz NOT NULL
 );
 
+
+/*
+insert into ac.planpacks values ('PACKID1','PKS8','PLANID1',10,10,10,90,'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.planpacks values ('PACKID2','PKS9','PLANID1',10,10,10,90,'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.planpacks values ('PACKID3','PKS14','PLANID1',10,10,10,90,'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+*/
 
 
 --RoleMaster
@@ -223,6 +239,10 @@ CREATE TABLE ac.roledetails (
 /*
 insert into ac.Roledetails values ('ROLDET1','ROLMA1','PKS8','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 insert into ac.Roledetails values ('ROLDET2','ROLMA1','PKS9','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.Roledetails values ('ROLDET3','ROLMA1','PKS14','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+
+insert into ac.Roledetails values ('ROLDET1','ROLMA1','PKS8','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.Roledetails values ('ROLDET2','ROLMA1','PKS9','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 insert into ac.Roledetails values ('ROLDET3','ROLMA2','PKS8','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 insert into ac.Roledetails values ('ROLDET4','ROLMA2','PKS9','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 insert into ac.Roledetails values ('ROLDET5','ROLMA2','PKS11','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
@@ -266,7 +286,7 @@ CREATE TABLE ac.userrole (
 
 ---
 CREATE TABLE ac.company (
-        companyId               varchar(100) NOT NULL UNIQUE,        
+        Id                      varchar(100) NOT NULL UNIQUE,        
         companyName             text NOT NULL,
         companyShortName        varchar(100) NOT NULL,
         companyCategory         varchar(100) NOT NULL,
@@ -291,7 +311,9 @@ CREATE TABLE ac.company (
         companyFiscalYear       integer NOT NULL,
         companyTimeZone         text,
         companyBaseCurency      varchar(3) NOT NULL,
-        companysParent          text,        
+        companysParent          text,     
+        companyid               varchar(30) NOT NULL,
+        status                  Varchar(3) NOT NULL,  --> D -Delete / A - Active
         isdefault               varchar(3) NOT NULL,  --> Y/N
         lmuserid                varchar(100) NOT NULL,                  
         octime			        timestamptz NOT NULL,

@@ -1,6 +1,7 @@
 package login
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -23,7 +24,12 @@ func userLogin(app *application.Application) http.HandlerFunc {
 		//var userinfo fireauth.User
 		var data string
 		var myc []models.TblMytree
+		var cppks *[]models.TblCompanyPacks
+		var cmpy *[]models.TblCompany
 		havdom := false
+		havpacks := false
+		havcpydetail := false
+		gotolanding := true
 
 		isregis, errs := commonfuncs.CheckUserRegistered(app, w, r)
 
@@ -36,7 +42,7 @@ func userLogin(app *application.Application) http.HandlerFunc {
 
 		if !ctxfetchok {
 			dd := httpresponse.SlugResponse{
-				Err:        fmt.Errorf("User Context Fetch error"),
+				Err:        errors.New("User Context Fetch error"),
 				ErrType:    httpresponse.ErrorTypeContexFetchFail,
 				RespWriter: w,
 				Request:    r,
@@ -53,17 +59,47 @@ func userLogin(app *application.Application) http.HandlerFunc {
 		if isregis {
 
 			// Check for domain registration
-
 			if userinfo.Companyid != "" {
 				havdom = true
 
 				if errs := commonfuncs.SessionOps(app, w, r); errs != nil {
 					return
 				}
-				data = ""
 
-				//TODO fecth menu tree
-				myc = []models.TblMytree{}
+				//TODO Check for COMPANY PACKS... if none NAV to pricing page
+
+				if cppks, errs = commonfuncs.PackageCheck(app, w, r); errs != nil {
+					return
+				}
+
+				if len(*cppks) == 1 {
+					havpacks = true
+				}
+
+				//TODO Check for COMPANY DETAILS CAPTURED... if none NAV to comapny details page
+
+				if cmpy, errs = commonfuncs.CompanyCheck(app, w, r); errs != nil {
+					return
+				}
+
+				if len(*cmpy) == 1 {
+					havcpydetail = true
+
+				}
+
+				//TODO Check for BRANCH DETAILS CAPTURED... if none NAV to branch details page
+
+				//TODO if all the above check satisfied, nav to landing page
+				if !(havpacks && havcpydetail) {
+					gotolanding = false
+				}
+
+				if !gotolanding {
+					myc = []models.TblMytree{}
+				} else {
+					//TODO fecth menu tree
+					myc = []models.TblMytree{}
+				}
 
 			} else {
 
@@ -78,7 +114,7 @@ func userLogin(app *application.Application) http.HandlerFunc {
 		} else {
 			//User registration Start
 			fmt.Println("calling regis")
-
+			gotolanding = false
 			data = "Not a Registered user. Register to continue."
 			myc = []models.TblMytree{}
 			//User registration End
@@ -99,7 +135,8 @@ func userLogin(app *application.Application) http.HandlerFunc {
 
 		}
 
-		ssd := map[string]interface{}{"message": data, "isregistered": isregis, "havedomain": havdom, "menu": &myc}
+		data = "User registration successful."
+		ssd := map[string]interface{}{"message": data, "isregistered": isregis, "havedomain": havdom, "havepacks": havpacks, "havecompany": havcpydetail, "menu": &myc}
 		//&nat{"nat1", "nat2"},
 		fmt.Println("registration completed ss sent")
 		ss := httpresponse.SlugResponse{

@@ -1,9 +1,10 @@
 package login
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
-    "encoding/json"
+	"strings"
 
 	"github.com/sveltegobackend/cmd/api/commonfuncs"
 	"github.com/sveltegobackend/cmd/api/models"
@@ -20,15 +21,14 @@ func registerdomain(app *application.Application) http.HandlerFunc {
 		ctx := r.Context()
 
 		var data string
-		var myc []models.TblMytree
+		//var myc []models.TblMytree
 		var p models.DomainRegis
 		fmt.Println(r.Body)
-		isregis:=false
-		havdom:=false
-		
+		//isregis := false
+		//havdom := false
+
 		err := json.NewDecoder(r.Body).Decode(&p)
 		fmt.Println(p)
-		
 
 		if err != nil {
 			return
@@ -51,34 +51,34 @@ func registerdomain(app *application.Application) http.HandlerFunc {
 			//dd.HttpRespondWithError()
 			return
 		}
+
 		var hostname string
 		fmt.Println(p.Registype)
 		fmt.Println(p.Registype == "subdomain")
-		if (p.Registype == "subdomain") {
+		if p.Registype == "subdomain" {
 			// Check for domain registration
-			hostname =p.Siteid+"."+userinfo.Hostname
-			fmt.Println("calling regis: ",hostname)
+			hostname = strings.ToLower(p.Siteid) + "." + userinfo.Hostname
+			fmt.Println("calling regis: ", hostname)
 		} else {
-			//User registration Start			
-			hostname =p.Siteid
-			fmt.Println("calling regis else: ",hostname)
+			//User registration Start
+			hostname = strings.ToLower(p.Siteid)
+			fmt.Println("calling regis else: ", hostname)
 		}
 
-		commonfuncs.DomRegis(app,w,r,hostname)
+		if errs := commonfuncs.DomRegis(app, w, r, hostname); errs != nil {
+			return
+		}
 
-
-
-
-
-		ssd := map[string]interface{}{"message": data, "isregistered": isregis, "havedomain": havdom, "menu": &myc}
+		data = "Your domain registration successful. Login with your url - " + hostname
+		ssd := map[string]interface{}{"message": data}
 		//&nat{"nat1", "nat2"},
-		fmt.Println("registration completed ss sent")
+		fmt.Println("domain registration completed ss sent")
 		ss := httpresponse.SlugResponse{
 			RespWriter: w,
 			Request:    r,
 			Data:       ssd,
 			Status:     "SUCCESS",
-			SlugCode:   "AUTH-RES",
+			SlugCode:   "DOMAIN-REG",
 			LogMsg:     "testing",
 		}
 
