@@ -23,13 +23,14 @@ func userLogin(app *application.Application) http.HandlerFunc {
 		//var ctxfetchok bool
 		//var userinfo fireauth.User
 		var data string
-		var myc []models.TblMytree
+		var myc *[]models.TblMytree
 		var cppks *[]models.TblCompanyPacks
 		var cmpy *[]models.TblCompany
+		nxtaction := "DOMAINREGIS"
 		havdom := false
 		havpacks := false
 		havcpydetail := false
-		gotolanding := true
+		//gotolanding := true
 
 		isregis, errs := commonfuncs.CheckUserRegistered(app, w, r)
 
@@ -61,6 +62,7 @@ func userLogin(app *application.Application) http.HandlerFunc {
 			// Check for domain registration
 			if userinfo.Companyid != "" {
 				havdom = true
+				nxtaction = "LANDING"
 
 				if errs := commonfuncs.SessionOps(app, w, r); errs != nil {
 					return
@@ -74,6 +76,8 @@ func userLogin(app *application.Application) http.HandlerFunc {
 
 				if len(*cppks) == 1 {
 					havpacks = true
+				} else {
+					nxtaction = "ADDPACKS"
 				}
 
 				//TODO Check for COMPANY DETAILS CAPTURED... if none NAV to comapny details page
@@ -84,28 +88,29 @@ func userLogin(app *application.Application) http.HandlerFunc {
 
 				if len(*cmpy) == 1 {
 					havcpydetail = true
-
+				} else {
+					nxtaction = "ADDCOMPANY"
 				}
 
 				//TODO Check for BRANCH DETAILS CAPTURED... if none NAV to branch details page
 
 				//TODO if all the above check satisfied, nav to landing page
-				if !(havpacks && havcpydetail) {
-					gotolanding = false
-				}
-
-				if !gotolanding {
-					myc = []models.TblMytree{}
-				} else {
+				nxtaction = "LANDING"
+				if nxtaction == "LANDING" {
 					//TODO fecth menu tree
-					myc = []models.TblMytree{}
+					if myc, errs = commonfuncs.PackageFetch(app, w, r); errs != nil {
+						return
+					}
+					//myc = []models.TblMytree{}
+				} else {
+					myc = &[]models.TblMytree{}
 				}
 
 			} else {
 
 				fmt.Println("else loop in login tblmytre")
 				data = "Subdomain not registered"
-				myc = []models.TblMytree{}
+				myc = &[]models.TblMytree{}
 
 			}
 
@@ -114,9 +119,9 @@ func userLogin(app *application.Application) http.HandlerFunc {
 		} else {
 			//User registration Start
 			fmt.Println("calling regis")
-			gotolanding = false
+			//gotolanding = false
 			data = "Not a Registered user. Register to continue."
-			myc = []models.TblMytree{}
+			myc = &[]models.TblMytree{}
 			//User registration End
 
 			cc := httpresponse.SlugResponse{
@@ -134,9 +139,10 @@ func userLogin(app *application.Application) http.HandlerFunc {
 			return
 
 		}
-
+		fmt.Println(isregis, havdom, havpacks, havcpydetail)
 		data = "User registration successful."
-		ssd := map[string]interface{}{"message": data, "isregistered": isregis, "havedomain": havdom, "havepacks": havpacks, "havecompany": havcpydetail, "menu": &myc}
+		//ssd := map[string]interface{}{"message": data, "isregistered": isregis, "havedomain": havdom, "havepacks": havpacks, "havecompany": havcpydetail, "menu": &myc}
+		ssd := map[string]interface{}{"message": data, "nextaction": nxtaction, "menu": myc}
 		//&nat{"nat1", "nat2"},
 		fmt.Println("registration completed ss sent")
 		ss := httpresponse.SlugResponse{

@@ -8,7 +8,7 @@ import (
 	"github.com/sveltegobackend/pkg/httpresponse"
 )
 
-func fetchUserinfoFromcontext(w http.ResponseWriter, r *http.Request, slugcode string) (*fireauth.User, error) {
+func FetchUserinfoFromcontext(w http.ResponseWriter, r *http.Request, slugcode string) (*fireauth.User, error) {
 
 	ctx := r.Context()
 	userinfo, ok := ctx.Value(fireauth.UserContextKey).(fireauth.User)

@@ -21,10 +21,10 @@ type TblUserlogin struct {
 type TblMytree struct {
 	Id          pgtype.Varchar     `json:"id"`
 	Name        pgtype.Varchar     `json:"name"`
-	DisplayName pgtype.Varchar     `json:"displayname"`
+	Displayname pgtype.Varchar     `json:"displayname"`
 	Description pgtype.Varchar     `json:"description"`
 	Type        pgtype.Varchar     `json:"type"`
-	Paren       pgtype.Text        `json:"parent"`
+	Parent      pgtype.Text        `json:"parent"`
 	Link        pgtype.Varchar     `json:"link"`
 	Icon        pgtype.Varchar     `json:"icon"`
 	Status      pgtype.Varchar     `json:"status"`
@@ -78,4 +78,19 @@ type TblCompany struct {
 	Lmuserid           pgtype.Varchar     `json:"lmuserid"`
 	Octime             pgtype.Timestamptz `json:"octime"`
 	Lmtime             pgtype.Timestamptz `json:"lmtime"`
+}
+
+type TblPacks struct {
+	Id          pgtype.Varchar     `json:"id"`
+	Name        pgtype.Varchar     `json:"name"`
+	Displayname pgtype.Varchar     `json:"displayname"`
+	Description pgtype.Varchar     `json:"description"`
+	Type        pgtype.Varchar     `json:"type"`
+	Parent      pgtype.TextArray   `json:"parent"`
+	Link        pgtype.Varchar     `json:"link"`
+	Icon        pgtype.Varchar     `json:"icon"`
+	Status      pgtype.Varchar     `json:"status"`
+	Octime      pgtype.Timestamptz `json:"octime"`
+	Lmtime      pgtype.Timestamptz `json:"lmtime"`
+	Open        pgtype.Bool        `json:"open"`
 }

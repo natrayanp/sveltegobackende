@@ -22,13 +22,13 @@ func CompanyCheck(app *application.Application, w http.ResponseWriter, r *http.R
 	ctx := r.Context()
 	//userinfo, ok := ctx.Value(fireauth.UserContextKey).(fireauth.User)
 
-	userinfo, errs := fetchUserinfoFromcontext(w, r, "COMPANYCHK-CHKCTX")
+	userinfo, errs := FetchUserinfoFromcontext(w, r, "COMPANYCHK-CHKCTX")
 	if errs != nil {
 		return &[]models.TblCompany{}, errs
 	}
 
 	const qry = `SELECT * FROM ac.company 
-					WHERE compnayid = $1
+					WHERE id = $1
 					AND status in ('A')`
 
 	var myc []models.TblCompany

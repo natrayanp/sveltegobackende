@@ -229,9 +229,9 @@ CREATE TABLE ac.roledetails (
     id                    varchar(20) NOT NULL CONSTRAINT roledetailsid PRIMARY KEY, 
     rolemasterid          varchar(100) NOT NULL,    
     packfuncid            varchar(20) NOT NULL,  --> This can have only function type from pack table
-    packid            varchar(30) NOT NULL,
+    planid               varchar(30) NOT NULL,
     companyid             varchar(30) NOT NULL,
-    branchid              varchar(30) NOT NULL,    
+    branchid              varchar(30) NOT NULL,                    
     octime			      timestamptz NOT NULL,
     lmtime			      timestamptz NOT NULL
 );

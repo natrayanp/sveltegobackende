@@ -25,7 +25,7 @@ func DomRegis(app *application.Application, w http.ResponseWriter, r *http.Reque
 	ctx := r.Context()
 	//userinfo, ok := ctx.Value(fireauth.UserContextKey).(fireauth.User)
 
-	userinfo, errs := fetchUserinfoFromcontext(w, r, "SESSION-CHKCTX")
+	userinfo, errs := FetchUserinfoFromcontext(w, r, "SESSION-CHKCTX")
 	if errs != nil {
 		return errs
 	}
