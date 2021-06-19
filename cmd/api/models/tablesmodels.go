@@ -36,9 +36,10 @@ type TblMytree struct {
 type TblCompanyPacks struct {
 	Id            pgtype.Text        `json:"id"`
 	Companyid     pgtype.Varchar     `json:"companyid"`
+	Planid        pgtype.Varchar     `json:"planid"`
 	Packid        pgtype.Varchar     `json:"packid"`
-	Startdate     pgtype.Timestamptz `json:"startdate"`
-	Expirydate    pgtype.Timestamptz `json:"expirydate"`
+	Startdate     pgtype.Date        `json:"startdate"`
+	Expirydate    pgtype.Date        `json:"expirydate"`
 	Userrolelimit pgtype.Numeric     `json:"userrolelimit"`
 	Userlimit     pgtype.Numeric     `json:"userlimit"`
 	Branchlimit   pgtype.Numeric     `json:"branchlimit"`

@@ -130,9 +130,10 @@ CREATE SEQUENCE companypacksid_seq START 1;
 CREATE TABLE ac.companypacks (
     id                    text NOT NULL CONSTRAINT sitepackid PRIMARY KEY DEFAULT 'CPCKID'||nextval('companypacksid_seq'::regclass)::text,
     companyid             varchar(100) NOT NULL,
+    planid                    varchar(20) NOT NULL ,
     packid                varchar(20) NOT NULL,  --> This can have only PACK type from pack table
-    startdate             timestamptz NOT NULL,
-    expirydate            timestamptz NOT NULL,
+    startdate             date NOT NULL,
+    expirydate            date NOT NULL,
     userrolelimit         numeric(10),
     userlimit             numeric(10),  
     branchlimit           numeric(10),
@@ -170,7 +171,7 @@ CREATE TABLE ac.planpacks (
     userrolelimit         numeric(10),
     userlimit             numeric(10),  
     branchlimit           numeric(10),
-    durationmonth         numeric(10),
+    durationdays         integer,
     status                varchar(3),
     octime			      timestamptz NOT NULL,
     lmtime			      timestamptz NOT NULL

@@ -14,3 +14,7 @@ type QueConfig struct {
 	WorkerCount   int64
 	QueName       string
 }
+
+type PackSelect struct {
+	Planid string
+}

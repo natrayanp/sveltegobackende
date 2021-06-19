@@ -14,7 +14,7 @@ import (
 	"github.com/sveltegobackend/pkg/httpresponse"
 )
 
-func PackageCheck(app *application.Application, w http.ResponseWriter, r *http.Request) (*[]models.TblCompanyPacks, error) {
+func GetPacks(app *application.Application, w http.ResponseWriter, r *http.Request) (*[]models.TblCompanyPacks, error) {
 	fmt.Println("----------------- PACKAGE CHECK START -------------------")
 
 	var data string
@@ -29,21 +29,22 @@ func PackageCheck(app *application.Application, w http.ResponseWriter, r *http.R
 
 	const qry = `SELECT * FROM ac.companypacks 
 					WHERE companyid = $1
+					AND planid = $2
 					AND status in ('A')
-					AND startdate >=  CURRENT_TIMESTAMP
-					AND expirydate <= CURRENT_TIMESTAMP`
+					AND startdate <=  CURRENT_DATE
+					AND expirydate >= CURRENT_DATE`
 
 	var myc []models.TblCompanyPacks
 
-	stmts1 := []*dbtran.PipelineStmt{
-		dbtran.NewPipelineStmt("select", qry, &myc, userinfo.Companyid),
+	stmts := []*dbtran.PipelineStmt{
+		dbtran.NewPipelineStmt("select", qry, &myc, userinfo.Companyid, "PLANID1"),
 	}
 
 	_, err := dbtran.WithTransaction(ctx, dbtran.TranTypeFullSet, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {
-		err := dbtran.RunPipeline(ctx, typ, db, ttx, stmts1...)
+		err := dbtran.RunPipeline(ctx, typ, db, ttx, stmts...)
 		return err
 	})
-
+	fmt.Println("+++++++++++++++++++++$$$end9")
 	if err != nil {
 		//https://github.com/jackc/pgx/issues/474
 		var pgErr *pgconn.PgError
@@ -72,7 +73,7 @@ func PackageCheck(app *application.Application, w http.ResponseWriter, r *http.R
 }
 
 func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.Request) (*[]models.TblMytree, error) {
-	fmt.Println("----------------- PACKAGE CHECK START -------------------")
+	fmt.Println("----------------- PACKAGE Fetch START -------------------")
 
 	var data string
 
@@ -133,7 +134,7 @@ func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.R
 	fmt.Println("---------------$$$end6")
 	fmt.Println(myc)
 	fmt.Println("---------------$$$end7")
-	fmt.Println("----------------- PACKAGE CHECK END -------------------")
+	fmt.Println("----------------- PACKAGE FETCH END -------------------")
 
 	return &myc, nil
 }

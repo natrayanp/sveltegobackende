@@ -70,14 +70,15 @@ func userLogin(app *application.Application) http.HandlerFunc {
 
 				//TODO Check for COMPANY PACKS... if none NAV to pricing page
 
-				if cppks, errs = commonfuncs.PackageCheck(app, w, r); errs != nil {
+				if cppks, errs = commonfuncs.GetPacks(app, w, r); errs != nil {
 					return
 				}
 
-				if len(*cppks) == 1 {
+				if len(*cppks) > 0 {
 					havpacks = true
 				} else {
 					nxtaction = "ADDPACKS"
+					goto NAVCHKEND
 				}
 
 				//TODO Check for COMPANY DETAILS CAPTURED... if none NAV to comapny details page
@@ -90,12 +91,14 @@ func userLogin(app *application.Application) http.HandlerFunc {
 					havcpydetail = true
 				} else {
 					nxtaction = "ADDCOMPANY"
+					goto NAVCHKEND
 				}
 
 				//TODO Check for BRANCH DETAILS CAPTURED... if none NAV to branch details page
 
 				//TODO if all the above check satisfied, nav to landing page
-				nxtaction = "LANDING"
+				//nxtaction = "LANDING"
+			NAVCHKEND:
 				if nxtaction == "LANDING" {
 					//TODO fecth menu tree
 					if myc, errs = commonfuncs.PackageFetch(app, w, r); errs != nil {

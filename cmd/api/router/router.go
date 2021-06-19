@@ -119,6 +119,7 @@ func authorisedRouter(app *application.Application) chi.Router {
 	r.Post("/regisdomain", login.DoRegisDomain(app))
 	r.Get("/users/:id", getuser.Do(app))
 	r.Post("/users", createuser.Do(app))
+	r.Post("/regisplan", login.DoPacks(app))
 
 	/*
 
@@ -136,4 +137,3 @@ func authorisedRouter(app *application.Application) chi.Router {
 
 	return r
 }
-
