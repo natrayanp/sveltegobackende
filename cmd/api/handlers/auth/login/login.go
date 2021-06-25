@@ -97,17 +97,40 @@ func userLogin(app *application.Application) http.HandlerFunc {
 				//TODO Check for BRANCH DETAILS CAPTURED... if none NAV to branch details page
 
 				//TODO if all the above check satisfied, nav to landing page
-				//nxtaction = "LANDING"
+
 			NAVCHKEND:
-				if nxtaction == "LANDING" {
-					//TODO fecth menu tree
-					if myc, errs = commonfuncs.PackageFetch(app, w, r); errs != nil {
+				nxtaction = "LANDING"
+				switch nxtaction {
+				case "LANDING":
+
+					if myc, errs = commonfuncs.PackageFetch(app, w, r, []string{"ALL"}); errs != nil {
 						return
 					}
-					//myc = []models.TblMytree{}
-				} else {
+				case "ADDCOMPANY":
+					if myc, errs = commonfuncs.PackageFetch(app, w, r, []string{"PKS8"}); errs != nil {
+						return
+					}
+				case "ADDBRANCH":
+					if myc, errs = commonfuncs.PackageFetch(app, w, r, []string{"PKS8", "PKS9"}); errs != nil {
+						return
+					}
+				default:
 					myc = &[]models.TblMytree{}
 				}
+				/*
+					if (nxtaction != "ADDPACKS") || (nxtaction != "ADDCOMPANY") {
+						//TODO fecth menu tree
+						if myc, errs = commonfuncs.PackageFetch(app, w, r, "ALL"); errs != nil {
+							return
+						}
+						//myc = []models.TblMytree{}
+					} else if nxtaction == "ADDCOMPANY" {
+						if myc, errs = commonfuncs.PackageFetch(app, w, r, "PKS7"); errs != nil {
+							return
+						}
+					} else {
+						myc = &[]models.TblMytree{}
+					}*/
 
 			} else {
 

@@ -167,7 +167,7 @@ func (ps *PipelineStmt) Selects(ctx context.Context, typ TranType, db *pgxpool.P
 	if err != nil {
 		return err
 	}
-	fmt.Println("+++++++++++++++++++++$$$")
+	fmt.Println("+++++++++++++++++++++$$$1")
 	err = pgxscan.ScanAll(ps.Resultstruct, rows)
 	fmt.Println(ps.Resultstruct)
 	fmt.Println(err)
@@ -175,7 +175,7 @@ func (ps *PipelineStmt) Selects(ctx context.Context, typ TranType, db *pgxpool.P
 	//fmt.Println(ps.reultstruct[0])
 	//fmt.Println(ps.reultstruct[0]["companyid"])
 	//fmt.Println(reflect.TypeOf(ps.reultstruct[0]["companyid"]))
-	fmt.Println("+++++++++++++++++++++$$$")
+	fmt.Println("+++++++++++++++++++++$$$2")
 	if err != nil {
 		return err
 	}
