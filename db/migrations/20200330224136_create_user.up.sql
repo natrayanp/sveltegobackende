@@ -285,6 +285,21 @@ CREATE TABLE ac.userrole (
 );
 
 
+CREATE SEQUENCE refid_seq START 1;
+
+
+CREATE TABLE ac.refdata (
+    id                     text NOT NULL CONSTRAINT refid PRIMARY KEY DEFAULT 'REFID'||nextval('refid_seq'::regclass)::text,
+    refcode               varchar(100) NOT NULL,
+    refvalcat              varchar(100) NOT NULL,
+    refvalue               varchar(100) NOT NULL,
+    description           varchar NOT NULL,
+    parent                varchar(20)[],
+    status                varchar(3),
+    octime			      timestamptz NOT NULL,
+    lmtime			      timestamptz NOT NULL
+);
+
 
 ---
 CREATE TABLE ac.company (

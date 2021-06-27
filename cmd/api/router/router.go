@@ -8,6 +8,8 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/sveltegobackend/cmd/api/handlers/auth/login"
+	"github.com/sveltegobackend/cmd/api/handlers/entity/company"
+
 	"github.com/sveltegobackend/cmd/api/handlers/auth/signup"
 	"github.com/sveltegobackend/cmd/api/handlers/createuser"
 	"github.com/sveltegobackend/cmd/api/handlers/getuser"
@@ -120,6 +122,8 @@ func authorisedRouter(app *application.Application) chi.Router {
 	r.Get("/users/:id", getuser.Do(app))
 	r.Post("/users", createuser.Do(app))
 	r.Post("/regisplan", login.DoPacks(app))
+	r.Get("/getcompany", company.DoFetch(app))
+	r.Post("/savecompany", company.DoSave(app))
 
 	/*
 

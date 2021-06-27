@@ -83,18 +83,10 @@ type TblCompany struct {
 	Lmtime             pgtype.Timestamptz `json:"lmtime"`
 }
 
-type TblPacks struct {
-	Id          pgtype.Varchar     `json:"id"`
-	Name        pgtype.Varchar     `json:"name"`
-	Displayname pgtype.Varchar     `json:"displayname"`
-	Description pgtype.Varchar     `json:"description"`
-	Type        pgtype.Varchar     `json:"type"`
-	Parent      pgtype.TextArray   `json:"parent"`
-	Sortorder   pgtype.Int2        `json:"sortorder"`
-	Link        pgtype.Varchar     `json:"link"`
-	Icon        pgtype.Varchar     `json:"icon"`
-	Status      pgtype.Varchar     `json:"status"`
-	Octime      pgtype.Timestamptz `json:"octime"`
-	Lmtime      pgtype.Timestamptz `json:"lmtime"`
-	Open        pgtype.Bool        `json:"open"`
+type TblRefdata struct {
+	Id        pgtype.Text      `json:"id"`
+	Refvalcat pgtype.Varchar   `json:"refvalcat"`
+	Refvalue  pgtype.Varchar   `json:"refvalue"`
+	Parent    pgtype.TextArray `json:"parent"`
+	Submenu   []*TblRefdata    `json:"submenu"`
 }
