@@ -299,8 +299,9 @@ CREATE TABLE ac.refdata (
     octime			      timestamptz NOT NULL,
     lmtime			      timestamptz NOT NULL
 );
-
-
+/*
+INSERT INTO ac.refdata values (DEFAULT,'industype','industype','Hotel','industry type of the company',ARRAY[NULL],'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+*/
 ---
 CREATE TABLE ac.company (
         Id                      varchar(100) NOT NULL UNIQUE,        

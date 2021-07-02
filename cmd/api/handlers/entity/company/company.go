@@ -17,27 +17,50 @@ func fetchCompany(app *application.Application) http.HandlerFunc {
 		fmt.Println("-------------------\n fetchCompany Start \n-------------------")
 
 		var cmpy *[]models.TblCompany
+		var cmpycp []models.TblCompany
 		havcpydetail := false
 		var errs error
+		var status string
 
 		if cmpy, errs = commonfuncs.CompanyCheck(app, w, r); errs != nil {
 			return
 		}
+		cmpycp = *cmpy
 
 		if len(*cmpy) == 1 {
 			havcpydetail = true
+			status = "SUCCESS"
 		} else {
 			havcpydetail = false
-			cmpy = &[]models.TblCompany{}
+			status = "FAILURE"
+			cmpycp = []models.TblCompany{}
 		}
 
-		//data = "Company Fetch successful"
-		lgmsg := "Company fetch successful.  But havecpy detail? = " + strconv.FormatBool(havcpydetail)
+		dd := []models.RefDatReq{
+			{Reftype: "group", Refname: "company"},
+		}
+
+		ddf := models.RefDatReqFinal{
+			Refs: dd,
+		}
+
+		fmt.Println("-------------------\n fetchCompany Start 1 \n-------------------")
+
+		if err := commonfuncs.RefDataFetch1(app, w, r, &ddf); err != nil {
+			return
+		}
+
+		fmt.Println(ddf.RefResult)
+
+		fmt.Println("-------------------\n fetchCompany Start 2 \n-------------------")
+
+		lgmsg := "Company Fetch successful.  But havecpy detail? = " + strconv.FormatBool(havcpydetail)
+		ssd := map[string]interface{}{"message": lgmsg, "company": cmpycp, "refdata": ddf.RefResult}
 		cc := httpresponse.SlugResponse{
 			RespWriter: w,
 			Request:    r,
-			Data:       cmpy,
-			Status:     "SUCCESS",
+			Data:       ssd,
+			Status:     status,
 			SlugCode:   "COMAPNY-FETCH",
 			LogMsg:     lgmsg,
 		}
