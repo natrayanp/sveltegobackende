@@ -141,8 +141,8 @@ func createDataTree1(mnodes *[]models.TblRefdata) {
 	fmt.Println("---------------$$$end6a5")
 }
 
-func refIndusType(app *application.Application, w http.ResponseWriter, r *http.Request) (*[]models.TblRefdata, error) {
-	fmt.Println("----------------- refCountry Fetch START -------------------")
+func refGenericType(app *application.Application, w http.ResponseWriter, r *http.Request, refcode string) (*[]models.TblRefdata, error) {
+	fmt.Println("----------------- refGenericType Fetch START -------------------")
 
 	var data string
 
@@ -152,10 +152,10 @@ func refIndusType(app *application.Application, w http.ResponseWriter, r *http.R
 	var myc []models.TblRefdata
 	var stmts []*dbtran.PipelineStmt
 
-	qry = `SELECT id,refvalcat,refvalue,parent FROM ac.refdata WHERE refcode = 'industype' ORDER BY refvalcat,refvalue;`
+	qry = `SELECT id,refvalcat,refvalue,parent FROM ac.refdata WHERE refcode = $1 ORDER BY refvalcat,refvalue;`
 
 	stmts = []*dbtran.PipelineStmt{
-		dbtran.NewPipelineStmt("select", qry, &myc),
+		dbtran.NewPipelineStmt("select", qry, &myc, refcode),
 	}
 
 	_, err := dbtran.WithTransaction(ctx, dbtran.TranTypeFullSet, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {
@@ -185,6 +185,12 @@ func refIndusType(app *application.Application, w http.ResponseWriter, r *http.R
 		}
 		dd.HttpRespond()
 		return &[]models.TblRefdata{}, err
+	}
+
+	fmt.Println("my length: ", len(myc))
+
+	if len(myc) == 0 {
+		myc = []models.TblRefdata{}
 	}
 
 	return &myc, nil
@@ -217,9 +223,9 @@ func RefDataFetch1(app *application.Application, w http.ResponseWriter, r *http.
 				m["country"] = ss
 				fmt.Println(m)
 
-			case "industype":
-				ss, _ := refIndusType(app, w, r)
-				m["industype"] = ss
+			case "industype", "compcat":
+				ss, _ := refGenericType(app, w, r, t)
+				m[t] = ss
 			}
 		}
 
@@ -235,7 +241,7 @@ func getRefIndividualItems(group string) []string {
 
 	switch group {
 	case "company":
-		return []string{"country", "industype"}
+		return []string{"country", "industype", "compcat"}
 	default:
 		return []string{}
 	}

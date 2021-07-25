@@ -51,32 +51,32 @@ type TblCompanyPacks struct {
 }
 
 type TblCompany struct {
-	CompanyId          pgtype.Varchar     `json:"companyId"`
-	CompanyName        pgtype.Text        `json:"companyName"`
-	CompanyShortName   pgtype.Varchar     `json:"companyShortName"`
-	CompanyCategory    pgtype.Varchar     `json:"companyCategory"`
-	CompanyStatus      pgtype.Varchar     `json:"companyStatus"`
-	CompanyDescription pgtype.Text        `json:"companyDescription"`
-	CompanyImageUrl    pgtype.Text        `json:"companyImageUrl"`
-	CompanyLogo        pgtype.Text        `json:"companyLogo"`
-	CompanyIndustry    pgtype.Varchar     `json:"companyIndustry"`
-	CompanyTaxID       pgtype.Varchar     `json:"companyTaxID"`
-	CompanyAddLine1    pgtype.Varchar     `json:"companyAddLine1"`
-	CompanyAddLine2    pgtype.Varchar     `json:"companyAddLine2"`
-	CompanyCity        pgtype.Varchar     `json:"companyCity"`
-	CompanyState       pgtype.Varchar     `json:"companyState"`
-	CompanyCountry     pgtype.Varchar     `json:"companyCountry"`
-	CompanyPinCode     pgtype.Numeric     `json:"companyPinCode"`
-	CompanyPhone       pgtype.Text        `json:"companyPhone"`
-	CompanyFax         pgtype.Text        `json:"companyFax"`
-	CompanyMobile      pgtype.Text        `json:"companyMobile"`
-	CompanyWebsite     pgtype.Text        `json:"companyWebsite"`
-	CompanyEmail       pgtype.Text        `json:"companyEmail"`
-	CompanyStartDate   pgtype.Date        `json:"companyStartDate"`
-	CompanyFiscalYear  pgtype.Numeric     `json:"companyFiscalYear"`
-	CompanyTimeZone    pgtype.Text        `json:"companyTimeZone"`
-	CompanyBaseCurency pgtype.Varchar     `json:"companyBaseCurency"`
-	CompanysParent     pgtype.Text        `json:"companysParent"`
+	Companyid          pgtype.Varchar     `json:"companyId"`
+	Companyname        pgtype.Text        `json:"companyName"`
+	Companyshortname   pgtype.Varchar     `json:"companyShortName"`
+	Companycategory    pgtype.Varchar     `json:"companyCategory"`
+	Companystatus      pgtype.Varchar     `json:"companyStatus"`
+	Companydescription pgtype.Text        `json:"companyDescription"`
+	Companyimageurl    pgtype.Text        `json:"companyImageUrl"`
+	Companylogo        pgtype.Text        `json:"companyLogo"`
+	Companyindustry    pgtype.Varchar     `json:"companyIndustry"`
+	Companytaxid       pgtype.Varchar     `json:"companyTaxID"`
+	Companyaddline1    pgtype.Varchar     `json:"companyAddLine1"`
+	Companyaddline2    pgtype.Varchar     `json:"companyAddLine2"`
+	Companycity        pgtype.Varchar     `json:"companyCity"`
+	Companystate       pgtype.Varchar     `json:"companyState"`
+	Companycountry     pgtype.Varchar     `json:"companyCountry"`
+	Companypincode     pgtype.Numeric     `json:"companyPinCode"`
+	Companyphone       pgtype.Text        `json:"companyPhone"`
+	Companyfax         pgtype.Text        `json:"companyFax"`
+	Companymobile      pgtype.Text        `json:"companyMobile"`
+	Companywebsite     pgtype.Text        `json:"companyWebsite"`
+	Companyemail       pgtype.Text        `json:"companyEmail"`
+	Companystartdate   pgtype.Date        `json:"companyStartDate"`
+	Companyfiscalyear  pgtype.Numeric     `json:"companyFiscalYear"`
+	Companytimezone    pgtype.Text        `json:"companyTimeZone"`
+	Companybasecurency pgtype.Varchar     `json:"companyBaseCurency"`
+	Companysparent     pgtype.Text        `json:"companysParent"`
 	Isdefault          pgtype.Varchar     `json:"isdefault"`
 	Lmuserid           pgtype.Varchar     `json:"lmuserid"`
 	Octime             pgtype.Timestamptz `json:"octime"`

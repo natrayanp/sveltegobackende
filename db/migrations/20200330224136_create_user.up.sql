@@ -301,10 +301,11 @@ CREATE TABLE ac.refdata (
 );
 /*
 INSERT INTO ac.refdata values (DEFAULT,'industype','industype','Hotel','industry type of the company',ARRAY[NULL],'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-*/
+INSERT INTO ac.refdata values (DEFAULT,'compcat','compcat','Food','Company type category',ARRAY[NULL],'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'compcat','compcat','FMCG','Company type FMCG',ARRAY[NULL],'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);*/
 ---
 CREATE TABLE ac.company (
-        Id                      varchar(100) NOT NULL UNIQUE,        
+        companyid                      varchar(100) NOT NULL UNIQUE,        
         companyName             text NOT NULL,
         companyShortName        varchar(100) NOT NULL,
         companyCategory         varchar(100) NOT NULL,
@@ -319,19 +320,17 @@ CREATE TABLE ac.company (
         companyCity             varchar(100) NOT NULL,
         companyState            varchar(100) NOT NULL,
         companyCountry          varchar(100) NOT NULL,
-        companyPinCode          integer NOT NULL,
+        companyPinCode          numeric	 NOT NULL,
         companyPhone            text,
         companyFax              text,
         companyMobile           text,
         companyWebsite          text,
         companyEmail            text,
         companyStartDate        date NOT NULL,
-        companyFiscalYear       integer NOT NULL,
+        companyFiscalYear       numeric	 NOT NULL,
         companyTimeZone         text,
         companyBaseCurency      varchar(3) NOT NULL,
-        companysParent          text,     
-        companyid               varchar(30) NOT NULL,
-        status                  Varchar(3) NOT NULL,  --> D -Delete / A - Active
+        companysParent          text,   
         isdefault               varchar(3) NOT NULL,  --> Y/N
         lmuserid                varchar(100) NOT NULL,                  
         octime			        timestamptz NOT NULL,
