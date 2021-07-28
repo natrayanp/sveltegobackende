@@ -57,3 +57,7 @@ type Cpy struct {
 	CompanysParent     string
 	Entityid           string
 }
+
+type Cpyops struct {
+	Optype string
+}

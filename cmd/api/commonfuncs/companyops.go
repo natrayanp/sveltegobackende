@@ -8,6 +8,7 @@ import (
 
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/r3labs/diff/v2"
 	"github.com/sveltegobackend/cmd/api/models"
 	"github.com/sveltegobackend/pkg/application"
 	"github.com/sveltegobackend/pkg/db/dbtran"
@@ -131,4 +132,79 @@ func CompanySave(app *application.Application, w http.ResponseWriter, r *http.Re
 	fmt.Println("----------------- CompanySave CHECK END -------------------")
 
 	return &myc, nil
+}
+
+func Companyupdate(app *application.Application, w http.ResponseWriter, r *http.Request, cpynew *models.Cpy, cpyindb *models.Cpy) (*[]models.TblCompany, error) {
+	fmt.Println("----------------- Company Update CHECK START -------------------")
+
+	//var data string
+
+	ctx := r.Context()
+	//userinfo, ok := ctx.Value(fireauth.UserContextKey).(fireauth.User)
+
+	userinfo, errs := FetchUserinfoFromcontext(w, r, "COMPANYCHK-CHKCTX")
+	if errs != nil {
+		return &[]models.TblCompany{}, errs
+	}
+
+	changelog, erre := diff.Diff(cpyindb, cpynew)
+	if erre != nil {
+		return &[]models.TblCompany{}, errs
+	}
+
+	qry := "UPDATE ac.company SET "
+	if len(changelog) > 0 {
+		for i, s := range changelog {
+			if i != 0 {
+				qry = qry + " , "
+			}
+			qry = qry + s.Path[0] + ` =  '` + fmt.Sprintf("%v", s.To) + `' `
+		}
+
+		qry = qry + ", lmtime = CURRENT_TIMESTAMP, lmuserid = $1 "
+
+		qry = qry + "WHERE companyid = $2 RETURNING *;"
+	}
+
+	fmt.Println(qry)
+	var myc []models.TblCompany
+	//var myc dbtran.Resultset
+
+	stmts1 := []*dbtran.PipelineStmt{
+		dbtran.NewPipelineStmt("select", qry, &myc, userinfo.UUID, cpynew.CompanyId),
+	}
+
+	_, err := dbtran.WithTransaction(ctx, dbtran.TranTypeFullSet, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {
+		err := dbtran.RunPipeline(ctx, typ, db, ttx, stmts1...)
+		return err
+	})
+	data := "d"
+
+	if err != nil {
+		//https://github.com/jackc/pgx/issues/474
+		var pgErr *pgconn.PgError
+
+		if errors.As(err, &pgErr) {
+			data = "Technical Error.  Please contact support"
+		}
+
+		//		dd := errors.SlugError{
+		dd := httpresponse.SlugResponse{
+			Err:        err,
+			ErrType:    httpresponse.ErrorTypeDatabase,
+			RespWriter: w,
+			Request:    r,
+			Data:       map[string]interface{}{"message": data},
+			SlugCode:   "COMPANY-UPDATE",
+			LogMsg:     pgErr.Error(),
+		}
+		dd.HttpRespond()
+		return &[]models.TblCompany{}, err
+	} else {
+		fmt.Println(myc)
+	}
+
+	fmt.Println("----------------- Company Update CHECK END -------------------")
+	return &myc, nil
+	//return &myc, nil
 }

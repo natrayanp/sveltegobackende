@@ -127,6 +127,34 @@ func saveCompany(app *application.Application) http.HandlerFunc {
 		fmt.Println("----------")
 		fmt.Println(cpy)
 
+		p, err = reader.NextPart()
+		if err != nil && err != io.EOF {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if p.FormName() != "text_action" {
+			http.Error(w, "text_action is expected", http.StatusBadRequest)
+			return
+		}
+		cpyop := &models.Cpyops{}
+		fmt.Println(p)
+		jsonDecoder = json.NewDecoder(p)
+		err = jsonDecoder.Decode(&cpyop)
+
+		//_, err = p.Read(text)
+
+		if err != nil {
+			//&& err != io.EOF {
+			fmt.Println(err.Error())
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		fmt.Println("----------cpyop\n----------")
+		fmt.Println(cpyop)
+		fmt.Println("----------cpyop\n----------")
+
 		// parse file field
 		p, err = reader.NextPart()
 		if err != nil && err != io.EOF {
@@ -176,27 +204,71 @@ func saveCompany(app *application.Application) http.HandlerFunc {
 		havcpydetail := false
 		var errs error
 		var status string
+		cmpycp = []models.TblCompany{}
 
-		/*
-
+		if cpyop.Optype == "update" {
 			if cmpy, errs = commonfuncs.CompanyCheck(app, w, r); errs != nil {
 				return
 			}
 			cmpycp = *cmpy
-
+			/*
+				const layoutISO = "2006-01-02"
+				cpydd, _ := time.Parse(layoutISO, cpy.CompanyStartDate)
+				cpy.CompanyStartDate = cpydd.String()
+			*/
 			if len(*cmpy) == 1 {
 				havcpydetail = true
-				status = "FAILURE"
-			} else {*/
-		havcpydetail = false
-		status = "SUCCESS"
-		cmpycp = []models.TblCompany{}
+				status = "SUCCESS"
 
-		if cmpy, errs = commonfuncs.CompanySave(app, w, r, cpy); errs != nil {
-			return
+				cpy1 := models.Cpy{
+					CompanyId:          cmpycp[0].Companyid.String,
+					CompanyName:        cmpycp[0].Companyname.String,
+					CompanyShortName:   cmpycp[0].Companyshortname.String,
+					CompanyAddLine1:    cmpycp[0].Companyaddline1.String,
+					CompanyAddLine2:    cmpycp[0].Companyaddline2.String,
+					CompanyCategory:    cmpycp[0].Companycategory.String,
+					CompanyStatus:      cmpycp[0].Companystatus.String,
+					CompanyLogoUrl:     cmpycp[0].Companyimageurl.String,
+					CompanyLogo:        cmpycp[0].Companylogo.String,
+					CompanyIndustry:    cmpycp[0].Companyindustry.String,
+					CompanyTaxID:       cmpycp[0].Companytaxid.String,
+					CompanyStartDate:   cmpycp[0].Companystartdate.Time.String(),
+					CompanyCountry:     cmpycp[0].Companycountry.String,
+					CompanyCity:        cmpycp[0].Companycity.String,
+					CompanyState:       cmpycp[0].Companystate.String,
+					CompanyPinCode:     cmpycp[0].Companypincode.String,
+					CompanyPhone:       cmpycp[0].Companyphone.String,
+					CompanyFax:         cmpycp[0].Companyfax.String,
+					CompanyMobile:      cmpycp[0].Companymobile.String,
+					CompanyEmail:       cmpycp[0].Companyemail.String,
+					CompanyWebsite:     cmpycp[0].Companywebsite.String,
+					CompanyFiscalYear:  cmpycp[0].Companyfiscalyear.String,
+					CompanyTimeZone:    cmpycp[0].Companytimezone.String,
+					CompanyBaseCurency: cmpycp[0].Companybasecurency.String,
+					CompanysParent:     cmpycp[0].Companysparent.String,
+				}
+
+				if cmpy, errs = commonfuncs.Companyupdate(app, w, r, cpy, &cpy1); errs != nil {
+					return
+				}
+				cmpycp = *cmpy
+
+			} else {
+				havcpydetail = true
+				status = "ERROR"
+				//TODO: send error response.
+			}
+
+		} else if cpyop.Optype == "save" {
+			havcpydetail = false
+			status = "SUCCESS"
+
+			if cmpy, errs = commonfuncs.CompanySave(app, w, r, cpy); errs != nil {
+				return
+			}
+			cmpycp = *cmpy
+
 		}
-		cmpycp = *cmpy
-
 		//	}
 
 		fmt.Println("-------------------\n fetchCompany in save company Start 1 \n-------------------")

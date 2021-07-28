@@ -99,7 +99,7 @@ func userLogin(app *application.Application) http.HandlerFunc {
 				//TODO if all the above check satisfied, nav to landing page
 
 			NAVCHKEND:
-				nxtaction = "LANDING"
+				//nxtaction = "LANDING"
 				switch nxtaction {
 				case "LANDING":
 

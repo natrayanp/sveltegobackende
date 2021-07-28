@@ -66,14 +66,14 @@ type TblCompany struct {
 	Companycity        pgtype.Varchar     `json:"companyCity"`
 	Companystate       pgtype.Varchar     `json:"companyState"`
 	Companycountry     pgtype.Varchar     `json:"companyCountry"`
-	Companypincode     pgtype.Numeric     `json:"companyPinCode"`
+	Companypincode     pgtype.Varchar     `json:"companyPinCode"`
 	Companyphone       pgtype.Text        `json:"companyPhone"`
 	Companyfax         pgtype.Text        `json:"companyFax"`
 	Companymobile      pgtype.Text        `json:"companyMobile"`
 	Companywebsite     pgtype.Text        `json:"companyWebsite"`
 	Companyemail       pgtype.Text        `json:"companyEmail"`
 	Companystartdate   pgtype.Date        `json:"companyStartDate"`
-	Companyfiscalyear  pgtype.Numeric     `json:"companyFiscalYear"`
+	Companyfiscalyear  pgtype.Varchar     `json:"companyFiscalYear"`
 	Companytimezone    pgtype.Text        `json:"companyTimeZone"`
 	Companybasecurency pgtype.Varchar     `json:"companyBaseCurency"`
 	Companysparent     pgtype.Text        `json:"companysParent"`
