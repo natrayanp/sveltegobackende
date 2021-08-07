@@ -67,29 +67,53 @@ func (a FirebaseClient) FireMiddleware(next http.Handler) http.Handler {
 		ctx := r.Context()
 		bearerToken := a.tokenFromHeader(r)
 		if bearerToken == "" {
-			httperr.Unauthorised("empty-bearer-token", "", nil, w, r)
+			httperr.Unauthorised("AUTH-FAIL", "empty-bearer-token", nil, w, r)
+			/*
+				dd := httpresponse.SlugResponse{
+					Err:        fmt.Errorf("empty-bearer-token"),
+					ErrType:    httpresponse.ErrorTypeDatabase,
+					RespWriter: w,
+					Request:    r,
+					Data:       map[string]interface{}{"message": "No Auth token"},
+					SlugCode:   "AUTH-FAIL",
+					LogMsg:     "empty bearer token",
+				}
+				dd.HttpRespond()
+			*/
 			return
 		}
 
 		token, err := a.AuthClient.VerifyIDToken(ctx, bearerToken)
 		if err != nil {
-			httperr.Unauthorised("unable-to-verify-jwt", "", err, w, r)
+			httperr.Unauthorised("AUTH-FAIL", "unable-to-verify-jwt", err, w, r)
+			/*
+				dd := httpresponse.SlugResponse{
+					Err:        fmt.Errorf("unable-to-verify-jwt"),
+					ErrType:    httpresponse.ErrorTypeDatabase,
+					RespWriter: w,
+					Request:    r,
+					Data:       map[string]interface{}{"message": "Invalid Auth token"},
+					SlugCode:   "AUTH-FAIL",
+					LogMsg:     "unable-to-verify-jwt",
+				}
+				dd.HttpRespond()
+			*/
 			return
 		}
 
 		//Get users
 		us, err := a.AuthClient.GetUser(ctx, token.UID)
 		if err != nil {
-			httperr.Unauthorised("unable-to-get-user-details", "", err, w, r)
+			httperr.Unauthorised("AUTH-FAIL", "unable-to-get-user-details", err, w, r)
 			/*
 				dd := httpresponse.SlugResponse{
 					Err:        fmt.Errorf("unable-to-get-user-details"),
 					ErrType:    httpresponse.ErrorTypeDatabase,
 					RespWriter: w,
 					Request:    r,
-					Data:       map[string]interface{}{"message": "Database error"},
-					SlugCode:   "AUTH-INT",
-					LogMsg:     "Database error",
+					Data:       map[string]interface{}{"message": "Unable to get user details"},
+					SlugCode:   "AUTH-FAIL",
+					LogMsg:     "Unable to get user details",
 				}
 				dd.HttpRespond()
 			*/
@@ -128,7 +152,7 @@ type User struct {
 	Disabled      bool
 	Token         *auth.Token
 	Session       string
-	Hostname		string
+	Hostname      string
 	Siteid        string
 	Companyid     string
 }

@@ -17,20 +17,30 @@ func userLogin(app *application.Application) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("-------------------\n logintoken Start \n-------------------")
 		defer r.Body.Close()
-		ctx := r.Context()
 
 		//Check user registered Start
 		//var ctxfetchok bool
 		//var userinfo fireauth.User
+		//var ctx context.Context
 		var data string
 		var myc *[]models.TblMytree
 		var cppks *[]models.TblCompanyPacks
 		var cmpy *[]models.TblCompany
+		var userinfo fireauth.User
+		var ctxfetchok bool
+		//TODO Add branch
+		brnc := &[]int{}
 		nxtaction := "DOMAINREGIS"
 		havdom := false
 		havpacks := false
 		havcpydetail := false
+
 		//gotolanding := true
+
+		ctx := r.Context()
+		userinfo, ctxfetchok = ctx.Value(fireauth.UserContextKey).(fireauth.User)
+
+		fmt.Println(ctxfetchok)
 
 		isregis, errs := commonfuncs.CheckUserRegistered(app, w, r)
 
@@ -39,34 +49,63 @@ func userLogin(app *application.Application) http.HandlerFunc {
 		}
 
 		//Check user registered END
-		userinfo, ctxfetchok := ctx.Value(fireauth.UserContextKey).(fireauth.User)
-
-		if !ctxfetchok {
-			dd := httpresponse.SlugResponse{
-				Err:        errors.New("User Context Fetch error"),
-				ErrType:    httpresponse.ErrorTypeContexFetchFail,
-				RespWriter: w,
-				Request:    r,
-				Data:       map[string]interface{}{"message": "Technical issue. Please contact support"},
-				SlugCode:   "AUTH-USRREGCHKFAIL",
-				LogMsg:     "Logic Failed",
-			}
-			dd.HttpRespond()
-			//dd.HttpRespondWithError()
-			return
-		}
 
 		fmt.Println(isregis)
 		if isregis {
 
-			// Check for domain registration
-			if userinfo.Companyid != "" {
-				havdom = true
-				nxtaction = "LANDING"
-
+			/*
 				if errs := commonfuncs.SessionOps(app, w, r); errs != nil {
 					return
 				}
+			*/
+
+			/*
+				sess, errs := commonfuncs.SessionOps(app, w, r)
+				if errs != nil {
+					return
+				}
+				fmt.Println(sess)
+				userinfo.Session = sess
+				fmt.Println(userinfo)
+				r = r.WithContext(context.WithValue(ctx, fireauth.UserContextKey, userinfo))
+				userinfo, ctxfetchok = ctx.Value(fireauth.UserContextKey).(fireauth.User)
+			*/
+			/*
+				sess, errs := commonfuncs.SessionOps(app, w, r, &ctx)
+				if errs != nil {
+					return
+				}
+				fmt.Println(sess)
+
+					userinfo.Session = sess
+					ctx1 := context.WithValue(ctx, fireauth.UserContextKey, userinfo)
+					r = r.WithContext(ctx1)
+			*/
+
+			fmt.Println("0909090909")
+			fmt.Println(userinfo)
+			fmt.Println(userinfo.Session)
+			fmt.Println("0909090909")
+
+			if !ctxfetchok {
+				dd := httpresponse.SlugResponse{
+					Err:        errors.New("User Context Fetch error"),
+					ErrType:    httpresponse.ErrorTypeContexFetchFail,
+					RespWriter: w,
+					Request:    r,
+					Data:       map[string]interface{}{"message": "Technical issue. Please contact support"},
+					SlugCode:   "AUTH-USRREGCHKFAIL",
+					LogMsg:     "Logic Failed",
+				}
+				dd.HttpRespond()
+				//dd.HttpRespondWithError()
+				return
+			}
+
+			// Check for domain registration
+			if userinfo.Companyid != "DEFAULT" {
+				havdom = true
+				nxtaction = "LANDING"
 
 				//TODO Check for COMPANY PACKS... if none NAV to pricing page
 
@@ -102,7 +141,6 @@ func userLogin(app *application.Application) http.HandlerFunc {
 				//nxtaction = "LANDING"
 				switch nxtaction {
 				case "LANDING":
-
 					if myc, errs = commonfuncs.PackageFetch(app, w, r, []string{"ALL"}); errs != nil {
 						return
 					}
@@ -110,13 +148,19 @@ func userLogin(app *application.Application) http.HandlerFunc {
 					if myc, errs = commonfuncs.PackageFetch(app, w, r, []string{"PKS8"}); errs != nil {
 						return
 					}
+					cmpy = &[]models.TblCompany{}
+					brnc = &[]int{}
+
 				case "ADDBRANCH":
 					if myc, errs = commonfuncs.PackageFetch(app, w, r, []string{"PKS8", "PKS9"}); errs != nil {
 						return
 					}
 				default:
 					myc = &[]models.TblMytree{}
+					cmpy = &[]models.TblCompany{}
+					brnc = &[]int{}
 				}
+
 				/*
 					if (nxtaction != "ADDPACKS") || (nxtaction != "ADDCOMPANY") {
 						//TODO fecth menu tree
@@ -133,11 +177,12 @@ func userLogin(app *application.Application) http.HandlerFunc {
 					}*/
 
 			} else {
-
+				nxtaction = "DOMAINREGIS"
 				fmt.Println("else loop in login tblmytre")
 				data = "Subdomain not registered"
 				myc = &[]models.TblMytree{}
-
+				cmpy = &[]models.TblCompany{}
+				brnc = &[]int{} //Add to send empty branch
 			}
 
 			// Return menu
@@ -147,7 +192,11 @@ func userLogin(app *application.Application) http.HandlerFunc {
 			fmt.Println("calling regis")
 			//gotolanding = false
 			data = "Not a Registered user. Register to continue."
+			nxtaction = "NOTREGISTERED"
+			//EMPTY session id sent
 			myc = &[]models.TblMytree{}
+			cmpy = &[]models.TblCompany{}
+			brnc = &[]int{} //Add to send empty branch
 			//User registration End
 
 			cc := httpresponse.SlugResponse{
@@ -155,20 +204,24 @@ func userLogin(app *application.Application) http.HandlerFunc {
 				ErrType:    httpresponse.ErrorTypeIncorrectInput,
 				RespWriter: w,
 				Request:    r,
-				Data:       map[string]interface{}{"message": data},
+				Data:       map[string]interface{}{"message": data, "nextaction": nxtaction, "menu": myc, "company": cmpy, "branch": brnc, "sessionid": userinfo.Session},
 				Status:     "ERROR",
 				SlugCode:   "AUTH-USRNOTREG",
 				LogMsg:     "User trying to login with non registered user",
+				Userinfo:   userinfo,
 			}
 			cc.HttpRespond()
 			//dd.HttpRespondWithError()
 			return
 
 		}
+
 		fmt.Println(isregis, havdom, havpacks, havcpydetail)
+		fmt.Println(userinfo)
+		fmt.Println(userinfo.Session)
 		data = "User registration successful."
 		//ssd := map[string]interface{}{"message": data, "isregistered": isregis, "havedomain": havdom, "havepacks": havpacks, "havecompany": havcpydetail, "menu": &myc}
-		ssd := map[string]interface{}{"message": data, "nextaction": nxtaction, "menu": myc}
+		ssd := map[string]interface{}{"message": data, "nextaction": nxtaction, "menu": myc, "company": cmpy, "branch": brnc}
 		//&nat{"nat1", "nat2"},
 		fmt.Println("registration completed ss sent")
 		ss := httpresponse.SlugResponse{
@@ -178,11 +231,14 @@ func userLogin(app *application.Application) http.HandlerFunc {
 			Status:     "SUCCESS",
 			SlugCode:   "AUTH-RES",
 			LogMsg:     "testing",
+			Userinfo:   userinfo,
 		}
+		fmt.Println(userinfo.Session)
+
+		fmt.Println("-------------------\n logintoken Stop \n-------------------")
 
 		ss.HttpRespond()
-		fmt.Println("-------------------\n logintoken Stop \n-------------------")
-		return
+		//return
 
 		/*
 			dds, stat := ss.RespData()

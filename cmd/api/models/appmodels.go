@@ -61,3 +61,7 @@ type Cpy struct {
 type Cpyops struct {
 	Optype string
 }
+
+type ResultCount struct {
+	Count int
+}

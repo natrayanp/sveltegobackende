@@ -11,6 +11,7 @@ import (
 	"github.com/sveltegobackend/pkg/db/dbtran"
 
 	//"github.com/sveltegobackend/pkg/errors/httperr"
+	"github.com/sveltegobackend/cmd/api/commonfuncs"
 	"github.com/sveltegobackend/cmd/api/models"
 	"github.com/sveltegobackend/pkg/fireauth"
 	"github.com/sveltegobackend/pkg/httpresponse"
@@ -25,6 +26,7 @@ func ParseHeadMiddleware(app *application.Application) func(next http.Handler) h
 			sess := r.Header.Get("session")
 			sid := r.Header.Get("siteid")
 
+			fmt.Println("============= chk session ===================")
 			fmt.Println(sess)
 			fmt.Println(sid)
 
@@ -100,8 +102,14 @@ func ParseHeadMiddleware(app *application.Application) func(next http.Handler) h
 			if len(myc) == 1 {
 				userinfo.Companyid = myc[0].Companyid.String
 			} else {
-				userinfo.Companyid = ""
+				userinfo.Companyid = "DEFAULT"
 			}
+
+			errs := commonfuncs.SessionOps(app, w, r, &userinfo)
+			if errs != nil {
+				return
+			}
+
 			fmt.Println(userinfo)
 			fmt.Println("@@@@@@@@@@@@@@@@@@@@@@@@@userinfo@@@@@@@@@@@@@@@@@@")
 			ctx = context.WithValue(ctx, fireauth.GetUserCtxKey(), userinfo)

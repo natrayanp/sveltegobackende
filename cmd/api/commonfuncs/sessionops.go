@@ -11,81 +11,138 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/sveltegobackend/cmd/api/models"
 	"github.com/sveltegobackend/pkg/application"
 	"github.com/sveltegobackend/pkg/db/dbtran"
 	"github.com/sveltegobackend/pkg/fireauth"
 	"github.com/sveltegobackend/pkg/httpresponse"
 )
 
-func SessionOps(app *application.Application, w http.ResponseWriter, r *http.Request) error {
+func SessionOps(app *application.Application, w http.ResponseWriter, r *http.Request, userinfo *fireauth.User) error {
 	//Check user registered Start
 
 	ctx := r.Context()
-	userinfo, ok := ctx.Value(fireauth.UserContextKey).(fireauth.User)
+	fmt.Println("--------- inside session ops ------------")
+	fmt.Println((*userinfo).Session)
 
-	if !ok {
-		err := fmt.Errorf("Empty context")
-		dd := httpresponse.SlugResponse{
-			Err:        err,
-			ErrType:    httpresponse.ErrorTypeDatabase,
-			RespWriter: w,
-			Request:    r,
-			Data:       map[string]interface{}{"message": "Technical Error.  Please contact support"},
-			SlugCode:   "SESSION-CHKCTX",
-			LogMsg:     "Context fetch error",
-		}
-		dd.HttpRespond()
-		return err
-	}
+	if userinfo.Session == "" {
 
-	qry := `UPDATE ac.loginh SET logoutime = CURRENT_TIMESTAMP
+		qry := `UPDATE ac.loginh SET logoutime = CURRENT_TIMESTAMP
 			WHERE userid = $1
 			AND companyid = $2
 			AND logoutime IS NULL`
 
-	qry1 := `INSERT INTO ac.loginh (userid, ipaddress, sessionid, companyid, logintime) 
+		qry1 := `INSERT INTO ac.loginh (userid, ipaddress, sessionid, companyid, logintime) 
 			VALUES ($1, $2, $3,$4 ,CURRENT_TIMESTAMP) RETURNING *;`
 
-	currentTime := time.Now().String()
-	mysess := getHash(userinfo.UUID+currentTime, "")
-	fmt.Println(mysess)
+		currentTime := time.Now().String()
+		mysess := getHash(userinfo.UUID+currentTime, "")
+		fmt.Println(mysess)
 
-	var myc dbtran.Resultset
-	var myc1 dbtran.Resultset
+		var myc dbtran.Resultset
+		var myc1 dbtran.Resultset
 
-	stmts := []*dbtran.PipelineStmt{
-		dbtran.NewPipelineStmt("update", qry, &myc, userinfo.UUID, userinfo.Companyid),
-		dbtran.NewPipelineStmt("insert", qry1, &myc1, userinfo.UUID, "", mysess, userinfo.Companyid),
-	}
-
-	_, err := dbtran.WithTransaction(ctx, dbtran.TranTypeFullSet, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {
-		err := dbtran.RunPipeline(ctx, typ, db, ttx, stmts...)
-		return err
-	})
-
-	if err != nil {
-
-		//		dd := errors.SlugError{
-		dd := httpresponse.SlugResponse{
-			Err:        err,
-			ErrType:    httpresponse.ErrorTypeDatabase,
-			RespWriter: w,
-			Request:    r,
-			Data:       map[string]interface{}{"message": "Database error"},
-			SlugCode:   "SESSION-CREAT",
-			LogMsg:     "Database error",
+		stmts := []*dbtran.PipelineStmt{
+			dbtran.NewPipelineStmt("update", qry, &myc, userinfo.UUID, userinfo.Companyid),
+			dbtran.NewPipelineStmt("insert", qry1, &myc1, userinfo.UUID, "", mysess, userinfo.Companyid),
 		}
-		//dd.HttpRespondWithError()
-		dd.HttpRespond()
-		return err
+
+		_, err := dbtran.WithTransaction(ctx, dbtran.TranTypeFullSet, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {
+			err := dbtran.RunPipeline(ctx, typ, db, ttx, stmts...)
+			return err
+		})
+
+		if err != nil {
+			//		dd := errors.SlugError{
+			dd := httpresponse.SlugResponse{
+				Err:        err,
+				ErrType:    httpresponse.ErrorTypeDatabase,
+				RespWriter: w,
+				Request:    r,
+				Data:       map[string]interface{}{"message": "Database error"},
+				SlugCode:   "SESSION-CREAT",
+				LogMsg:     "Database error",
+			}
+			//dd.HttpRespondWithError()
+			dd.HttpRespond()
+			userinfo.Session = ""
+			return err
+		} else {
+			userinfo.Session = mysess
+		}
+	} else {
+
+		//TODO check if session exists is it valid if not return error
+		fmt.Println("else loop")
+
+		qry3 := `SELECT count(1) FROM ac.loginh 
+		WHERE userid = $1
+		AND companyid = $2
+		AND logoutime IS NULL`
+
+		var myc3 []models.ResultCount
+
+		stmts := []*dbtran.PipelineStmt{
+			dbtran.NewPipelineStmt("select", qry3, &myc3, userinfo.UUID, userinfo.Companyid),
+		}
+
+		_, err := dbtran.WithTransaction(ctx, dbtran.TranTypeFullSet, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {
+			err := dbtran.RunPipeline(ctx, typ, db, ttx, stmts...)
+			return err
+		})
+		fmt.Println(err)
+		fmt.Println(myc3)
+		res := false
+		if err != nil {
+			res = true
+		}
+		if myc3[0].Count == 0 {
+			res = true
+		}
+
+		if res {
+			//		dd := errors.SlugError{
+			fmt.Println("going inside error")
+			var ds map[string]interface{}
+			var lms string
+			var sc string
+
+			if err != nil {
+				fmt.Println("going inside s")
+				ds = map[string]interface{}{"message": "Database error from"}
+				lms = "Database error from"
+				sc = "SESSION-CHECK"
+			} else {
+				fmt.Println("going inside e")
+				err = fmt.Errorf("user session fetch error")
+				ds = map[string]interface{}{"message": "Invalid session"}
+				lms = "Invalid session"
+				sc = "SESSION-INVALID"
+			}
+
+			dd := httpresponse.SlugResponse{
+				Err:        err,
+				ErrType:    httpresponse.ErrorTypeDatabase,
+				RespWriter: w,
+				Request:    r,
+				Data:       ds, //map[string]interface{}{"message": "Database error"},
+				SlugCode:   sc,
+				LogMsg:     lms, //"Database error",
+			}
+			//dd.HttpRespondWithError()
+			dd.HttpRespond()
+			return err
+		}
+		fmt.Println("going insiderrrrrr error")
+
 	}
 
-	userinfo.Session = mysess
-	ctx1 := context.WithValue(ctx, fireauth.GetUserCtxKey(), userinfo)
-	r = r.WithContext(ctx1)
-
-	fmt.Println("ddsds")
-	fmt.Println(myc)
+	/*
+		ctx1 := context.WithValue(ctx, fireauth.GetUserCtxKey(), userinfo)
+		r = r.WithContext(ctx1)
+		r.WithContext(context.WithValue(r.Context(), fireauth.GetUserCtxKey(), userinfo))
+	*/
+	fmt.Println("++++++++++++ddsds++++++++++++++")
 
 	return nil
 }

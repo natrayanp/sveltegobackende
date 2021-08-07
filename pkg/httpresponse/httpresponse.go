@@ -25,7 +25,8 @@ var (
 type finalResponse struct {
 	Data       map[string]interface{} `json:"data"`
 	Status     string                 `json:"status"`
-	Sessionid  string                 `json:"sessionid"`
+	Session    string                 `json:"session"`
+	SlugCode   string                 `json:"slugcode"`
 	httpStatus int
 }
 
@@ -53,7 +54,7 @@ func (s SlugResponse) HttpRespond() {
 		log.GetLogEntry(s.Request).WithField("slugcode", s.SlugCode).Info(s.LogMsg)
 	}
 
-	resp := finalResponse{structToMap(s.Data), s.Status, s.Userinfo.Session, s.getStatucode()}
+	resp := finalResponse{structToMap(s.Data), s.Status, s.Userinfo.Session, s.SlugCode, s.getStatucode()}
 	fmt.Println("chek data resp")
 	fmt.Println(resp)
 	if err := render.Render(s.RespWriter, s.Request, &resp); err != nil {

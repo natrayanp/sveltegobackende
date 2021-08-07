@@ -24,6 +24,6 @@ require (
 	github.com/vgarvardt/gue/v2 v2.2.1
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 	golang.org/x/tools/gopls v0.7.0 // indirect
-	google.golang.org/api v0.51.0 // indirect
+	google.golang.org/api v0.52.0 // indirect
 
 )

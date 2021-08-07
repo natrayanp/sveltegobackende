@@ -20,13 +20,13 @@ func InternalError(slug string, logMSg string, err error, w http.ResponseWriter,
 
 func Unauthorised(slug string, logMSg string, err error, w http.ResponseWriter, r *http.Request) {
 	if slug == "" {
-		slug = "Unauthorised"
+		slug = "AUTH-FAIL"
 	}
 	if logMSg == "" {
-		logMSg = "Unauthorised"
+		logMSg = "AUTH-FAIL"
 	}
 	logs.GetLogEntry(r).WithError(err).WithField("error-slug", slug).Warn(logMSg)
-	httpRespondWithError(err, "Unauthorised", w, r, logMSg, http.StatusUnauthorized)
+	httpRespondWithError(err, "AUTH-FAIL", w, r, logMSg, http.StatusUnauthorized)
 }
 
 func BadRequest(slug string, logMSg string, err error, w http.ResponseWriter, r *http.Request) {
@@ -70,9 +70,9 @@ func RespondWithSlugError(err error, w http.ResponseWriter, r *http.Request) {
 }
 */
 
-func httpRespondWithError(err error, slug string, w http.ResponseWriter, r *http.Request, logMSg string, status int) {
+func httpRespondWithError(err error, slugcode string, w http.ResponseWriter, r *http.Request, logMSg string, status int) {
 	//logs.GetLogEntry(r).WithError(err).WithField("error-slug", slug).Warn(logMSg)
-	resp := ErrorResponse{slug, status}
+	resp := ErrorResponse{slugcode, status}
 
 	if err := render.Render(w, r, resp); err != nil {
 		panic(err)
@@ -82,7 +82,7 @@ func httpRespondWithError(err error, slug string, w http.ResponseWriter, r *http
 }
 
 type ErrorResponse struct {
-	Slug       string `json:"slug"`
+	Slugcode   string `json:"slugcode"`
 	httpStatus int
 }
 

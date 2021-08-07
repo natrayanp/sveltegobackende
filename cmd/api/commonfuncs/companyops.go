@@ -77,8 +77,10 @@ func CompanySave(app *application.Application, w http.ResponseWriter, r *http.Re
 
 	ctx := r.Context()
 	//userinfo, ok := ctx.Value(fireauth.UserContextKey).(fireauth.User)
-
 	userinfo, errs := FetchUserinfoFromcontext(w, r, "COMPANYCHK-CHKCTX")
+	fmt.Println(userinfo)
+	fmt.Println(userinfo.Companyid)
+
 	if errs != nil {
 		return &[]models.TblCompany{}, errs
 	}
@@ -86,8 +88,6 @@ func CompanySave(app *application.Application, w http.ResponseWriter, r *http.Re
 	const qry = `INSERT INTO ac.company VALUES
 					($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,
 						$25,$26,$27,$28,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) RETURNING *;`
-
-	//fmt.Println(cpy)
 
 	var myc []models.TblCompany
 	//var myc dbtran.Resultset
