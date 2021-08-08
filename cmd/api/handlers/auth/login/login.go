@@ -26,14 +26,15 @@ func userLogin(app *application.Application) http.HandlerFunc {
 		var myc *[]models.TblMytree
 		var cppks *[]models.TblCompanyPacks
 		var cmpy *[]models.TblCompany
+		var brnc *[]models.TblBranch
 		var userinfo fireauth.User
 		var ctxfetchok bool
 		//TODO Add branch
-		brnc := &[]int{}
 		nxtaction := "DOMAINREGIS"
 		havdom := false
 		havpacks := false
 		havcpydetail := false
+		//havbrndetail := false
 
 		//gotolanding := true
 
@@ -134,6 +135,17 @@ func userLogin(app *application.Application) http.HandlerFunc {
 				}
 
 				//TODO Check for BRANCH DETAILS CAPTURED... if none NAV to branch details page
+				if brnc, errs = commonfuncs.BranchCheck(app, w, r); errs != nil {
+					return
+				}
+
+				if len(*brnc) == 1 {
+					//havbrndetail = true
+				} else {
+					//havbrndetail = false
+					nxtaction = "ADDBRANCH"
+					goto NAVCHKEND
+				}
 
 				//TODO if all the above check satisfied, nav to landing page
 
@@ -149,16 +161,17 @@ func userLogin(app *application.Application) http.HandlerFunc {
 						return
 					}
 					cmpy = &[]models.TblCompany{}
-					brnc = &[]int{}
+					brnc = &[]models.TblBranch{}
 
 				case "ADDBRANCH":
 					if myc, errs = commonfuncs.PackageFetch(app, w, r, []string{"PKS8", "PKS9"}); errs != nil {
 						return
 					}
+
 				default:
 					myc = &[]models.TblMytree{}
 					cmpy = &[]models.TblCompany{}
-					brnc = &[]int{}
+					brnc = &[]models.TblBranch{}
 				}
 
 				/*
@@ -182,7 +195,7 @@ func userLogin(app *application.Application) http.HandlerFunc {
 				data = "Subdomain not registered"
 				myc = &[]models.TblMytree{}
 				cmpy = &[]models.TblCompany{}
-				brnc = &[]int{} //Add to send empty branch
+				brnc = &[]models.TblBranch{} //Add to send empty branch
 			}
 
 			// Return menu
@@ -196,7 +209,7 @@ func userLogin(app *application.Application) http.HandlerFunc {
 			//EMPTY session id sent
 			myc = &[]models.TblMytree{}
 			cmpy = &[]models.TblCompany{}
-			brnc = &[]int{} //Add to send empty branch
+			brnc = &[]models.TblBranch{} //Add to send empty branch
 			//User registration End
 
 			cc := httpresponse.SlugResponse{

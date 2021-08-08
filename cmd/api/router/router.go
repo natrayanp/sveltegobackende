@@ -8,6 +8,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/sveltegobackend/cmd/api/handlers/auth/login"
+	"github.com/sveltegobackend/cmd/api/handlers/entity/branch"
 	"github.com/sveltegobackend/cmd/api/handlers/entity/company"
 	"github.com/sveltegobackend/cmd/api/handlers/refdata"
 
@@ -126,6 +127,7 @@ func authorisedRouter(app *application.Application) chi.Router {
 	r.Get("/getcompany", company.DoFetch(app))
 	r.Post("/savecompany", company.DoSave(app))
 	r.Post("/getrefdata", refdata.Do(app))
+	r.Get("/getbranch", branch.DoBrFetch(app))
 
 	/*
 

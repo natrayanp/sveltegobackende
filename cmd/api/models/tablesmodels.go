@@ -90,3 +90,30 @@ type TblRefdata struct {
 	Parent    pgtype.TextArray `json:"parent"`
 	Submenu   []*TblRefdata    `json:"submenu"`
 }
+
+type TblBranch struct {
+	CompanyId         pgtype.Varchar     `json:"companyId"`
+	BranchId          pgtype.Varchar     `json:"branchId"`
+	BranchName        pgtype.Text        `json:"branchName"`
+	BranchShortName   pgtype.Varchar     `json:"branchShortName"`
+	BranchCategory    pgtype.Varchar     `json:"branchCategory"`
+	BranchStatus      pgtype.Varchar     `json:"branchStatus"`
+	BranchDescription pgtype.Text        `json:"branchDescriptio"`
+	BranchImageUrl    pgtype.Text        `json:"branchImageUrl"`
+	BranchAddLine1    pgtype.Varchar     `json:"branchAddLine1"`
+	BranchAddLine2    pgtype.Varchar     `json:"branchAddLine2"`
+	BranchCity        pgtype.Varchar     `json:"branchCity"`
+	BranchState       pgtype.Varchar     `json:"branchState"`
+	BranchCountry     pgtype.Varchar     `json:"branchCountry"`
+	BranchPinCode     pgtype.Varchar     `json:"branchPinCode"`
+	BranchPhone       pgtype.Text        `json:"branchPhone"`
+	BranchFax         pgtype.Text        `json:"branchFax"`
+	BranchMobile      pgtype.Text        `json:"branchMobile"`
+	BranchWebsite     pgtype.Text        `json:"branchWebsite"`
+	BranchEmail       pgtype.Text        `json:"branchEmail"`
+	BranchStartDate   pgtype.Date        `json:"branchStartDate"`
+	Isdefault         pgtype.Varchar     `json:"isdefault"`
+	Lmuserid          pgtype.Varchar     `json:"lmuserid"`
+	Octime            pgtype.Timestamptz `json:"octime"`
+	Lmtime            pgtype.Timestamptz `json:"lmtime"`
+}

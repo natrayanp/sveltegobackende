@@ -82,11 +82,13 @@ func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.R
 	if len(packfuncid) == 1 && packfuncid[0] == "ALL" {
 		packfuncidf = "ALL"
 	} else {
-		for _, n := range packfuncid {
-			/*	if i != 0 {
-				packfuncidf = packfuncidf + ","
-			}*/
-			packfuncidf = packfuncidf + n
+		for i, n := range packfuncid {
+			if i != 0 {
+				packfuncidf = packfuncidf + ",'" + n + "'"
+
+			} else if i == 0 {
+				packfuncidf = "'" + n + "'"
+			}
 
 		}
 	}
@@ -124,14 +126,14 @@ func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.R
 	} else {
 
 		qry = `WITH RECURSIVE MyTree AS (
-		SELECT *,false as open FROM ac.packs WHERE id in ($1)
+		SELECT *,false as open FROM ac.packs WHERE id  = ANY($1)
 		UNION
 		SELECT m.*,false as open FROM ac.packs AS m JOIN MyTree AS t ON m.id = ANY(t.parent) 
 	)
 	SELECT * FROM MyTree ORDER BY TYPE, SORTORDER,NAME;`
 
 		stmts = []*dbtran.PipelineStmt{
-			dbtran.NewPipelineStmt("select", qry, &myc, packfuncidf),
+			dbtran.NewPipelineStmt("select", qry, &myc, packfuncid),
 		}
 	}
 

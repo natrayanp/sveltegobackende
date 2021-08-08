@@ -305,7 +305,7 @@ INSERT INTO ac.refdata values (DEFAULT,'compcat','compcat','Food','Company type 
 INSERT INTO ac.refdata values (DEFAULT,'compcat','compcat','FMCG','Company type FMCG',ARRAY[NULL],'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);*/
 ---
 CREATE TABLE ac.company (
-        companyid                      varchar(100) NOT NULL UNIQUE,        
+        companyid               varchar(100) NOT NULL UNIQUE,        
         companyName             text NOT NULL,
         companyShortName        varchar(100) NOT NULL,
         companyCategory         varchar(100) NOT NULL,
@@ -339,8 +339,38 @@ CREATE TABLE ac.company (
 
 
 
+CREATE SEQUENCE ac.branchid_sequence START 1;
 
 
+
+CREATE TABLE ac.branch (
+            companyId           varchar(100) REFERENCES ac.company(companyid),
+            branchId            varchar(100)  default (('BR'::text || to_char(CURRENT_TIMESTAMP, 'DDMMYYYY'::text)) ||
+                                        nextval('ac.branchid_sequence'::regclass)) not null
+                                        constraint branch_pkey primary key,
+            branchName          text NOT NULL,
+            branchShortName     varchar(100) NOT NULL,
+            branchCategory      varchar(100) NOT NULL,
+            branchStatus        varchar(3) NOT NULL,  --> D -Delete / A - Active
+            branchDescription   text NOT NULL,
+            branchImageUrl      text,
+            branchAddLine1      varchar(100) NOT NULL,
+            branchAddLine2      varchar(100) NOT NULL,
+            branchCity          varchar(100) NOT NULL,
+            branchState         varchar(100) NOT NULL,
+            branchCountry       varchar(100) NOT NULL,
+            branchPinCode       varchar(50) NOT NULL,
+            branchPhone         text,
+            branchFax           text,
+            branchMobile        text,
+            branchWebsite       text,
+            branchEmail         text,
+            branchStartDate     date NOT NULL,
+            isdefault           varchar(3) NOT NULL,  --> Y/N
+            lmuserid            varchar(100) NOT NULL,                  
+            octime			    timestamptz NOT NULL,
+            lmtime			    timestamptz NOT NULL
+);
 
 
 
