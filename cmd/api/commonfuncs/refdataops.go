@@ -242,6 +242,8 @@ func getRefIndividualItems(group string) []string {
 	switch group {
 	case "company":
 		return []string{"country", "industype", "compcat"}
+	case "branch":
+		return []string{"country"}
 	default:
 		return []string{}
 	}

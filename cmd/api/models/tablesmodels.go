@@ -93,6 +93,7 @@ type TblRefdata struct {
 
 type TblBranch struct {
 	CompanyId         pgtype.Varchar     `json:"companyId"`
+	Companyname       pgtype.Text        `json:"companyName"`
 	BranchId          pgtype.Varchar     `json:"branchId"`
 	BranchName        pgtype.Text        `json:"branchName"`
 	BranchShortName   pgtype.Varchar     `json:"branchShortName"`

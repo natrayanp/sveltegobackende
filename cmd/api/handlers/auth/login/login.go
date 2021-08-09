@@ -104,7 +104,7 @@ func userLogin(app *application.Application) http.HandlerFunc {
 			}
 
 			// Check for domain registration
-			if userinfo.Companyid != "DEFAULT" {
+			if userinfo.Companyid != "PUBLIC" {
 				havdom = true
 				nxtaction = "LANDING"
 

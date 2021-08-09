@@ -206,7 +206,7 @@ func saveCompany(app *application.Application) http.HandlerFunc {
 		var status string
 		cmpycp = []models.TblCompany{}
 
-		if cpyop.Optype == "update" {
+		if cpyop.Optype == "Update" {
 			if cmpy, errs = commonfuncs.CompanyCheck(app, w, r); errs != nil {
 				return
 			}
@@ -259,7 +259,7 @@ func saveCompany(app *application.Application) http.HandlerFunc {
 				//TODO: send error response.
 			}
 
-		} else if cpyop.Optype == "save" {
+		} else if cpyop.Optype == "Save" {
 			havcpydetail = false
 			status = "SUCCESS"
 

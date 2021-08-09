@@ -102,7 +102,7 @@ func ParseHeadMiddleware(app *application.Application) func(next http.Handler) h
 			if len(myc) == 1 {
 				userinfo.Companyid = myc[0].Companyid.String
 			} else {
-				userinfo.Companyid = "DEFAULT"
+				userinfo.Companyid = "PUBLIC"
 			}
 
 			errs := commonfuncs.SessionOps(app, w, r, &userinfo)

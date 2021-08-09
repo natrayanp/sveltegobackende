@@ -28,9 +28,12 @@ func BranchCheck(app *application.Application, w http.ResponseWriter, r *http.Re
 		return &[]models.TblBranch{}, errs
 	}
 
-	const qry = `SELECT * FROM ac.branch 
-					WHERE companyid = $1
-					AND branchStatus in ('A')`
+	const qry = `SELECT a.*,b.companyname FROM ac.branch a
+					FULL OUTER JOIN ac.company b
+					ON a.companyid = b.companyid
+					WHERE a.companyid = $1
+					AND b.companystatus in ('A')
+					AND a.branchStatus in ('A')`
 
 	var myc []models.TblBranch
 
@@ -71,7 +74,7 @@ func BranchCheck(app *application.Application, w http.ResponseWriter, r *http.Re
 }
 
 func BranchSave(app *application.Application, w http.ResponseWriter, r *http.Request, cpy *models.Cpy) (*[]models.TblBranch, error) {
-	fmt.Println("----------------- CompanySave CHECK START -------------------")
+	fmt.Println("----------------- Branch Save CHECK START -------------------")
 
 	var data string
 
@@ -85,9 +88,9 @@ func BranchSave(app *application.Application, w http.ResponseWriter, r *http.Req
 		return &[]models.TblBranch{}, errs
 	}
 
-	const qry = `INSERT INTO ac.company VALUES
-					($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,
-						$25,$26,$27,$28,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) RETURNING *;`
+	const qry = `INSERT INTO ac.branch VALUES
+					($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,
+						CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) RETURNING *;`
 
 	var myc []models.TblBranch
 	//var myc dbtran.Resultset
@@ -129,13 +132,13 @@ func BranchSave(app *application.Application, w http.ResponseWriter, r *http.Req
 		fmt.Println(myc)
 	}
 
-	fmt.Println("----------------- CompanySave CHECK END -------------------")
+	fmt.Println("-----------------  Branch Save CHECK END -------------------")
 
 	return &myc, nil
 }
 
 func Branchupdate(app *application.Application, w http.ResponseWriter, r *http.Request, cpynew *models.Cpy, cpyindb *models.Cpy) (*[]models.TblBranch, error) {
-	fmt.Println("----------------- Company Update CHECK START -------------------")
+	fmt.Println("----------------- Branch Update CHECK START -------------------")
 
 	//var data string
 
@@ -204,7 +207,7 @@ func Branchupdate(app *application.Application, w http.ResponseWriter, r *http.R
 		fmt.Println(myc)
 	}
 
-	fmt.Println("----------------- Company Update CHECK END -------------------")
+	fmt.Println("----------------- Branch Update CHECK END -------------------")
 	return &myc, nil
 	//return &myc, nil
 }
