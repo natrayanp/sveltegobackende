@@ -103,24 +103,23 @@ CREATE TABLE ac.packs (
     lmtime			      timestamptz NOT NULL
 );
 
-/*
-insert into ac.packs values ('PKS1','POS','POS','POS has all the POS functionalities','pack',ARRAY[NULL],'','radio_button_checked','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS2','POS Function','POS Function','Functions related to POS','module',ARRAY['PKS1'],'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS3','POS Reports','POS Reports','Reports related to POS','module',ARRAY['PKS1'],'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS4','POS Settings','POS Settings','Setting for POS module','module',ARRAY['PKS1’,’PKS6'],'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS5','POS Generic Settings','Generic Settings','Generic settings for POS','function',ARRAY['PKS4'],'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS6','Settings','Settings','Settings','pack',ARRAY[NULL],'/landing/settings','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS7','Entity Settings','Entity Configuration','This module has all the entity level settings','module',ARRAY['PKS6'],'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS8','companysettigs','Company','This has the functions for company set up','function',ARRAY['PKS7'],'/landing/settings/companysettings','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS9','branchsettings','Branch','This has the functions for Branch set up','function',ARRAY['PKS7'],'/landing/settings/branchsettings','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS10','User Settings','User Config','This module has all the user level settings','module',ARRAY['PKS6'],'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS11','user role','Roles','This has the functions for user role set up','function',ARRAY['PKS10'],'/landing/settings/roles','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS12','User Settings','Users','This has the functions for user set up','function',ARRAY['PKS10'],'/landing/settings/users','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 
-insert into ac.packs values ('PKS13','Pricing','Pricing','Pricing plans avaialble','pack',ARRAY[NULL],'/landing/pricing','fa-hand-holding-heart','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS14','Pricing','Pricing','Pricing plans avaialble','module',ARRAY['PKS13'],'','','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS15','Pricing','Pricing','Pricing plans avaialble','function',ARRAY['PKS14'],'','','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-*/
+insert into ac.packs values ('PKS1','POS','POS','POS has all the POS functionalities','pack',ARRAY[NULL],1,'','radio_button_checked','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS2','POS Function','POS Function','Functions related to POS','module',ARRAY['PKS1'],1,'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS3','POS Reports','POS Reports','Reports related to POS','module',ARRAY['PKS1'],2,'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS4','POS Settings','POS Settings','Setting for POS module','module',ARRAY['PKS1’,’PKS6'],3,'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS5','POS Generic Settings','Generic Settings','Generic settings for POS','function',ARRAY['PKS4'],1,'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS6','Settings','Settings','Settings','pack',ARRAY[NULL],2,'/landing/settings','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS7','Entity Settings','Entity Configuration','This module has all the entity level settings','module',ARRAY['PKS6'],1,'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS8','companysettigs','Company','This has the functions for company set up','function',ARRAY['PKS7'],1,'/landing/settings/companysettings','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS9','branchsettings','Branch','This has the functions for Branch set up','function',ARRAY['PKS7'],2,'/landing/settings/branchsettings','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS10','User Settings','User Config','This module has all the user level settings','module',ARRAY['PKS6'],3,'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS11','user role','Roles','This has the functions for user role set up','function',ARRAY['PKS10'],1,'/landing/settings/roles','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS12','User Settings','Users','This has the functions for user set up','function',ARRAY['PKS10'],1,'/landing/settings/users','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS13','Pricing','Pricing','Pricing plans avaialble','pack',ARRAY[NULL],4,'/landing/pricing','fa-hand-holding-heart','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS14','Pricing','Pricing','Pricing plans avaialble','module',ARRAY['PKS13'],1,'','','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS15','Pricing','Pricing','Pricing plans avaialble','function',ARRAY['PKS14'],1,'','','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+
 
 
 
@@ -161,7 +160,7 @@ CREATE TABLE ac.plan (
     lmtime			      timestamptz NOT NULL
 );
 
---insert into ac.plan values ('PLANID1','Free','Free','Free plan available for all','SGD',0,0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.plan values ('PLANID1','Free','Free','Free plan available for all','SGD',0,0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 
 
 -- SITE Plan PACKs  (This is the plan card)
@@ -179,11 +178,11 @@ CREATE TABLE ac.planpacks (
 );
 
 
-/*
+
 insert into ac.planpacks values ('PACKID1','PKS8','PLANID1',10,10,10,90,'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 insert into ac.planpacks values ('PACKID2','PKS9','PLANID1',10,10,10,90,'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 insert into ac.planpacks values ('PACKID3','PKS14','PLANID1',10,10,10,90,'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-*/
+
 
 
 --RoleMaster
@@ -200,9 +199,9 @@ CREATE TABLE ac.rolemaster (
     lmtime			      timestamptz NOT NULL
 );
 
-/*
-insert into ac.ROLEMASTER values ('ROLMA1','SignupAdmin','SignupAdmin','This is the role given to users when they sign up','PUBLIC','PUBLIC','PUBLIC','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.ROLEMASTER values ('ROLMA2','defaultadmin','defaultadmin','This is the role given to users when they completed creation of their first Company and branch','PUBLIC','PUBLIC','PUBLIC','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+/* DONOT RUN
+insert into ac.ROLEMASTER values ('ROLMA1','SignupAdmin','SignupAdmin','This is the role given to users when they sign up','PUBLIC','PUBLIC','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.ROLEMASTER values ('ROLMA2','defaultadmin','defaultadmin','This is the role given to users when they completed creation of their first Company and branch','PUBLIC','PUBLIC','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 */
 
 
@@ -221,8 +220,8 @@ insert into ac.ROLEMASTER values ('ROLMA2','defaultadmin','defaultadmin','This i
     );
 
 /*
-insert into ac.defaultrolemaster values ('DROLMA1','SignupAdmin','SignupAdmin','This is the role given to users when they sign up','PUBLIC','PUBLIC','PUBLIC','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.defaultrolemaster values ('DROLMA2','defaultadmin','defaultadmin','This is the role given to users when they completed creation of their first Company and branch','PUBLIC','PUBLIC','PUBLIC','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.defaultrolemaster values ('DROLMA1','SignupAdmin','SignupAdmin','This is the role given to users when they sign up','PUBLIC','PUBLIC','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.defaultrolemaster values ('DROLMA2','defaultadmin','defaultadmin','This is the role given to users when they completed creation of their first Company and branch','PUBLIC','PUBLIC','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 */
 
 --RoleDetails
