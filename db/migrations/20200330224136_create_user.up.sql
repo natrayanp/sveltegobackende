@@ -343,7 +343,7 @@ CREATE SEQUENCE ac.branchid_sequence START 1;
 
 
 CREATE TABLE ac.branch (
-            companyId           varchar(100) REFERENCES ac.company(companyid),
+            companyid           varchar(100) REFERENCES ac.company(companyid),
             branchId            varchar(100)  default (('BR'::text || to_char(CURRENT_TIMESTAMP, 'DDMMYYYY'::text)) ||
                                         nextval('ac.branchid_sequence'::regclass)) not null
                                         constraint branch_pkey primary key,

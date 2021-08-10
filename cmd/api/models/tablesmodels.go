@@ -92,27 +92,27 @@ type TblRefdata struct {
 }
 
 type TblBranch struct {
-	CompanyId         pgtype.Varchar     `json:"companyId"`
+	Companyid         pgtype.Varchar     `json:"companyId"`
 	Companyname       pgtype.Text        `json:"companyName"`
-	BranchId          pgtype.Varchar     `json:"branchId"`
-	BranchName        pgtype.Text        `json:"branchName"`
-	BranchShortName   pgtype.Varchar     `json:"branchShortName"`
-	BranchCategory    pgtype.Varchar     `json:"branchCategory"`
-	BranchStatus      pgtype.Varchar     `json:"branchStatus"`
-	BranchDescription pgtype.Text        `json:"branchDescriptio"`
-	BranchImageUrl    pgtype.Text        `json:"branchImageUrl"`
-	BranchAddLine1    pgtype.Varchar     `json:"branchAddLine1"`
-	BranchAddLine2    pgtype.Varchar     `json:"branchAddLine2"`
-	BranchCity        pgtype.Varchar     `json:"branchCity"`
-	BranchState       pgtype.Varchar     `json:"branchState"`
-	BranchCountry     pgtype.Varchar     `json:"branchCountry"`
-	BranchPinCode     pgtype.Varchar     `json:"branchPinCode"`
-	BranchPhone       pgtype.Text        `json:"branchPhone"`
-	BranchFax         pgtype.Text        `json:"branchFax"`
-	BranchMobile      pgtype.Text        `json:"branchMobile"`
-	BranchWebsite     pgtype.Text        `json:"branchWebsite"`
-	BranchEmail       pgtype.Text        `json:"branchEmail"`
-	BranchStartDate   pgtype.Date        `json:"branchStartDate"`
+	Branchid          pgtype.Varchar     `json:"branchId"`
+	Branchname        pgtype.Text        `json:"branchName"`
+	Branchshortname   pgtype.Varchar     `json:"branchShortName"`
+	Branchcategory    pgtype.Varchar     `json:"branchCategory"`
+	Branchstatus      pgtype.Varchar     `json:"branchStatus"`
+	Branchdescription pgtype.Text        `json:"branchDescriptio"`
+	Branchimageurl    pgtype.Text        `json:"branchImageUrl"`
+	Branchaddline1    pgtype.Varchar     `json:"branchAddLine1"`
+	Branchaddline2    pgtype.Varchar     `json:"branchAddLine2"`
+	Branchcountry     pgtype.Varchar     `json:"branchCountry"`
+	Branchstate       pgtype.Varchar     `json:"branchState"`
+	Branchcity        pgtype.Varchar     `json:"branchCity"`
+	Branchpincode     pgtype.Varchar     `json:"branchPinCode"`
+	Branchphone       pgtype.Text        `json:"branchPhone"`
+	Branchfax         pgtype.Text        `json:"branchFax"`
+	Branchmobile      pgtype.Text        `json:"branchMobile"`
+	Branchwebsite     pgtype.Text        `json:"branchWebsite"`
+	Branchemail       pgtype.Text        `json:"branchEmail"`
+	Branchstartdate   pgtype.Date        `json:"branchStartDate"`
 	Isdefault         pgtype.Varchar     `json:"isdefault"`
 	Lmuserid          pgtype.Varchar     `json:"lmuserid"`
 	Octime            pgtype.Timestamptz `json:"octime"`

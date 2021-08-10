@@ -1,6 +1,7 @@
 package branch
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -27,7 +28,7 @@ func fetchBranch(app *application.Application) http.HandlerFunc {
 		}
 		brchcp = *brch
 
-		if len(*brch) == 1 {
+		if len(*brch) > 0 {
 			havcpydetail = true
 			status = "SUCCESS"
 		} else {
@@ -43,7 +44,7 @@ func fetchBranch(app *application.Application) http.HandlerFunc {
 		ddf := models.RefDatReqFinal{
 			Refs: dd,
 		}
-
+		fmt.Println(brchcp)
 		fmt.Println("-------------------\n fetchBranch Start 1 \n-------------------")
 
 		if err := commonfuncs.RefDataFetch1(app, w, r, &ddf); err != nil {
@@ -66,73 +67,75 @@ func fetchBranch(app *application.Application) http.HandlerFunc {
 		}
 		cc.HttpRespond()
 		fmt.Println("-------------------\n fetchBranch Stop \n-------------------")
-		//return
+		return
 
 	}
 }
 
 func saveBranch(app *application.Application) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("-------------------\n save Company Start \n-------------------")
-		/*
-			defer r.Body.Close()
+		fmt.Println("-------------------\n save Branch Start \n-------------------")
 
-			user := &models.User{}
-			json.NewDecoder(r.Body).Decode(user)
+		defer r.Body.Close()
 
-			var cmpy *[]models.TblCompany
-			var cmpycp []models.TblCompany
-			havcpydetail := false
-			var errs error
-			var status string
-			cmpycp = []models.TblCompany{}
+		brncdata := &models.BrnResp{}
+		json.NewDecoder(r.Body).Decode(brncdata)
+		fmt.Println(brncdata)
 
-			if cpyop.Optype == "update" {
-				if cmpy, errs = commonfuncs.CompanyCheck(app, w, r); errs != nil {
-					return
-				}
-				cmpycp = *cmpy
-				/*
-					const layoutISO = "2006-01-02"
-					cpydd, _ := time.Parse(layoutISO, cpy.CompanyStartDate)
-					cpy.CompanyStartDate = cpydd.String()
-		*/
-		/*			if len(*cmpy) == 1 {
+		var brnc *[]models.TblBranch
+		var brnccp []models.TblBranch
+		havcpydetail := false
+		var errs error
+		var status string
+		brnccp = []models.TblBranch{}
+		//brn := &models.Brn{}
+		brn := &brncdata.Branchdata
+
+		fmt.Println(brn)
+		fmt.Println(brncdata.Optype)
+
+		if brncdata.Optype == "Update" {
+			if brnc, errs = commonfuncs.BranchCheck(app, w, r); errs != nil {
+				return
+			}
+			brnccp = *brnc
+			/*
+				const layoutISO = "2006-01-02"
+				brdd, _ := time.Parse(layoutISO, cpy.CompanyStartDate)
+				brnc.BranchStartDate = cpydd.String()
+			*/
+			if len(*brnc) == 1 {
 				havcpydetail = true
 				status = "SUCCESS"
 
-				cpy1 := models.Cpy{
-					CompanyId:          cmpycp[0].Companyid.String,
-					CompanyName:        cmpycp[0].Companyname.String,
-					CompanyShortName:   cmpycp[0].Companyshortname.String,
-					CompanyAddLine1:    cmpycp[0].Companyaddline1.String,
-					CompanyAddLine2:    cmpycp[0].Companyaddline2.String,
-					CompanyCategory:    cmpycp[0].Companycategory.String,
-					CompanyStatus:      cmpycp[0].Companystatus.String,
-					CompanyLogoUrl:     cmpycp[0].Companyimageurl.String,
-					CompanyLogo:        cmpycp[0].Companylogo.String,
-					CompanyIndustry:    cmpycp[0].Companyindustry.String,
-					CompanyTaxID:       cmpycp[0].Companytaxid.String,
-					CompanyStartDate:   cmpycp[0].Companystartdate.Time.String(),
-					CompanyCountry:     cmpycp[0].Companycountry.String,
-					CompanyCity:        cmpycp[0].Companycity.String,
-					CompanyState:       cmpycp[0].Companystate.String,
-					CompanyPinCode:     cmpycp[0].Companypincode.String,
-					CompanyPhone:       cmpycp[0].Companyphone.String,
-					CompanyFax:         cmpycp[0].Companyfax.String,
-					CompanyMobile:      cmpycp[0].Companymobile.String,
-					CompanyEmail:       cmpycp[0].Companyemail.String,
-					CompanyWebsite:     cmpycp[0].Companywebsite.String,
-					CompanyFiscalYear:  cmpycp[0].Companyfiscalyear.String,
-					CompanyTimeZone:    cmpycp[0].Companytimezone.String,
-					CompanyBaseCurency: cmpycp[0].Companybasecurency.String,
-					CompanysParent:     cmpycp[0].Companysparent.String,
+				brn1 := models.Brn{
+					CompanyId:         brnccp[0].Companyid.String,
+					BranchId:          brnccp[0].Branchid.String,
+					BranchName:        brnccp[0].Branchname.String,
+					BranchShortName:   brnccp[0].Branchshortname.String,
+					BranchCategory:    brnccp[0].Branchcategory.String,
+					BranchStatus:      brnccp[0].Branchstatus.String,
+					BranchDescription: brnccp[0].Branchdescription.String,
+					BranchImageUrl:    brnccp[0].Branchimageurl.String,
+					BranchAddLine1:    brnccp[0].Branchaddline1.String,
+					BranchAddLine2:    brnccp[0].Branchaddline2.String,
+					BranchCountry:     brnccp[0].Branchcountry.String,
+					BranchState:       brnccp[0].Branchstate.String,
+					BranchCity:        brnccp[0].Branchcity.String,
+					BranchPinCode:     brnccp[0].Branchpincode.String,
+					BranchPhone:       brnccp[0].Branchphone.String,
+					BranchFax:         brnccp[0].Branchfax.String,
+					BranchMobile:      brnccp[0].Branchmobile.String,
+					BranchEmail:       brnccp[0].Branchemail.String,
+					BranchWebsite:     brnccp[0].Branchwebsite.String,
+					BranchStartDate:   brnccp[0].Branchstartdate.Time.String(),
+					Isdefault:         brnccp[0].Isdefault.String,
 				}
 
-				if cmpy, errs = commonfuncs.Companyupdate(app, w, r, cpy, &cpy1); errs != nil {
+				if brnc, errs = commonfuncs.Branchupdate(app, w, r, brn, &brn1); errs != nil {
 					return
 				}
-				cmpycp = *cmpy
+				brnccp = *brnc
 
 			} else {
 				havcpydetail = true
@@ -140,40 +143,43 @@ func saveBranch(app *application.Application) http.HandlerFunc {
 				//TODO: send error response.
 			}
 
-		} else if cpyop.Optype == "save" {
+		} else if brncdata.Optype == "Save" {
 			havcpydetail = false
 			status = "SUCCESS"
 
-			if cmpy, errs = commonfuncs.CompanySave(app, w, r, cpy); errs != nil {
+			if brnc, errs = commonfuncs.BranchSave(app, w, r, brn); errs != nil {
+				fmt.Println("I am returning/n")
 				return
 			}
-			cmpycp = *cmpy
+			brnccp = *brnc
+			fmt.Println("after fetch/n")
 
 		}
 		//	}
 
-		fmt.Println("-------------------\n fetchCompany in save company Start 1 \n-------------------")
+		fmt.Println("-------------------\n fetchBranch in save company Start 1 \n-------------------")
+		fmt.Println(status)
+		if status == "SUCCESS" {
+			if brnc, errs = commonfuncs.BranchCheck(app, w, r); errs != nil {
+				return
+			}
+			brnccp = *brnc
+		}
+		fmt.Println("-------------------\n fetchBranch in save company  Start 2 \n-------------------")
 
-		//cmpycp = []models.TblCompany{}
-		//havcpydetail = true
-		//status = "success"
-
-		fmt.Println("-------------------\n fetchCompany in save company  Start 2 \n-------------------")
-
-		lgmsg := "Company Save successful.  But havecpy detail? = " + strconv.FormatBool(havcpydetail)
-		//ssd := map[string]interface{}{"message": lgmsg, "company": cmpycp, "refdata": ddf.RefResult}
-		ssd := map[string]interface{}{"message": lgmsg, "company": cmpycp, "refdata": ""}
+		lgmsg := "Branch Save successful.  But havecpy detail? = " + strconv.FormatBool(havcpydetail)
+		//ssd := map[string]interface{}{"message": lgmsg, "company": brnccp, "refdata": ddf.RefResult}
+		ssd := map[string]interface{}{"message": lgmsg, "branch": brnccp, "refdata": "s"}
 		cc := httpresponse.SlugResponse{
 			RespWriter: w,
 			Request:    r,
 			Data:       ssd,
 			Status:     status,
-			SlugCode:   "COMPANY-SAVE",
+			SlugCode:   "BRANCH-SAVE",
 			LogMsg:     lgmsg,
 		}
 		cc.HttpRespond()
-		*/
-		fmt.Println("-------------------\n save Company Stop \n-------------------")
+		fmt.Println("-------------------\n save Branch Stop \n-------------------")
 		return
 
 	}

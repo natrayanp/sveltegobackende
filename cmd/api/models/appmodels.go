@@ -65,3 +65,33 @@ type Cpyops struct {
 type ResultCount struct {
 	Count int
 }
+
+type Brn struct {
+	CompanyId         string
+	Companyname       string
+	BranchId          string
+	BranchName        string
+	BranchShortName   string
+	BranchCategory    string
+	BranchStatus      string
+	BranchDescription string
+	BranchImageUrl    string
+	BranchAddLine1    string
+	BranchAddLine2    string
+	BranchCity        string
+	BranchState       string
+	BranchCountry     string
+	BranchPinCode     string
+	BranchPhone       string
+	BranchFax         string
+	BranchMobile      string
+	BranchWebsite     string
+	BranchEmail       string
+	BranchStartDate   string
+	Isdefault         string
+}
+
+type BrnResp struct {
+	Optype     string
+	Branchdata Brn
+}

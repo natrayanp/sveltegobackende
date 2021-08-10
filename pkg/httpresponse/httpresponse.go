@@ -55,6 +55,7 @@ func (s SlugResponse) HttpRespond() {
 	}
 
 	resp := finalResponse{structToMap(s.Data), s.Status, s.Userinfo.Session, s.SlugCode, s.getStatucode()}
+
 	fmt.Println("chek data resp")
 	fmt.Println(resp)
 	if err := render.Render(s.RespWriter, s.Request, &resp); err != nil {
@@ -120,7 +121,7 @@ func structToMap(item interface{}) map[string]interface{} {
 			return map[string]interface{}{}
 		}
 	}
-
+	fmt.Println("return from println")
 	fmt.Println(res)
 	return res
 }
