@@ -23,7 +23,7 @@ func fetchBranch(app *application.Application) http.HandlerFunc {
 		var errs error
 		var status string
 
-		if brch, errs = commonfuncs.BranchCheck(app, w, r); errs != nil {
+		if brch, errs = commonfuncs.BranchCheck(app, w, r, []string{"all"}); errs != nil {
 			return
 		}
 		brchcp = *brch
@@ -46,13 +46,10 @@ func fetchBranch(app *application.Application) http.HandlerFunc {
 		}
 		fmt.Println(brchcp)
 		fmt.Println("-------------------\n fetchBranch Start 1 \n-------------------")
-
 		if err := commonfuncs.RefDataFetch1(app, w, r, &ddf); err != nil {
 			return
 		}
-
 		fmt.Println(ddf.RefResult)
-
 		fmt.Println("-------------------\n fetchBranch Start 2 \n-------------------")
 
 		lgmsg := "Branch Fetch successful.  But havecpy detail? = " + strconv.FormatBool(havcpydetail)
@@ -95,7 +92,7 @@ func saveBranch(app *application.Application) http.HandlerFunc {
 		fmt.Println(brncdata.Optype)
 
 		if brncdata.Optype == "Update" {
-			if brnc, errs = commonfuncs.BranchCheck(app, w, r); errs != nil {
+			if brnc, errs = commonfuncs.BranchCheck(app, w, r, []string{brn.BranchId}); errs != nil {
 				return
 			}
 			brnccp = *brnc
@@ -132,10 +129,9 @@ func saveBranch(app *application.Application) http.HandlerFunc {
 					Isdefault:         brnccp[0].Isdefault.String,
 				}
 
-				if brnc, errs = commonfuncs.Branchupdate(app, w, r, brn, &brn1); errs != nil {
+				if _, errs = commonfuncs.Branchupdate(app, w, r, brn, &brn1); errs != nil {
 					return
 				}
-				brnccp = *brnc
 
 			} else {
 				havcpydetail = true
@@ -147,26 +143,24 @@ func saveBranch(app *application.Application) http.HandlerFunc {
 			havcpydetail = false
 			status = "SUCCESS"
 
-			if brnc, errs = commonfuncs.BranchSave(app, w, r, brn); errs != nil {
+			if _, errs = commonfuncs.BranchSave(app, w, r, brn); errs != nil {
 				fmt.Println("I am returning/n")
 				return
 			}
-			brnccp = *brnc
+
 			fmt.Println("after fetch/n")
 
 		}
-		//	}
 
 		fmt.Println("-------------------\n fetchBranch in save company Start 1 \n-------------------")
 		fmt.Println(status)
 		if status == "SUCCESS" {
-			if brnc, errs = commonfuncs.BranchCheck(app, w, r); errs != nil {
+			if brnc, errs = commonfuncs.BranchCheck(app, w, r, []string{"all"}); errs != nil {
 				return
 			}
 			brnccp = *brnc
 		}
 		fmt.Println("-------------------\n fetchBranch in save company  Start 2 \n-------------------")
-
 		lgmsg := "Branch Save successful.  But havecpy detail? = " + strconv.FormatBool(havcpydetail)
 		//ssd := map[string]interface{}{"message": lgmsg, "company": brnccp, "refdata": ddf.RefResult}
 		ssd := map[string]interface{}{"message": lgmsg, "branch": brnccp, "refdata": "s"}

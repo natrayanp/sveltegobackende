@@ -135,11 +135,11 @@ func userLogin(app *application.Application) http.HandlerFunc {
 				}
 
 				//TODO Check for BRANCH DETAILS CAPTURED... if none NAV to branch details page
-				if brnc, errs = commonfuncs.BranchCheck(app, w, r); errs != nil {
+				if brnc, errs = commonfuncs.BranchCheck(app, w, r, []string{"all"}); errs != nil {
 					return
 				}
 
-				if len(*brnc) == 1 {
+				if len(*brnc) > 0 {
 					//havbrndetail = true
 				} else {
 					//havbrndetail = false
