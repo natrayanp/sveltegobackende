@@ -105,6 +105,8 @@ func ParseHeadMiddleware(app *application.Application) func(next http.Handler) h
 				userinfo.Companyid = "PUBLIC"
 			}
 
+			myc[0].Entityid.AssignTo(userinfo.Entityid)
+
 			errs := commonfuncs.SessionOps(app, w, r, &userinfo)
 			if errs != nil {
 				return

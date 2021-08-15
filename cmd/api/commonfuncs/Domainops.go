@@ -56,12 +56,15 @@ func DomRegis(app *application.Application, w http.ResponseWriter, r *http.Reque
 						companyid = 'CPYID'||nextval('companyid_seq'::regclass), 
 						lmtime = CURRENT_TIMESTAMP, 
 						selecthostname = $1,
-						hostname = $1
+						hostname = $1,
+						companyowner = 'Y'
 					WHERE userid = $2
 					AND siteid = $3
-					AND selecthostname isnull`
+					AND selecthostname isnull
+					RETURNING *`
 
-	var myc1 dbtran.Resultset
+	//var myc1 dbtran.Resultset
+	var myc1 models.TblUserlogin
 
 	stmts1 := []*dbtran.PipelineStmt{
 		dbtran.NewPipelineStmt("update", qry1, &myc1, dom, userinfo.UUID, userinfo.Siteid),
@@ -103,7 +106,7 @@ func DomRegis(app *application.Application, w http.ResponseWriter, r *http.Reque
 		UUID string
 		Cpid string
 	}
-	args, err := json.Marshal(assingrole{UUID: userinfo.UUID, Cpid: userinfo.Companyid})
+	args, err := json.Marshal(assingrole{UUID: userinfo.UUID, Cpid: myc1.Companyid.String})
 
 	if err != nil {
 		dd := httpresponse.SlugResponse{

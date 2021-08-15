@@ -2,9 +2,11 @@ package commonfuncs
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 
+	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/sveltegobackend/cmd/api/models"
 	"github.com/sveltegobackend/pkg/application"
@@ -13,11 +15,11 @@ import (
 	"github.com/sveltegobackend/pkg/httpresponse"
 )
 
-func CheckUserRegistered(app *application.Application, w http.ResponseWriter, r *http.Request) (bool, error) {
+func CheckUserRegistered(app *application.Application, w http.ResponseWriter, r *http.Request) (*models.RegisChk, error) {
 	//Check user registered Start
 
-	//havesubdomain := false
 	isregistered := false
+	cpown := "DK"
 
 	ctx := r.Context()
 	userinfo, ok := ctx.Value(fireauth.UserContextKey).(fireauth.User)
@@ -34,7 +36,7 @@ func CheckUserRegistered(app *application.Application, w http.ResponseWriter, r 
 			LogMsg:     "Context fetch error",
 		}
 		dd.HttpRespond()
-		return isregistered, err
+		return &models.RegisChk{Isregis: isregistered, Companyowner: cpown}, err
 	}
 
 	qry := `SELECT * FROM ac.userlogin
@@ -54,6 +56,14 @@ func CheckUserRegistered(app *application.Application, w http.ResponseWriter, r 
 	})
 
 	if err != nil {
+		//https://github.com/jackc/pgx/issues/474
+		var pgErr *pgconn.PgError
+		fmt.Println("---------------$$$end5a")
+		data := "Technical Error.  Please contact support"
+
+		if errors.As(err, &pgErr) {
+			data = "Technical Error.  Please contact support"
+		}
 
 		//		dd := errors.SlugError{
 		dd := httpresponse.SlugResponse{
@@ -61,15 +71,14 @@ func CheckUserRegistered(app *application.Application, w http.ResponseWriter, r 
 			ErrType:    httpresponse.ErrorTypeDatabase,
 			RespWriter: w,
 			Request:    r,
-			Data:       map[string]interface{}{"message": "Database error"},
+			Data:       map[string]interface{}{"message": data},
 			SlugCode:   "AUTH-INT",
-			LogMsg:     "Database error",
+			LogMsg:     pgErr.Error(),
 		}
-		//dd.HttpRespondWithError()
 		dd.HttpRespond()
-		return isregistered, err
-
+		return &models.RegisChk{Isregis: isregistered, Companyowner: cpown}, err
 	}
+
 	fmt.Println("ddsds")
 	fmt.Println(myc)
 
@@ -86,20 +95,21 @@ func CheckUserRegistered(app *application.Application, w http.ResponseWriter, r 
 		}
 
 		dd.HttpRespond()
-		return isregistered, err
+		return &models.RegisChk{Isregis: isregistered, Companyowner: cpown}, err
 
 	} else if len(myc) == 0 {
 		fmt.Println("no record db success")
-		return isregistered, err
+		return &models.RegisChk{Isregis: isregistered, Companyowner: cpown}, err
 	} else if len(myc) == 1 {
 		isregistered = true
+		cpown = myc[0].Companyowner.String
 		/*		if myc[0].Domainmapid.String != "" {
 				havesubdomain = true
 			}*/
 	}
 
 	//Check user registered end
-	return isregistered, err
+	return &models.RegisChk{Isregis: isregistered, Companyowner: cpown}, err
 }
 
 func RegisterUser(app *application.Application, w http.ResponseWriter, r *http.Request) (bool, error) {
@@ -122,8 +132,8 @@ func RegisterUser(app *application.Application, w http.ResponseWriter, r *http.R
 		return false, err
 	}
 
-	const qry = `INSERT INTO ac.userlogin (userid, username, useremail, userpassword, userstatus, emailverified, siteid, hostname, companyid, userstatlstupdt, octime, lmtime) 
-	VALUES ($1, $2, $3, $4, $5,$6,$7,$8,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);`
+	const qry = `INSERT INTO ac.userlogin (userid, username, useremail, userpassword, userstatus, emailverified, siteid, hostname, companyid, companyowner, userstatlstupdt, octime, lmtime) 
+	VALUES ($1, $2, $3, $4, $5,$6,$7,$8,'DK',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);`
 
 	//uspass := ""
 

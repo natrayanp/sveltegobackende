@@ -35,6 +35,8 @@ CREATE TABLE ac.userlogin (
     hostname    text NOT NULL,          
     selecthostname    text UNIQUE,          
     companyid   varchar(100),
+    companyowner    varchar(3) NOT NULL, --> Y, N, DK
+    entityid    varchar(100)[],  --> This holds the ID enity id will have companyids tagged in another table which is TODO
     userstatlstupdt	           timestamptz NOT NULL,    
     octime			           timestamptz NOT NULL,
     lmtime			           timestamptz NOT NULL,
@@ -131,7 +133,7 @@ CREATE TABLE ac.companypacks (
     id                    text NOT NULL CONSTRAINT sitepackid PRIMARY KEY DEFAULT 'CPCKID'||nextval('companypacksid_seq'::regclass)::text,
     companyid             varchar(100) NOT NULL,
     planid                    varchar(20) NOT NULL ,
-    packid                varchar(20) NOT NULL,  --> This can have only PACK type from pack table
+    packfuncid             varchar(20) NOT NULL,  --> This can have only PACK type from pack table
     startdate             date NOT NULL,
     expirydate            date NOT NULL,
     userrolelimit         numeric(10),
@@ -178,10 +180,14 @@ CREATE TABLE ac.planpacks (
 );
 
 
-
+/* This is to be created for each plan
+    currently iam adding a free plan
+*/
 insert into ac.planpacks values ('PACKID1','PKS8','PLANID1',10,10,10,90,'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 insert into ac.planpacks values ('PACKID2','PKS9','PLANID1',10,10,10,90,'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 insert into ac.planpacks values ('PACKID3','PKS14','PLANID1',10,10,10,90,'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.planpacks values ('PACKID4','PKS11','PLANID1',10,10,10,90,'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.planpacks values ('PACKID5','PKS12','PLANID1',10,10,10,90,'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 
 
 
@@ -199,12 +205,13 @@ CREATE TABLE ac.rolemaster (
     lmtime			      timestamptz NOT NULL
 );
 
-/* DONOT RUN
+
 insert into ac.ROLEMASTER values ('ROLMA1','SignupAdmin','SignupAdmin','This is the role given to users when they sign up','PUBLIC','PUBLIC','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+/*
 insert into ac.ROLEMASTER values ('ROLMA2','defaultadmin','defaultadmin','This is the role given to users when they completed creation of their first Company and branch','PUBLIC','PUBLIC','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 */
 
-
+/*
 --defaultRoleMaster
 
     CREATE TABLE ac.defaultrolemaster (    
@@ -219,11 +226,10 @@ insert into ac.ROLEMASTER values ('ROLMA2','defaultadmin','defaultadmin','This i
         lmtime			      timestamptz NOT NULL
     );
 
-/*
-insert into ac.defaultrolemaster values ('DROLMA1','SignupAdmin','SignupAdmin','This is the role given to users when they sign up','PUBLIC','PUBLIC','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.defaultrolemaster values ('DROLMA2','defaultadmin','defaultadmin','This is the role given to users when they completed creation of their first Company and branch','PUBLIC','PUBLIC','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-*/
 
+insert into ac.defaultrolemaster values ('ROLMA1','SignupAdmin','SignupAdmin','This is the role given to users when they sign up','PUBLIC','PUBLIC','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+
+*/
 --RoleDetails
 
 CREATE TABLE ac.roledetails (    
@@ -237,19 +243,16 @@ CREATE TABLE ac.roledetails (
     lmtime			      timestamptz NOT NULL
 );
 
-/*
+/*  All the Functions and Modules that are to be part of sign up admin should have should be included here   
+    Eventhough we have entry in this table for sign up role.  User will get the modules/functions that are common between this and company packs
+*/
 insert into ac.Roledetails values ('ROLDET1','ROLMA1','PKS8','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 insert into ac.Roledetails values ('ROLDET2','ROLMA1','PKS9','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 insert into ac.Roledetails values ('ROLDET3','ROLMA1','PKS14','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.Roledetails values ('ROLDET3','ROLMA1','PKS11','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.Roledetails values ('ROLDET3','ROLMA1','PKS12','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 
-insert into ac.Roledetails values ('ROLDET1','ROLMA1','PKS8','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.Roledetails values ('ROLDET2','ROLMA1','PKS9','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.Roledetails values ('ROLDET3','ROLMA2','PKS8','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.Roledetails values ('ROLDET4','ROLMA2','PKS9','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.Roledetails values ('ROLDET5','ROLMA2','PKS11','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.Roledetails values ('ROLDET6','ROLMA2','PKS12','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-*/
-
+/*
 --defaultRoleDetails
 
 CREATE TABLE ac.defaultroledetails (    
@@ -261,7 +264,7 @@ CREATE TABLE ac.defaultroledetails (
     octime			      timestamptz NOT NULL,
     lmtime			      timestamptz NOT NULL
 );
-/*
+
 insert into ac.defaultroledetails values ('DROLDET1','ROLMA1','PKS8','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 insert into ac.defaultroledetails values ('DROLDET2','ROLMA1','PKS9','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 insert into ac.defaultroledetails values ('DROLDET3','ROLMA2','PKS8','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);

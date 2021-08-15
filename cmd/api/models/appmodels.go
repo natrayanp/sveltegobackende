@@ -95,3 +95,24 @@ type BrnResp struct {
 	Optype     string
 	Branchdata Brn
 }
+
+type RegisChk struct {
+	Isregis      bool
+	Companyowner string
+}
+
+type ActiveCompnayTree struct {
+	Branchid      string
+	MyCompnayTree TblMytree
+}
+
+type PacksResp struct {
+	EntityLst        []string
+	ActiveEntity     string
+	CompanyLst       []string
+	ActiveCompany    string
+	BranchLst        []TblBranch
+	ActiveBranch     TblBranch
+	BrnLvlTreeforCpy []ActiveCompnayTree
+	CpyLvlTreeforCpy TblMytree
+}

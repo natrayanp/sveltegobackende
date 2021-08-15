@@ -1,6 +1,7 @@
 package signup
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -22,7 +23,7 @@ func userSignup(app *application.Application) http.HandlerFunc {
 		var userinfo fireauth.User
 		var data string
 
-		isregis, errs := commonfuncs.CheckUserRegistered(app, w, r)
+		regischk, errs := commonfuncs.CheckUserRegistered(app, w, r)
 
 		if errs != nil {
 			return
@@ -33,7 +34,7 @@ func userSignup(app *application.Application) http.HandlerFunc {
 
 		if !ctxfetchok {
 			dd := httpresponse.SlugResponse{
-				Err:        fmt.Errorf("User Context Fetch error"),
+				Err:        errors.New("User Context Fetch error"),
 				ErrType:    httpresponse.ErrorTypeContexFetchFail,
 				RespWriter: w,
 				Request:    r,
@@ -46,8 +47,8 @@ func userSignup(app *application.Application) http.HandlerFunc {
 			return
 		}
 
-		fmt.Println(isregis)
-		if isregis {
+		fmt.Println(regischk)
+		if regischk.Isregis {
 			data = userinfo.Email + "Already a registered user"
 			if !userinfo.EmailVerified {
 				data = data + ". Verify your email before login."
@@ -99,7 +100,8 @@ func userSignup(app *application.Application) http.HandlerFunc {
 		/*
 			dds, stat := ss.RespData()
 
-			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("Content-Type", "application/js
+			on")
 			w.WriteHeader(stat)
 			response, _ := json.Marshal(dds)
 			fmt.Println(response)

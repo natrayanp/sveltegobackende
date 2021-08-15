@@ -3,19 +3,21 @@ package models
 import "github.com/jackc/pgtype"
 
 type TblUserlogin struct {
-	Userid          pgtype.Varchar     `json:"userid"`
-	Username        pgtype.Varchar     `json:"username"`
-	Useremail       pgtype.Varchar     `json:"useremail"`
-	Userpassword    pgtype.Varchar     `json:"userpassword"`
-	Userstatus      pgtype.Varchar     `json:"userstatus"`
-	Emailverified   pgtype.Bool        `json:"emailverified"`
-	Siteid          pgtype.Varchar     `json:"siteid"`
-	Hostname        pgtype.Text        `json:"hostname"`
-	Selecthostname  pgtype.Text        `json:"selecthostname"`
-	Companyid       pgtype.Varchar     `json:"companyid"`
-	Userstatlstupdt pgtype.Timestamptz `json:"userstatuslastupdate"`
-	Octime          pgtype.Timestamptz `json:"creattime"`
-	Lmtime          pgtype.Timestamptz `json:"lasmodifytime"`
+	Userid          pgtype.Varchar      `json:"userid"`
+	Username        pgtype.Varchar      `json:"username"`
+	Useremail       pgtype.Varchar      `json:"useremail"`
+	Userpassword    pgtype.Varchar      `json:"userpassword"`
+	Userstatus      pgtype.Varchar      `json:"userstatus"`
+	Emailverified   pgtype.Bool         `json:"emailverified"`
+	Siteid          pgtype.Varchar      `json:"siteid"`
+	Hostname        pgtype.Text         `json:"hostname"`
+	Selecthostname  pgtype.Text         `json:"selecthostname"`
+	Companyid       pgtype.Varchar      `json:"companyid"`
+	Companyowner    pgtype.Varchar      `json:"companyowner"`
+	Entityid        pgtype.VarcharArray `json:"entityid"`
+	Userstatlstupdt pgtype.Timestamptz  `json:"userstatuslastupdate"`
+	Octime          pgtype.Timestamptz  `json:"creattime"`
+	Lmtime          pgtype.Timestamptz  `json:"lasmodifytime"`
 }
 
 type TblMytree struct {

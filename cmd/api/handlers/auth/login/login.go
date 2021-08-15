@@ -43,7 +43,7 @@ func userLogin(app *application.Application) http.HandlerFunc {
 
 		fmt.Println(ctxfetchok)
 
-		isregis, errs := commonfuncs.CheckUserRegistered(app, w, r)
+		regischk, errs := commonfuncs.CheckUserRegistered(app, w, r)
 
 		if errs != nil {
 			return
@@ -51,8 +51,8 @@ func userLogin(app *application.Application) http.HandlerFunc {
 
 		//Check user registered END
 
-		fmt.Println(isregis)
-		if isregis {
+		fmt.Println(regischk)
+		if regischk.Isregis {
 
 			/*
 				if errs := commonfuncs.SessionOps(app, w, r); errs != nil {
@@ -104,7 +104,7 @@ func userLogin(app *application.Application) http.HandlerFunc {
 			}
 
 			// Check for domain registration
-			if userinfo.Companyid != "PUBLIC" {
+			if userinfo.Companyid != "PUBLIC" && regischk.Companyowner == "Y" {
 				havdom = true
 				nxtaction = "LANDING"
 
@@ -121,6 +121,18 @@ func userLogin(app *application.Application) http.HandlerFunc {
 					goto NAVCHKEND
 				}
 
+				/*
+					if myc, errs = commonfuncs.PackageFetch(app, w, r, []string{"ALL"}, []string{"ALL"}); errs != nil {
+						return
+					}
+
+					if len(*myc) > 0 {
+						havpacks = true
+					} else {
+						nxtaction = "ADDPACKS"
+						goto NAVCHKEND
+					}
+				*/
 				//TODO Check for COMPANY DETAILS CAPTURED... if none NAV to comapny details page
 
 				if cmpy, errs = commonfuncs.CompanyCheck(app, w, r); errs != nil {
@@ -153,18 +165,21 @@ func userLogin(app *application.Application) http.HandlerFunc {
 				//nxtaction = "LANDING"
 				switch nxtaction {
 				case "LANDING":
-					if myc, errs = commonfuncs.PackageFetch(app, w, r, []string{"ALL"}); errs != nil {
+
+					if myc, errs = commonfuncs.PackageFetch(app, w, r, []string{"ALL"}, []string{"ALL"}); errs != nil {
 						return
 					}
+
+					fmt.Println("LANDING so nothing to fetch")
 				case "ADDCOMPANY":
-					if myc, errs = commonfuncs.PackageFetch(app, w, r, []string{"PKS8"}); errs != nil {
+					if myc, errs = commonfuncs.PackageFetch(app, w, r, []string{"PKS8"}, []string{"ALL"}); errs != nil {
 						return
 					}
 					cmpy = &[]models.TblCompany{}
 					brnc = &[]models.TblBranch{}
 
 				case "ADDBRANCH":
-					if myc, errs = commonfuncs.PackageFetch(app, w, r, []string{"PKS8", "PKS9"}); errs != nil {
+					if myc, errs = commonfuncs.PackageFetch(app, w, r, []string{"PKS8", "PKS9"}, []string{"ALL"}); errs != nil {
 						return
 					}
 
@@ -189,7 +204,13 @@ func userLogin(app *application.Application) http.HandlerFunc {
 						myc = &[]models.TblMytree{}
 					}*/
 
+			} else if userinfo.Companyid != "PUBLIC" && regischk.Companyowner == "N" {
+
+				//TODO : Flow for staff to be implemented
+				fmt.Println("Flow for staff to be implemented")
+
 			} else {
+
 				nxtaction = "DOMAINREGIS"
 				fmt.Println("else loop in login tblmytre")
 				data = "Subdomain not registered"
@@ -213,7 +234,7 @@ func userLogin(app *application.Application) http.HandlerFunc {
 			//User registration End
 
 			cc := httpresponse.SlugResponse{
-				Err:        fmt.Errorf("Not a Registered user"),
+				Err:        errors.New("not a registered user"),
 				ErrType:    httpresponse.ErrorTypeIncorrectInput,
 				RespWriter: w,
 				Request:    r,
@@ -229,11 +250,10 @@ func userLogin(app *application.Application) http.HandlerFunc {
 
 		}
 
-		fmt.Println(isregis, havdom, havpacks, havcpydetail)
+		fmt.Println(regischk.Isregis, havdom, havpacks, havcpydetail)
 		fmt.Println(userinfo)
 		fmt.Println(userinfo.Session)
 		data = "User registration successful."
-		//ssd := map[string]interface{}{"message": data, "isregistered": isregis, "havedomain": havdom, "havepacks": havpacks, "havecompany": havcpydetail, "menu": &myc}
 		ssd := map[string]interface{}{"message": data, "nextaction": nxtaction, "menu": myc, "company": cmpy, "branch": brnc}
 		//&nat{"nat1", "nat2"},
 		fmt.Println("registration completed ss sent")

@@ -74,24 +74,10 @@ func GetPacks(app *application.Application, w http.ResponseWriter, r *http.Reque
 	return &myc, nil
 }
 
-func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.Request, packfuncid []string) (*[]models.TblMytree, error) {
+func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.Request, packfuncid []string, companyid string) (*[]models.TblMytree, error) {
 	fmt.Println("----------------- PACKAGE Fetch START -------------------")
 
 	var data string
-	packfuncidf := ""
-	if len(packfuncid) == 1 && packfuncid[0] == "ALL" {
-		packfuncidf = "ALL"
-	} else {
-		for i, n := range packfuncid {
-			if i != 0 {
-				packfuncidf = packfuncidf + ",'" + n + "'"
-
-			} else if i == 0 {
-				packfuncidf = "'" + n + "'"
-			}
-
-		}
-	}
 
 	ctx := r.Context()
 	//userinfo, ok := ctx.Value(fireauth.UserContextKey).(fireauth.User)
@@ -103,83 +89,186 @@ func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.R
 
 	var qry string
 	var myc []models.TblMytree
+	var myca [][]models.TblMytree
+	var mybranch *[]models.TblBranch
 	var stmts []*dbtran.PipelineStmt
+	var datosend models.PacksResp
+	var err error
+	var havbrndetail bool
 
-	if packfuncidf == "ALL" {
+	datosend.EntityLst = userinfo.Entityid
+	datosend.ActiveEntity = ""
+	datosend.CompanyLst = []string{companyid}
+	datosend.ActiveCompany = datosend.CompanyLst[0]
 
-		qry := `WITH RECURSIVE MyTree AS (
-						SELECT *,false as open FROM ac.packs WHERE id IN(
-						SELECT packfuncid FROM ac.roledetails WHERE rolemasterid IN (SELECT DISTINCT rolemasterid FROM ac.userrole WHERE userid = $1
-																	AND status NOT IN ('D','I') 
-																	AND companyid IN ('PUBLIC',$2) 
-																	AND branchid IN('PUBLIC')                                                                        
-																)                                                                  
-											)
-		UNION
-		SELECT m.*,false as open FROM ac.packs AS m JOIN MyTree AS t ON m.id = ANY(t.parent) 
-	)
-	SELECT * FROM MyTree ORDER BY TYPE, SORTORDER,NAME;`
+	mybr, err := BranchCheck(app, w, r, []string{"All"})
+	if err != nil {
+		fmt.Println("TODO: Error handling")
+	}
+
+	if mybr, errs := commonfuncs.BranchCheck(app, w, r, []string{"all"}); errs != nil {
+		return
+	}
+
+	if len(*mybr) > 0 {
+		havbrndetail = true
+		datosend.BranchLst = *mybr
+		datosend.ActiveBranch = datosend.BranchLst[0]
+	} else {
+		havbrndetail = false
+		datosend.BranchLst = *mybr
+		datosend.ActiveBranch = ""
+	}
+
+	/*
+		if packfuncid[0] == "ALL" {
+
+
+		qry = `WITH RECURSIVE MyTree AS
+					(
+						SELECT *,false as open FROM ac.packs WHERE id IN
+						(
+							(	SELECT PACKFpackfuncidemasterid IN
+									(SELECT DISTINCT rolemasterid FROM ac.userrole
+										WHERE userid = $1
+										AND status NOT IN ('D','I')
+										AND companyid = $2
+									)
+								INTERSECT
+								SELECT PACKFUNCID from ac.companypacks
+									WHERE companyid = $2
+									AND status NOT IN ('D','I')
+									AND startdate <=  CURRENT_DATE
+									AND expirydate >= CURRENT_DATE
+							)
+						)
+						UNION
+						SELECT m.*,false as open FROM ac.packs AS m JOIN MyTree AS t ON m.id = ANY(t.parent)
+					)
+					SELECT * FROM MyTree ORDER BY TYPE, SORTORDER,NAME;`
+
+			stmts = []*dbtran.PipelineStmt{
+				dbtran.NewPipelineStmt("select", qry, &myc, userinfo.UUID, userinfo.Companyid),
+			}
+
+
+		} else {
+	*/
+	if packfuncid[0] != "ALL" {
+		qry = `WITH RECURSIVE MyTree AS 
+				(
+					SELECT *,false as open FROM ac.packs WHERE id IN
+					(
+						(	SELECT PACKFUNCID FROM ac.roledetails 
+								WHERE rolemasterid IN 
+								(SELECT DISTINCT rolemasterid FROM ac.userrole 
+									WHERE userid = $1
+									AND status NOT IN ('D','I') 
+									AND companyid = $2
+								)
+							INTERSECT	
+							SELECT PACKFUNCID from ac.companypacks 
+								WHERE companyid = $2
+								AND status NOT IN ('D','I')
+								AND startdate <=  CURRENT_DATE
+								AND expirydate >= CURRENT_DATE
+							INTERSECT	
+							SELECT * FROM UNNEST($3) AS PACKFUNCID
+						)
+					)
+					UNION
+					SELECT m.*,false as open FROM ac.packs AS m JOIN MyTree AS t ON m.id = ANY(t.parent)
+				)
+				SELECT * FROM MyTree ORDER BY TYPE, SORTORDER,NAME;`
 
 		stmts = []*dbtran.PipelineStmt{
-			dbtran.NewPipelineStmt("select", qry, &myc, userinfo.UUID, "PUBLIC"),
+			dbtran.NewPipelineStmt("select", qry, &myc, userinfo.UUID, userinfo.Companyid, packfuncid),
 		}
+
+		_, err := dbtran.WithTransaction(ctx, dbtran.TranTypeFullSet, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {
+			err := dbtran.RunPipeline(ctx, typ, db, ttx, stmts...)
+			return err
+		})
+
+		fmt.Println("---------------$$$end5")
+		//fmt.Println(err.Error())
+		if err != nil {
+			//https://github.com/jackc/pgx/issues/474
+			var pgErr *pgconn.PgError
+			fmt.Println("---------------$$$end5a")
+			if errors.As(err, &pgErr) {
+				data = "Technical Error.  Please contact support"
+			}
+
+			//		dd := errors.SlugError{
+			dd := httpresponse.SlugResponse{
+				Err:        err,
+				ErrType:    httpresponse.ErrorTypeDatabase,
+				RespWriter: w,
+				Request:    r,
+				Data:       map[string]interface{}{"message": data},
+				SlugCode:   "DOMAINREG-UPDATE",
+				LogMsg:     pgErr.Error(),
+			}
+			dd.HttpRespond()
+			return &[]models.TblMytree{}, err
+		}
+
+		fmt.Println("---------------$$$end6")
+		dd, _ := json.Marshal(myc)
+		fmt.Println(string(dd))
+		fmt.Println("---------------$$$end6a")
+		fmt.Printf("&myc is: %p\n", &myc)
+		createDataTree(&myc)
+		fmt.Println("---------------$$$end6b")
+		dd1, _ := json.Marshal(myc)
+		fmt.Printf("&myc is: %p\n", &myc)
+		fmt.Println(string(dd1))
+		fmt.Println("---------------$$$end7")
+		fmt.Println("----------------- PACKAGE FETCH END -------------------")
+
+		return &myc, nil
+
 	} else {
 
-		qry = `WITH RECURSIVE MyTree AS (
-		SELECT *,false as open FROM ac.packs WHERE id  = ANY($1)
-		UNION
-		SELECT m.*,false as open FROM ac.packs AS m JOIN MyTree AS t ON m.id = ANY(t.parent) 
-	)
-	SELECT * FROM MyTree ORDER BY TYPE, SORTORDER,NAME;`
+		if havbrndetail {
 
-		stmts = []*dbtran.PipelineStmt{
-			dbtran.NewPipelineStmt("select", qry, &myc, packfuncid),
+			for i, s := range datosend.BranchLst {
+				fmt.Println(i, s.Branchid.String)
+
+				qry = `WITH RECURSIVE MyTree AS 
+			(
+				SELECT $3 as branchid, *,false as open FROM ac.packs WHERE id IN
+				(
+					(	SELECT PACKFpackfuncidemasterid IN 
+							(SELECT DISTINCT rolemasterid FROM ac.userrole 
+								WHERE userid = $1
+								AND status NOT IN ('D','I') 
+								AND companyid = $2
+								AND branchid = $3
+							)
+						INTERSECT	
+						SELECT PACKFUNCID from ac.companypacks 
+							WHERE companyid = $2
+							AND status NOT IN ('D','I')
+							AND startdate <=  CURRENT_DATE
+							AND expirydate >= CURRENT_DATE
+					)
+				)
+				UNION
+				SELECT $3 as branchid,m.*,false as open FROM ac.packs AS m JOIN MyTree AS t ON m.id = ANY(t.parent)
+			)
+			SELECT * FROM MyTree ORDER BY TYPE, SORTORDER,NAME;`
+
+				append(stmts, []*dbtran.PipelineStmt{
+					dbtran.NewPipelineStmt("select", qry, &myca[i], userinfo.UUID, userinfo.Companyid, s.Branchid.String),
+				})
+
+			}
+
 		}
+
 	}
-
-	_, err := dbtran.WithTransaction(ctx, dbtran.TranTypeFullSet, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {
-		err := dbtran.RunPipeline(ctx, typ, db, ttx, stmts...)
-		return err
-	})
-
-	fmt.Println("---------------$$$end5")
-	//fmt.Println(err.Error())
-	if err != nil {
-		//https://github.com/jackc/pgx/issues/474
-		var pgErr *pgconn.PgError
-		fmt.Println("---------------$$$end5a")
-		if errors.As(err, &pgErr) {
-			data = "Technical Error.  Please contact support"
-		}
-
-		//		dd := errors.SlugError{
-		dd := httpresponse.SlugResponse{
-			Err:        err,
-			ErrType:    httpresponse.ErrorTypeDatabase,
-			RespWriter: w,
-			Request:    r,
-			Data:       map[string]interface{}{"message": data},
-			SlugCode:   "DOMAINREG-UPDATE",
-			LogMsg:     pgErr.Error(),
-		}
-		dd.HttpRespond()
-		return &[]models.TblMytree{}, err
-	}
-
-	fmt.Println("---------------$$$end6")
-	dd, _ := json.Marshal(myc)
-	fmt.Println(string(dd))
-	fmt.Println("---------------$$$end6a")
-	fmt.Printf("&myc is: %p\n", &myc)
-	createDataTree(&myc)
-	fmt.Println("---------------$$$end6b")
-	dd1, _ := json.Marshal(myc)
-	fmt.Printf("&myc is: %p\n", &myc)
-	fmt.Println(string(dd1))
-	fmt.Println("---------------$$$end7")
-	fmt.Println("----------------- PACKAGE FETCH END -------------------")
-
-	return &myc, nil
 }
 
 func createDataTree(mnodes *[]models.TblMytree) {

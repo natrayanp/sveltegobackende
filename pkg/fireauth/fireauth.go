@@ -155,6 +155,7 @@ type User struct {
 	Hostname      string
 	Siteid        string
 	Companyid     string
+	Entityid      []string
 }
 
 func GetUserPopulated(us *auth.UserRecord, token *auth.Token) User {
