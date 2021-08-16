@@ -103,7 +103,7 @@ type RegisChk struct {
 
 type ActiveCompnayTree struct {
 	Branchid      string
-	MyCompnayTree TblMytree
+	MyCompnayTree []TblMytree
 }
 
 type PacksResp struct {
@@ -114,5 +114,5 @@ type PacksResp struct {
 	BranchLst        []TblBranch
 	ActiveBranch     TblBranch
 	BrnLvlTreeforCpy []ActiveCompnayTree
-	CpyLvlTreeforCpy TblMytree
+	CpyLvlTreeforCpy []TblMytree
 }

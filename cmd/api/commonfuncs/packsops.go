@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sync"
 
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgtype"
@@ -74,50 +75,47 @@ func GetPacks(app *application.Application, w http.ResponseWriter, r *http.Reque
 	return &myc, nil
 }
 
-func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.Request, packfuncid []string, companyid string) (*[]models.TblMytree, error) {
+func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.Request, packfuncid []string, companyid string) (*models.PacksResp, error) {
 	fmt.Println("----------------- PACKAGE Fetch START -------------------")
 
 	var data string
+	var wgbr, wgcp sync.WaitGroup
+	var qry string
+	var myc []models.TblMytree
+	var myca []models.ActiveCompnayTree
+	var mybr *[]models.TblBranch
+	var stmts []*dbtran.PipelineStmt
+	var datosend models.PacksResp
+	var err error
+	var havbrndetail bool
 
 	ctx := r.Context()
 	//userinfo, ok := ctx.Value(fireauth.UserContextKey).(fireauth.User)
 
 	userinfo, errs := FetchUserinfoFromcontext(w, r, "PACKAGE-CHKCTX")
 	if errs != nil {
-		return &[]models.TblMytree{}, errs
+		return &models.PacksResp{}, errs
 	}
-
-	var qry string
-	var myc []models.TblMytree
-	var myca [][]models.TblMytree
-	var mybranch *[]models.TblBranch
-	var stmts []*dbtran.PipelineStmt
-	var datosend models.PacksResp
-	var err error
-	var havbrndetail bool
 
 	datosend.EntityLst = userinfo.Entityid
 	datosend.ActiveEntity = ""
 	datosend.CompanyLst = []string{companyid}
 	datosend.ActiveCompany = datosend.CompanyLst[0]
 
-	mybr, err := BranchCheck(app, w, r, []string{"All"})
-	if err != nil {
+	if mybr, err = BranchCheck(app, w, r, []string{"all"}); err != nil {
 		fmt.Println("TODO: Error handling")
-	}
-
-	if mybr, errs := commonfuncs.BranchCheck(app, w, r, []string{"all"}); errs != nil {
-		return
+		return &models.PacksResp{}, errs
 	}
 
 	if len(*mybr) > 0 {
+		fmt.Println(len(*mybr))
 		havbrndetail = true
 		datosend.BranchLst = *mybr
 		datosend.ActiveBranch = datosend.BranchLst[0]
 	} else {
 		havbrndetail = false
-		datosend.BranchLst = *mybr
-		datosend.ActiveBranch = ""
+		datosend.BranchLst = []models.TblBranch{}
+		datosend.ActiveBranch = models.TblBranch{}
 	}
 
 	/*
@@ -155,6 +153,7 @@ func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.R
 		} else {
 	*/
 	if packfuncid[0] != "ALL" {
+
 		qry = `WITH RECURSIVE MyTree AS 
 				(
 					SELECT *,false as open FROM ac.packs WHERE id IN
@@ -175,7 +174,7 @@ func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.R
 							INTERSECT	
 							SELECT * FROM UNNEST($3) AS PACKFUNCID
 						)
-					)
+					)					
 					UNION
 					SELECT m.*,false as open FROM ac.packs AS m JOIN MyTree AS t ON m.id = ANY(t.parent)
 				)
@@ -211,7 +210,7 @@ func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.R
 				LogMsg:     pgErr.Error(),
 			}
 			dd.HttpRespond()
-			return &[]models.TblMytree{}, err
+			return &models.PacksResp{}, errs
 		}
 
 		fmt.Println("---------------$$$end6")
@@ -227,48 +226,144 @@ func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.R
 		fmt.Println("---------------$$$end7")
 		fmt.Println("----------------- PACKAGE FETCH END -------------------")
 
-		return &myc, nil
+		datosend.CpyLvlTreeforCpy = myc
+
+		//return &datosend, nil
 
 	} else {
 
+		myca = make([]models.ActiveCompnayTree, len(datosend.BranchLst))
+		//https: //www.ardanlabs.com/blog/2019/04/concurrency-trap-2-incomplete-work.html
+		//https://stackoverflow.com/questions/18805416/waiting-on-an-indeterminate-number-of-goroutines
+
 		if havbrndetail {
-
+			fmt.Println("--- start for loop")
 			for i, s := range datosend.BranchLst {
+				var mycpp []models.TblMytree
+				myca[i].Branchid = s.Branchid.String
 				fmt.Println(i, s.Branchid.String)
-
-				qry = `WITH RECURSIVE MyTree AS 
+				wgbr.Add(1)
+				go func() {
+					defer wgbr.Done()
+					qry = `WITH RECURSIVE MyTree AS 
 			(
-				SELECT $3 as branchid, *,false as open FROM ac.packs WHERE id IN
+				SELECT *,false as open FROM ac.packs WHERE id IN
 				(
-					(	SELECT PACKFpackfuncidemasterid IN 
+					(	SELECT PACKFUNCID FROM ac.roledetails 
+						WHERE rolemasterid IN 
 							(SELECT DISTINCT rolemasterid FROM ac.userrole 
 								WHERE userid = $1
 								AND status NOT IN ('D','I') 
 								AND companyid = $2
-								AND branchid = $3
+								AND branchid && ARRAY['ALL'::VARCHAR,$3::VARCHAR]
 							)
 						INTERSECT	
 						SELECT PACKFUNCID from ac.companypacks 
 							WHERE companyid = $2
 							AND status NOT IN ('D','I')
 							AND startdate <=  CURRENT_DATE
-							AND expirydate >= CURRENT_DATE
+							AND expirydate >= CURRENT_DATE							
 					)
-				)
+				) 
+				AND menulevel NOT IN ('COMPANY')
 				UNION
-				SELECT $3 as branchid,m.*,false as open FROM ac.packs AS m JOIN MyTree AS t ON m.id = ANY(t.parent)
+				SELECT m.*,false as open FROM ac.packs AS m JOIN MyTree AS t ON m.id = ANY(t.parent)
 			)
 			SELECT * FROM MyTree ORDER BY TYPE, SORTORDER,NAME;`
 
-				append(stmts, []*dbtran.PipelineStmt{
-					dbtran.NewPipelineStmt("select", qry, &myca[i], userinfo.UUID, userinfo.Companyid, s.Branchid.String),
-				})
+					stmts = []*dbtran.PipelineStmt{
+						dbtran.NewPipelineStmt("select", qry, &mycpp, userinfo.UUID, userinfo.Companyid, s.Branchid.String),
+					}
 
+					_, err := dbtran.WithTransaction(ctx, dbtran.TranTypeFullSet, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {
+						err := dbtran.RunPipeline(ctx, typ, db, ttx, stmts...)
+						return err
+					})
+
+					if err != nil {
+						fmt.Println("TODO error handlin in go routine")
+					}
+
+					fmt.Println("---------------$$$end6aw")
+					fmt.Println(mycpp)
+					fmt.Printf("&myc is: %p\n", &mycpp)
+					createDataTree(&mycpp)
+					myca[i].MyCompnayTree = mycpp
+					fmt.Println("---------------$$$end6bw")
+					dd1, _ := json.Marshal(myca[i])
+					fmt.Printf("&myc is: %p\n", &myca[i])
+					fmt.Println(string(dd1))
+					fmt.Println("---------------$$$end7w")
+				}()
+				wgbr.Wait()
+
+				fmt.Println("All routines completed")
+				fmt.Printf("&myc is: %p\n", &myca)
+				dd1, _ := json.Marshal(myca)
+				fmt.Println(string(dd1))
+				datosend.BrnLvlTreeforCpy = myca
 			}
+		} else {
+			datosend.BrnLvlTreeforCpy = []models.ActiveCompnayTree{}
+		}
+	}
 
+	wgcp.Add(1)
+	go func() {
+		defer wgcp.Done()
+		var mycpb []models.TblMytree
+		qry = `WITH RECURSIVE MyTree AS 
+			(
+				SELECT *,false as open FROM ac.packs WHERE id IN
+				(
+					(	SELECT PACKFUNCID FROM ac.roledetails 
+						WHERE rolemasterid IN 
+							(SELECT DISTINCT rolemasterid FROM ac.userrole 
+								WHERE userid = $1
+								AND status NOT IN ('D','I') 
+								AND companyid = $2								
+							)
+						INTERSECT	
+						SELECT PACKFUNCID from ac.companypacks 
+							WHERE companyid = $2
+							AND status NOT IN ('D','I')
+							AND startdate <=  CURRENT_DATE
+							AND expirydate >= CURRENT_DATE							
+					)
+				)
+				AND menulevel IN ('COMPANY')
+				UNION
+				SELECT m.*,false as open FROM ac.packs AS m JOIN MyTree AS t ON m.id = ANY(t.parent)
+			)
+			SELECT * FROM MyTree ORDER BY TYPE, SORTORDER,NAME;`
+
+		stmts = []*dbtran.PipelineStmt{
+			dbtran.NewPipelineStmt("select", qry, &mycpb, userinfo.UUID, userinfo.Companyid),
 		}
 
-	}
+		_, err := dbtran.WithTransaction(ctx, dbtran.TranTypeFullSet, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {
+			err := dbtran.RunPipeline(ctx, typ, db, ttx, stmts...)
+			return err
+		})
+
+		if err != nil {
+			fmt.Println("TODO error handlin in go routine")
+		}
+
+		fmt.Println("---------------$$$end6aw")
+		fmt.Println(mycpb)
+		fmt.Printf("&myc is: %p\n", &mycpb)
+		createDataTree(&mycpb)
+		datosend.CpyLvlTreeforCpy = mycpb
+		fmt.Println("---------------$$$end6bw")
+		dd1, _ := json.Marshal(mycpb)
+		fmt.Printf("&myc is: %p\n", mycpb)
+		fmt.Println(string(dd1))
+		fmt.Println("---------------$$$end7w")
+	}()
+	wgcp.Wait()
+
+	return &datosend, err
 }
 
 func createDataTree(mnodes *[]models.TblMytree) {

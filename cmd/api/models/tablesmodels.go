@@ -41,7 +41,7 @@ type TblCompanyPacks struct {
 	Id            pgtype.Text        `json:"id"`
 	Companyid     pgtype.Varchar     `json:"companyid"`
 	Planid        pgtype.Varchar     `json:"planid"`
-	Packid        pgtype.Varchar     `json:"packid"`
+	Packfuncid    pgtype.Varchar     `json:"packfuncid"`
 	Startdate     pgtype.Date        `json:"startdate"`
 	Expirydate    pgtype.Date        `json:"expirydate"`
 	Userrolelimit pgtype.Numeric     `json:"userrolelimit"`

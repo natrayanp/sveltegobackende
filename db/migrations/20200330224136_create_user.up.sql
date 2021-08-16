@@ -279,7 +279,7 @@ CREATE TABLE ac.userrole (
     userid 		          varchar(100) NOT NULL,
     rolemasterid          varchar(20) NOT NULL,       
     companyid             varchar(30) NOT NULL,
-    branchid              varchar(30) NOT NULL,      
+    branchid              varchar(30)[] NOT NULL,      
     status                varchar(3) NOT NULL,  --> D -Delete / A - Active
     isdefault             varchar(3) NOT NULL,  --> Y/N
     octime			      timestamptz NOT NULL,

@@ -23,7 +23,8 @@ func userLogin(app *application.Application) http.HandlerFunc {
 		//var userinfo fireauth.User
 		//var ctx context.Context
 		var data string
-		var myc *[]models.TblMytree
+		//var myc *[]models.TblMytree
+		var myc *models.PacksResp
 		var cppks *[]models.TblCompanyPacks
 		var cmpy *[]models.TblCompany
 		var brnc *[]models.TblBranch
@@ -166,25 +167,25 @@ func userLogin(app *application.Application) http.HandlerFunc {
 				switch nxtaction {
 				case "LANDING":
 
-					if myc, errs = commonfuncs.PackageFetch(app, w, r, []string{"ALL"}, []string{"ALL"}); errs != nil {
+					if myc, errs = commonfuncs.PackageFetch(app, w, r, []string{"ALL"}, "ALL"); errs != nil {
 						return
 					}
 
 					fmt.Println("LANDING so nothing to fetch")
 				case "ADDCOMPANY":
-					if myc, errs = commonfuncs.PackageFetch(app, w, r, []string{"PKS8"}, []string{"ALL"}); errs != nil {
+					if myc, errs = commonfuncs.PackageFetch(app, w, r, []string{"PKS8"}, "ALL"); errs != nil {
 						return
 					}
 					cmpy = &[]models.TblCompany{}
 					brnc = &[]models.TblBranch{}
 
 				case "ADDBRANCH":
-					if myc, errs = commonfuncs.PackageFetch(app, w, r, []string{"PKS8", "PKS9"}, []string{"ALL"}); errs != nil {
+					if myc, errs = commonfuncs.PackageFetch(app, w, r, []string{"PKS8", "PKS9"}, "ALL"); errs != nil {
 						return
 					}
 
 				default:
-					myc = &[]models.TblMytree{}
+					myc = &models.PacksResp{}
 					cmpy = &[]models.TblCompany{}
 					brnc = &[]models.TblBranch{}
 				}
@@ -214,7 +215,7 @@ func userLogin(app *application.Application) http.HandlerFunc {
 				nxtaction = "DOMAINREGIS"
 				fmt.Println("else loop in login tblmytre")
 				data = "Subdomain not registered"
-				myc = &[]models.TblMytree{}
+				myc = &models.PacksResp{}
 				cmpy = &[]models.TblCompany{}
 				brnc = &[]models.TblBranch{} //Add to send empty branch
 			}
@@ -228,7 +229,7 @@ func userLogin(app *application.Application) http.HandlerFunc {
 			data = "Not a Registered user. Register to continue."
 			nxtaction = "NOTREGISTERED"
 			//EMPTY session id sent
-			myc = &[]models.TblMytree{}
+			myc = &models.PacksResp{}
 			cmpy = &[]models.TblCompany{}
 			brnc = &[]models.TblBranch{} //Add to send empty branch
 			//User registration End
