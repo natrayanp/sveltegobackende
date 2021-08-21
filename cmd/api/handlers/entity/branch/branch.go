@@ -13,22 +13,58 @@ import (
 	"github.com/sveltegobackend/pkg/mymiddleware"
 )
 
+/*
 func fetchBranch(app *application.Application) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("-------------------\n fetchBranch Start \n-------------------")
 
+		defer r.Body.Close()
+		var p []models.ActiveEntityTree
+		var febranc []string
+		var fecomp string
 		var brch *[]models.TblBranch
 		var brchcp []models.TblBranch
 		havcpydetail := false
 		var errs error
 		var status string
 
-		if brch, errs = commonfuncs.BranchCheck(app, w, r, []string{"all"}); errs != nil {
+		err := json.NewDecoder(r.Body).Decode(&p)
+		fmt.Println(p)
+
+		if err != nil {
+			return
+		}
+
+		for _, x := range p {
+
+			switch x.EntityType {
+			case "company":
+				if x.Entityid[0] != "null" {
+					fecomp = x.Entityid[0]
+				} else {
+					fecomp = "DEFAULT"
+				}
+			case "branch":
+				if x.Entityid[0] != "null" {
+					febranc = x.Entityid
+				} else {
+					febranc = []string{"All"}
+				}
+			}
+
+		}
+
+		if brch, errs = commonfuncs.BranchCheck(app, w, r, fecomp, febranc); errs != nil {
 			return
 		}
 		brchcp = *brch
+		/*
+			const layoutISO = "2006-01-02"
+			brdd, _ := time.Parse(layoutISO, cpy.CompanyStartDate)
+			brnc.BranchStartDate = cpydd.String()
+*/
 
-		if len(*brch) > 0 {
+/*		if len(*brch) > 0 {
 			havcpydetail = true
 			status = "SUCCESS"
 		} else {
@@ -37,12 +73,10 @@ func fetchBranch(app *application.Application) http.HandlerFunc {
 			brchcp = []models.TblBranch{}
 		}
 
-		dd := []models.RefDatReq{
-			{Reftype: "group", Refname: "branch"},
-		}
-
 		ddf := models.RefDatReqFinal{
-			Refs: dd,
+			Refs: []models.RefDatReq{
+				{Reftype: "group", Refname: "branch"},
+			},
 		}
 		fmt.Println(brchcp)
 		fmt.Println("-------------------\n fetchBranch Start 1 \n-------------------")
@@ -68,7 +102,7 @@ func fetchBranch(app *application.Application) http.HandlerFunc {
 
 	}
 }
-
+*/
 func saveBranch(app *application.Application) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("-------------------\n save Branch Start \n-------------------")
@@ -92,46 +126,45 @@ func saveBranch(app *application.Application) http.HandlerFunc {
 		fmt.Println(brncdata.Optype)
 
 		if brncdata.Optype == "Update" {
-			if brnc, errs = commonfuncs.BranchCheck(app, w, r, []string{brn.BranchId}); errs != nil {
+			if brnc, errs = commonfuncs.BranchCheck(app, w, r, brn.Companyid, []string{brn.Branchid}); errs != nil {
 				return
 			}
 			brnccp = *brnc
-			/*
-				const layoutISO = "2006-01-02"
-				brdd, _ := time.Parse(layoutISO, cpy.CompanyStartDate)
-				brnc.BranchStartDate = cpydd.String()
-			*/
+
 			if len(*brnc) == 1 {
 				havcpydetail = true
 				status = "SUCCESS"
 
-				brn1 := models.Brn{
-					CompanyId:         brnccp[0].Companyid.String,
-					BranchId:          brnccp[0].Branchid.String,
-					BranchName:        brnccp[0].Branchname.String,
-					BranchShortName:   brnccp[0].Branchshortname.String,
-					BranchCategory:    brnccp[0].Branchcategory.String,
-					BranchStatus:      brnccp[0].Branchstatus.String,
-					BranchDescription: brnccp[0].Branchdescription.String,
-					BranchImageUrl:    brnccp[0].Branchimageurl.String,
-					BranchAddLine1:    brnccp[0].Branchaddline1.String,
-					BranchAddLine2:    brnccp[0].Branchaddline2.String,
-					BranchCountry:     brnccp[0].Branchcountry.String,
-					BranchState:       brnccp[0].Branchstate.String,
-					BranchCity:        brnccp[0].Branchcity.String,
-					BranchPinCode:     brnccp[0].Branchpincode.String,
-					BranchPhone:       brnccp[0].Branchphone.String,
-					BranchFax:         brnccp[0].Branchfax.String,
-					BranchMobile:      brnccp[0].Branchmobile.String,
-					BranchEmail:       brnccp[0].Branchemail.String,
-					BranchWebsite:     brnccp[0].Branchwebsite.String,
-					BranchStartDate:   brnccp[0].Branchstartdate.Time.String(),
-					Isdefault:         brnccp[0].Isdefault.String,
-				}
-
-				if _, errs = commonfuncs.Branchupdate(app, w, r, brn, &brn1); errs != nil {
+				brn1 := brnccp[0]
+				/*
+					brn1 := models.Brn{
+						CompanyId:         brnccp[0].Companyid.String,
+						BranchId:          brnccp[0].Branchid.String,
+						BranchName:        brnccp[0].Branchname.String,
+						BranchShortName:   brnccp[0].Branchshortname.String,
+						BranchCategory:    brnccp[0].Branchcategory.String,
+						BranchStatus:      brnccp[0].Branchstatus.String,
+						BranchDescription: brnccp[0].Branchdescription.String,
+						BranchImageUrl:    brnccp[0].Branchimageurl.String,
+						BranchAddLine1:    brnccp[0].Branchaddline1.String,
+						BranchAddLine2:    brnccp[0].Branchaddline2.String,
+						BranchCountry:     brnccp[0].Branchcountry.String,
+						BranchState:       brnccp[0].Branchstate.String,
+						BranchCity:        brnccp[0].Branchcity.String,
+						BranchPinCode:     brnccp[0].Branchpincode.String,
+						BranchPhone:       brnccp[0].Branchphone.String,
+						BranchFax:         brnccp[0].Branchfax.String,
+						BranchMobile:      brnccp[0].Branchmobile.String,
+						BranchEmail:       brnccp[0].Branchemail.String,
+						BranchWebsite:     brnccp[0].Branchwebsite.String,
+						BranchStartDate:   brnccp[0].Branchstartdate.Time.String(),
+						Isdefault:         brnccp[0].Isdefault.String,
+					}
+				*/
+				if brnc, errs = commonfuncs.Branchupdate(app, w, r, brn, &brn1); errs != nil {
 					return
 				}
+				brnccp = *brnc
 
 			} else {
 				havcpydetail = true
@@ -143,23 +176,26 @@ func saveBranch(app *application.Application) http.HandlerFunc {
 			havcpydetail = false
 			status = "SUCCESS"
 
-			if _, errs = commonfuncs.BranchSave(app, w, r, brn); errs != nil {
+			if brnc, errs = commonfuncs.BranchSave(app, w, r, brn); errs != nil {
 				fmt.Println("I am returning/n")
 				return
 			}
+			brnccp = *brnc
 
 			fmt.Println("after fetch/n")
 
 		}
 
 		fmt.Println("-------------------\n fetchBranch in save company Start 1 \n-------------------")
-		fmt.Println(status)
-		if status == "SUCCESS" {
-			if brnc, errs = commonfuncs.BranchCheck(app, w, r, []string{"all"}); errs != nil {
-				return
+		/*
+			fmt.Println(status)
+			if status == "SUCCESS" {
+				if brnc, errs = commonfuncs.BranchCheck(app, w, r, brn.Companyid, []string{"all"}); errs != nil {
+					return
+				}
+				brnccp = *brnc
 			}
-			brnccp = *brnc
-		}
+		*/
 		fmt.Println("-------------------\n fetchBranch in save company  Start 2 \n-------------------")
 		lgmsg := "Branch Save successful.  But havecpy detail? = " + strconv.FormatBool(havcpydetail)
 		//ssd := map[string]interface{}{"message": lgmsg, "company": brnccp, "refdata": ddf.RefResult}
@@ -179,10 +215,11 @@ func saveBranch(app *application.Application) http.HandlerFunc {
 	}
 }
 
+/*
 func DoBrFetch(app *application.Application) http.HandlerFunc {
 	return mymiddleware.Chain(fetchBranch(app))
 }
-
+*/
 func DoBrSave(app *application.Application) http.HandlerFunc {
 	return mymiddleware.Chain(saveBranch(app))
 }

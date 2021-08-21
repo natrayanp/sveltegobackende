@@ -153,6 +153,7 @@ func (ps *PipelineStmt) Selects(ctx context.Context, typ TranType, db *pgxpool.P
 	if typ != TranTypeNoTran {
 		fmt.Println("+++++++++++++++++++++qq1")
 		rows, err = tx.Query(ctx, ps.query, ps.args...)
+
 		fmt.Println("printrow:", rows)
 		fmt.Println("error:", err)
 		fmt.Println("+++++++++++++++++++++qq1")

@@ -29,6 +29,15 @@ type RefDatReqFinal struct {
 	RefResult map[string]interface{}
 }
 
+type TtblRefdata struct {
+	Id        string         `json:"id"`
+	Refvalcat string         `json:"refvalcat"`
+	Refvalue  string         `json:"refvalue"`
+	Sortorder int            `json:"sortorder"`
+	Parent    []*string      `json:"parent"`
+	Submenu   []*TtblRefdata `json:"submenu"`
+}
+
 type Cpy struct {
 	CompanyId          string
 	CompanyName        string
@@ -93,7 +102,7 @@ type Brn struct {
 
 type BrnResp struct {
 	Optype     string
-	Branchdata Brn
+	Branchdata TblBranch
 }
 
 type RegisChk struct {
@@ -101,18 +110,26 @@ type RegisChk struct {
 	Companyowner string
 }
 
-type ActiveCompnayTree struct {
-	Branchid      string
-	MyCompnayTree []TblMytree
+type ActiveEntityTree struct {
+	EntityType string
+	Entityid   string
+	EntityTree []TtblMytree
+}
+
+type ReqEntityTree struct {
+	EntityType string
+	Entityid   []string
+	EntityTree []TtblMytree
 }
 
 type PacksResp struct {
-	EntityLst        []string
+	Navstring        string
+	EntityLst        []*string
 	ActiveEntity     string
-	CompanyLst       []string
-	ActiveCompany    string
+	CompanyLst       []TblCompany
+	ActiveCompany    TblCompany
 	BranchLst        []TblBranch
 	ActiveBranch     TblBranch
-	BrnLvlTreeforCpy []ActiveCompnayTree
-	CpyLvlTreeforCpy []TblMytree
+	BrnLvlTreeforCpy []ActiveEntityTree
+	CpyLvlTreeforCpy []ActiveEntityTree
 }

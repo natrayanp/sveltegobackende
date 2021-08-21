@@ -15,18 +15,21 @@ import (
 	"github.com/sveltegobackend/pkg/httpresponse"
 )
 
-func BranchCheck(app *application.Application, w http.ResponseWriter, r *http.Request, branchidlist []string) (*[]models.TblBranch, error) {
+func BranchCheck(app *application.Application, w http.ResponseWriter, r *http.Request, companyid string, branchidlist []string) (*[]models.TblBranch, error) {
 	fmt.Println("----------------- PACKAGE CHECK START -------------------")
 
 	var data string
 	var myc []models.TblBranch
 
 	ctx := r.Context()
-	//userinfo, ok := ctx.Value(fireauth.UserContextKey).(fireauth.User)
 
 	userinfo, errs := FetchUserinfoFromcontext(w, r, "BRANCHCHK-CHKCTX")
 	if errs != nil {
 		return &[]models.TblBranch{}, errs
+	}
+
+	if companyid == "DEFAULT" {
+		companyid = userinfo.Companyid
 	}
 
 	qry := `SELECT a.*,b.companyname FROM ac.branch a
@@ -37,14 +40,14 @@ func BranchCheck(app *application.Application, w http.ResponseWriter, r *http.Re
 						AND a.branchStatus in ('A') `
 
 	stmts1 := []*dbtran.PipelineStmt{
-		dbtran.NewPipelineStmt("select", qry, &myc, userinfo.Companyid),
+		dbtran.NewPipelineStmt("select", qry, &myc, companyid),
 	}
 
 	if branchidlist[0] != "all" {
 		qry = qry + "AND a.branchid = ANY($2) "
 
 		stmts1 = []*dbtran.PipelineStmt{
-			dbtran.NewPipelineStmt("select", qry, &myc, userinfo.Companyid, branchidlist),
+			dbtran.NewPipelineStmt("select", qry, &myc, companyid, branchidlist),
 		}
 	}
 
@@ -80,7 +83,7 @@ func BranchCheck(app *application.Application, w http.ResponseWriter, r *http.Re
 	return &myc, nil
 }
 
-func BranchSave(app *application.Application, w http.ResponseWriter, r *http.Request, cpy *models.Brn) (*[]models.TblBranch, error) {
+func BranchSave(app *application.Application, w http.ResponseWriter, r *http.Request, cpy *models.TblBranch) (*[]models.TblBranch, error) {
 	fmt.Println("----------------- Branch Save CHECK START -------------------")
 
 	var data string
@@ -98,15 +101,15 @@ func BranchSave(app *application.Application, w http.ResponseWriter, r *http.Req
 
 	const qry = `INSERT INTO ac.branch VALUES
 						($1,DEFAULT,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,
-							CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);`
+							CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)  RETURNING *;`
 
-	//var myc []models.TblBranch
-	var myc dbtran.Resultset
+	var myc []models.TblBranch
+	//var myc dbtran.Resultset
 	fmt.Println(cpy)
 	stmts1 := []*dbtran.PipelineStmt{
-		dbtran.NewPipelineStmt("insert", qry, &myc, cpy.CompanyId, cpy.BranchName, cpy.BranchShortName, "ca",
-			"A", "desc", "imgur", cpy.BranchAddLine1, cpy.BranchAddLine2, cpy.BranchCity, cpy.BranchState, cpy.BranchCountry, cpy.BranchPinCode,
-			cpy.BranchPhone, cpy.BranchFax, cpy.BranchMobile, cpy.BranchWebsite, cpy.BranchEmail, cpy.BranchStartDate, cpy.Isdefault, userinfo.UUID),
+		dbtran.NewPipelineStmt("select", qry, &myc, cpy.Companyid, cpy.Branchname, cpy.Branchshortname, "ca",
+			"A", "desc", "imgur", cpy.Branchaddline1, cpy.Branchaddline2, cpy.Branchcity, cpy.Branchstate, cpy.Branchcountry, cpy.Branchpincode,
+			cpy.Branchphone, cpy.Branchfax, cpy.Branchmobile, cpy.Branchwebsite, cpy.Branchemail, cpy.Branchstartdate, cpy.Isdefault, userinfo.UUID),
 	}
 
 	_, err := dbtran.WithTransaction(ctx, dbtran.TranTypeFullSet, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {
@@ -114,7 +117,8 @@ func BranchSave(app *application.Application, w http.ResponseWriter, r *http.Req
 		return err
 	})
 	fmt.Println(myc)
-	if err != nil || myc.RowsAffected < 1 {
+	//if err != nil || myc.RowsAffected < 1 {
+	if err != nil || len(myc) < 1 {
 		//https://github.com/jackc/pgx/issues/474
 		var pgErr *pgconn.PgError
 		data = "Technical Error.  Please contact support"
@@ -123,7 +127,8 @@ func BranchSave(app *application.Application, w http.ResponseWriter, r *http.Req
 			lgmsg = pgErr.Error()
 		}
 
-		if myc.RowsAffected < 1 {
+		//	if myc.RowsAffected < 1 {
+		if len(myc) < 1 {
 			err = errors.New("no rows inserted")
 			lgmsg = "No data saved by successful INSERT query"
 		}
@@ -146,10 +151,10 @@ func BranchSave(app *application.Application, w http.ResponseWriter, r *http.Req
 
 	fmt.Println("-----------------  Branch Save CHECK END -------------------")
 
-	return &[]models.TblBranch{}, nil
+	return &myc, nil
 }
 
-func Branchupdate(app *application.Application, w http.ResponseWriter, r *http.Request, cpynew *models.Brn, cpyindb *models.Brn) (*[]models.TblBranch, error) {
+func Branchupdate(app *application.Application, w http.ResponseWriter, r *http.Request, cpynew *models.TblBranch, cpyindb *models.TblBranch) (*[]models.TblBranch, error) {
 	fmt.Println("----------------- Branch Update CHECK START -------------------")
 
 	var data string
@@ -179,15 +184,15 @@ func Branchupdate(app *application.Application, w http.ResponseWriter, r *http.R
 
 		qry = qry + ", lmtime = CURRENT_TIMESTAMP, lmuserid = $1 "
 
-		qry = qry + "WHERE companyid = $2 AND branchid = $3;"
+		qry = qry + "WHERE companyid = $2 AND branchid = $3 RETURNING *;"
 	}
 
 	fmt.Println(qry)
-	//var myc []models.TblBranch
-	var myc dbtran.Resultset
+	var myc []models.TblBranch
+	//var myc dbtran.Resultset
 
 	stmts1 := []*dbtran.PipelineStmt{
-		dbtran.NewPipelineStmt("update", qry, &myc, userinfo.UUID, cpynew.CompanyId, cpynew.BranchId),
+		dbtran.NewPipelineStmt("select", qry, &myc, userinfo.UUID, cpynew.Companyid, cpynew.Branchid),
 	}
 
 	_, err := dbtran.WithTransaction(ctx, dbtran.TranTypeFullSet, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {
@@ -195,7 +200,8 @@ func Branchupdate(app *application.Application, w http.ResponseWriter, r *http.R
 		return err
 	})
 
-	if err != nil || myc.RowsAffected < 1 {
+	//if err != nil || myc.RowsAffected < 1 {
+	if err != nil || len(myc) < 1 {
 		//https://github.com/jackc/pgx/issues/474
 		var pgErr *pgconn.PgError
 		data = "Technical Error.  Please contact support"
@@ -204,7 +210,8 @@ func Branchupdate(app *application.Application, w http.ResponseWriter, r *http.R
 			lgmsg = pgErr.Error()
 		}
 
-		if myc.RowsAffected < 1 {
+		//if myc.RowsAffected < 1 {
+		if len(myc) < 1 {
 			err = errors.New("no data updated")
 			lgmsg = "No data updated by succesful UPDATE query"
 		}
@@ -226,6 +233,6 @@ func Branchupdate(app *application.Application, w http.ResponseWriter, r *http.R
 	}
 
 	fmt.Println("----------------- Branch Update CHECK END -------------------")
-	return &[]models.TblBranch{}, nil
+	return &myc, nil
 	//return &myc, nil
 }

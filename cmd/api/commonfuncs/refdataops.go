@@ -8,7 +8,6 @@ import (
 	"net/http"
 
 	"github.com/jackc/pgconn"
-	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/sveltegobackend/cmd/api/models"
 	"github.com/sveltegobackend/pkg/application"
@@ -96,7 +95,7 @@ func createDataTree1(mnodes *[]models.TblRefdata) {
 	fmt.Printf("&mnodes is: %p\n", mnodes)
 	var newnodes []models.TblRefdata
 	fmt.Println("---------------$$$end6a1")
-	m := make(map[pgtype.Text]*models.TblRefdata)
+	m := make(map[string]*models.TblRefdata)
 	for i, _ := range nodes {
 		//fmt.Printf("Setting m[%d] = <node with ID=%d>\n", n.ID, n.ID)
 		m[nodes[i].Id] = &nodes[i]
@@ -105,28 +104,31 @@ func createDataTree1(mnodes *[]models.TblRefdata) {
 	fmt.Println("---------------$$$end6a2")
 	for i, n := range nodes {
 		//fmt.Printf("Setting <node with ID=%d>.Child to <node with ID=%d>\n", n.ID, m[n.ParentID].ID)
+		fmt.Println("---------------$$$end6a2start")
 		fmt.Println(n)
-		fmt.Println(n.Parent.Dimensions[0].Length)
+		fmt.Println(len(n.Parent))
+		//fmt.Println(len(*n.Parent))
 		fmt.Println("---------------$$$end6a2a")
-		if n.Parent.Dimensions[0].Length > 0 {
-			fmt.Println(n.Parent.Status)
+		if len(n.Parent) > 0 {
+			fmt.Println(n.Parent)
 
-			for _, t := range n.Parent.Elements {
-				fmt.Println(t.Status)
-				fmt.Println(t.Status == pgtype.Null)
+			for _, t := range n.Parent {
 				fmt.Println("---------------$$$end6a2a1")
-				if t.Status != pgtype.Null {
-					m[t].Submenu = append(m[t].Submenu, m[nodes[i].Id])
+				fmt.Println(t)
+
+				if t != nil {
+					m[*t].Submenu = append(m[*t].Submenu, m[nodes[i].Id])
 				}
+				fmt.Println(m)
 			}
 		}
 	}
 	fmt.Println("---------------$$$end6a3")
 	for _, n := range m {
 		fmt.Println(n)
-		fmt.Println(n.Parent.Elements[0].Status)
-		fmt.Println(n.Parent.Elements[0].Status == pgtype.Null)
-		if n.Parent.Elements[0].Status == pgtype.Null {
+		fmt.Println(n.Parent)
+
+		if n.Parent[0] == nil {
 			fmt.Println(n)
 			fmt.Println(newnodes)
 			newnodes = append(newnodes, *n)
@@ -141,7 +143,7 @@ func createDataTree1(mnodes *[]models.TblRefdata) {
 	fmt.Println("---------------$$$end6a5")
 }
 
-func refGenericType(app *application.Application, w http.ResponseWriter, r *http.Request, refcode string) (*[]models.TblRefdata, error) {
+func refGenericType(app *application.Application, w http.ResponseWriter, r *http.Request, refcode string) (*[]models.TtblRefdata, error) {
 	fmt.Println("----------------- refGenericType Fetch START -------------------")
 
 	var data string
@@ -149,10 +151,11 @@ func refGenericType(app *application.Application, w http.ResponseWriter, r *http
 	ctx := r.Context()
 
 	var qry string
-	var myc []models.TblRefdata
+	//var myc []models.TblRefdata
+	var myc []models.TtblRefdata
 	var stmts []*dbtran.PipelineStmt
 
-	qry = `SELECT id,refvalcat,refvalue,parent FROM ac.refdata WHERE refcode = $1 ORDER BY refvalcat,refvalue;`
+	qry = `SELECT id,refvalcat,refvalue,parent,sortorder FROM ac.refdata WHERE refcode = $1 ORDER BY refvalcat,refvalue,sortorder;`
 
 	stmts = []*dbtran.PipelineStmt{
 		dbtran.NewPipelineStmt("select", qry, &myc, refcode),
@@ -184,13 +187,14 @@ func refGenericType(app *application.Application, w http.ResponseWriter, r *http
 			LogMsg:     pgErr.Error(),
 		}
 		dd.HttpRespond()
-		return &[]models.TblRefdata{}, err
+		return &[]models.TtblRefdata{}, err
 	}
 
 	fmt.Println("my length: ", len(myc))
 
 	if len(myc) == 0 {
-		myc = []models.TblRefdata{}
+		//myc = []models.TblRefdata{}
+		myc = []models.TtblRefdata{}
 	}
 
 	return &myc, nil
@@ -226,6 +230,19 @@ func RefDataFetch1(app *application.Application, w http.ResponseWriter, r *http.
 			case "industype", "compcat":
 				ss, _ := refGenericType(app, w, r, t)
 				m[t] = ss
+			default:
+				ss, _ := refGenericType(app, w, r, t)
+				/*
+					ssd := make([]models.TtblRefdata, len(*ss))
+
+					for xx, xxds := range *ss {
+
+						assingdsome(xx, xxds, &ssd[xx])
+
+					}
+				*/
+				m[t] = ss
+
 			}
 		}
 

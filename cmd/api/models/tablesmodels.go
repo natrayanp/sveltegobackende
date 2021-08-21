@@ -1,7 +1,10 @@
 package models
 
-import "github.com/jackc/pgtype"
+import (
+	"time"
+)
 
+/*
 type TblUserlogin struct {
 	Userid          pgtype.Varchar      `json:"userid"`
 	Username        pgtype.Varchar      `json:"username"`
@@ -19,24 +22,66 @@ type TblUserlogin struct {
 	Octime          pgtype.Timestamptz  `json:"creattime"`
 	Lmtime          pgtype.Timestamptz  `json:"lasmodifytime"`
 }
+*/
 
+type TblUserlogin struct {
+	Userid          string    `json:"userid"`
+	Username        *string   `json:"username"`
+	Useremail       *string   `json:"useremail"`
+	Userpassword    *string   `json:"userpassword"`
+	Userstatus      string    `json:"userstatus"`
+	Emailverified   *bool     `json:"emailverified"`
+	Siteid          string    `json:"siteid"`
+	Hostname        string    `json:"hostname"`
+	Selecthostname  *string   `json:"selecthostname"`
+	Companyid       *string   `json:"companyid"`
+	Companyowner    string    `json:"companyowner"`
+	Entityid        []*string `json:"entityid"`
+	Userstatlstupdt time.Time `json:"userstatuslastupdate"`
+	Octime          time.Time `json:"creattime"`
+	Lmtime          time.Time `json:"lasmodifytime"`
+}
+
+/*
 type TblMytree struct {
 	Id          pgtype.Varchar      `json:"id"`
 	Name        pgtype.Varchar      `json:"name"`
 	Displayname pgtype.Varchar      `json:"displayname"`
 	Description pgtype.Varchar      `json:"description"`
 	Type        pgtype.Varchar      `json:"type"`
+	Menulevel   pgtype.Varchar      `json:"menulevel"`
+	Allowedops  pgtype.BoolArray    `json:"allowedops"`
 	Parent      pgtype.VarcharArray `json:"parent"`
 	Sortorder   pgtype.Int2         `json:"sortorder"`
 	Link        pgtype.Varchar      `json:"link"`
 	Icon        pgtype.Varchar      `json:"icon"`
 	Status      pgtype.Varchar      `json:"status"`
-	Octime      pgtype.Timestamptz  `json:"creattime"`
-	Lmtime      pgtype.Timestamptz  `json:"lasmodifytime"`
-	Open        pgtype.Bool         `json:"open"`
-	Submenu     []*TblMytree        `json:"submenu"`
+	Octime      pgtype.Timestamptz
+	Lmtime      pgtype.Timestamptz
+	Open        pgtype.Bool  `json:"open"`
+	Submenu     []*TblMytree `json:"submenu"`
+}
+*/
+type TtblMytree struct {
+	Id          string    `json:"id"`
+	Name        string    `json:"name"`
+	Displayname string    `json:"displayname"`
+	Description string    `json:"description"`
+	Type        string    `json:"type"`
+	Menulevel   string    `json:"menulevel"`
+	Allowedops  []bool    `json:"allowedops"`
+	Parent      []*string `json:"parent"`
+	Sortorder   int       `json:"sortorder"`
+	Link        *string   `json:"link"`
+	Icon        *string   `json:"icon"`
+	Status      *string   `json:"status"`
+	Octime      time.Time
+	Lmtime      time.Time
+	Open        bool          `json:"open"`
+	Submenu     []*TtblMytree `json:"submenu"`
 }
 
+/*
 type TblCompanyPacks struct {
 	Id            pgtype.Text        `json:"id"`
 	Companyid     pgtype.Varchar     `json:"companyid"`
@@ -51,7 +96,24 @@ type TblCompanyPacks struct {
 	Octime        pgtype.Timestamptz `json:"octime"`
 	Lmtime        pgtype.Timestamptz `json:"lmtime"`
 }
+*/
 
+type TblCompanyPacks struct {
+	Id            string    `json:"id"`
+	Companyid     string    `json:"companyid"`
+	Planid        string    `json:"planid"`
+	Packfuncid    string    `json:"packfuncid"`
+	Startdate     time.Time `json:"startdate"`
+	Expirydate    time.Time `json:"expirydate"`
+	Userrolelimit *int      `json:"userrolelimit"`
+	Userlimit     *int      `json:"userlimit"`
+	Branchlimit   *int      `json:"branchlimit"`
+	Status        string    `json:"status"`
+	Octime        time.Time `json:"octime"`
+	Lmtime        time.Time `json:"lmtime"`
+}
+
+/*
 type TblCompany struct {
 	Companyid          pgtype.Varchar     `json:"companyId"`
 	Companyname        pgtype.Text        `json:"companyName"`
@@ -84,15 +146,61 @@ type TblCompany struct {
 	Octime             pgtype.Timestamptz `json:"octime"`
 	Lmtime             pgtype.Timestamptz `json:"lmtime"`
 }
+*/
+type TblCompany struct {
+	Companyid          string    `json:"companyId"`
+	Companyname        string    `json:"companyName"`
+	Companyshortname   string    `json:"companyShortName"`
+	Companycategory    string    `json:"companyCategory"`
+	Companystatus      string    `json:"companyStatus"`
+	Companydescription string    `json:"companyDescription"`
+	Companyimageurl    *string   `json:"companyImageUrl"`
+	Companylogo        *string   `json:"companyLogo"`
+	Companyindustry    string    `json:"companyIndustry"`
+	Companytaxid       string    `json:"companyTaxID"`
+	Companyaddline1    string    `json:"companyAddLine1"`
+	Companyaddline2    string    `json:"companyAddLine2"`
+	Companycity        string    `json:"companyCity"`
+	Companystate       string    `json:"companyState"`
+	Companycountry     string    `json:"companyCountry"`
+	Companypincode     string    `json:"companyPinCode"`
+	Companyphone       *string   `json:"companyPhone"`
+	Companyfax         *string   `json:"companyFax"`
+	Companymobile      *string   `json:"companyMobile"`
+	Companywebsite     *string   `json:"companyWebsite"`
+	Companyemail       *string   `json:"companyEmail"`
+	Companystartdate   time.Time `json:"companyStartDate"`
+	Companyfiscalyear  string    `json:"companyFiscalYear"`
+	Companytimezone    *string   `json:"companyTimeZone"`
+	Companybasecurency string    `json:"companyBaseCurency"`
+	Companysparent     *string   `json:"companysParent"`
+	Isdefault          string    `json:"isdefault"`
+	Lmuserid           string    `json:"lmuserid"`
+	Octime             time.Time `json:"octime"`
+	Lmtime             time.Time `json:"lmtime"`
+}
 
+/*
 type TblRefdata struct {
 	Id        pgtype.Text      `json:"id"`
 	Refvalcat pgtype.Varchar   `json:"refvalcat"`
 	Refvalue  pgtype.Varchar   `json:"refvalue"`
+	Sortorder pgtype.Int2      `json:"sortorder"`
 	Parent    pgtype.TextArray `json:"parent"`
 	Submenu   []*TblRefdata    `json:"submenu"`
 }
+*/
 
+type TblRefdata struct {
+	Id        string        `json:"id"`
+	Refvalcat string        `json:"refvalcat"`
+	Refvalue  string        `json:"refvalue"`
+	Sortorder int           `json:"sortorder"`
+	Parent    []*string     `json:"parent"`
+	Submenu   []*TblRefdata `json:"submenu"`
+}
+
+/*
 type TblBranch struct {
 	Companyid         pgtype.Varchar     `json:"companyId"`
 	Companyname       pgtype.Text        `json:"companyName"`
@@ -119,4 +227,32 @@ type TblBranch struct {
 	Lmuserid          pgtype.Varchar     `json:"lmuserid"`
 	Octime            pgtype.Timestamptz `json:"octime"`
 	Lmtime            pgtype.Timestamptz `json:"lmtime"`
+}
+*/
+type TblBranch struct {
+	Companyid         string    `json:"companyId"`
+	Companyname       string    `json:"companyName"`
+	Branchid          string    `json:"branchId"`
+	Branchname        string    `json:"branchName"`
+	Branchshortname   string    `json:"branchShortName"`
+	Branchcategory    string    `json:"branchCategory"`
+	Branchstatus      string    `json:"branchStatus"`
+	Branchdescription string    `json:"branchDescriptio"`
+	Branchimageurl    *string   `json:"branchImageUrl"`
+	Branchaddline1    string    `json:"branchAddLine1"`
+	Branchaddline2    string    `json:"branchAddLine2"`
+	Branchcountry     string    `json:"branchCountry"`
+	Branchstate       string    `json:"branchState"`
+	Branchcity        string    `json:"branchCity"`
+	Branchpincode     string    `json:"branchPinCode"`
+	Branchphone       *string   `json:"branchPhone"`
+	Branchfax         *string   `json:"branchFax"`
+	Branchmobile      *string   `json:"branchMobile"`
+	Branchwebsite     *string   `json:"branchWebsite"`
+	Branchemail       *string   `json:"branchEmail"`
+	Branchstartdate   time.Time `json:"branchStartDate"`
+	Isdefault         string    `json:"isdefault"`
+	Lmuserid          string    `json:"lmuserid"`
+	Octime            time.Time `json:"octime"`
+	Lmtime            time.Time `json:"lmtime"`
 }

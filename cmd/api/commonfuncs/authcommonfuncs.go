@@ -102,7 +102,7 @@ func CheckUserRegistered(app *application.Application, w http.ResponseWriter, r 
 		return &models.RegisChk{Isregis: isregistered, Companyowner: cpown}, err
 	} else if len(myc) == 1 {
 		isregistered = true
-		cpown = myc[0].Companyowner.String
+		cpown = myc[0].Companyowner
 		/*		if myc[0].Domainmapid.String != "" {
 				havesubdomain = true
 			}*/

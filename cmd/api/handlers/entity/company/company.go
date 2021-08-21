@@ -26,8 +26,25 @@ func fetchCompany(app *application.Application) http.HandlerFunc {
 		havcpydetail := false
 		var errs error
 		var status string
+		var cpyd string
 
-		if cmpy, errs = commonfuncs.CompanyCheck(app, w, r); errs != nil {
+		defer r.Body.Close()
+		var p models.ReqEntityTree
+
+		err := json.NewDecoder(r.Body).Decode(&p)
+		fmt.Println(p)
+
+		if err != nil {
+			return
+		}
+
+		if p.EntityType == "company" && p.Entityid[0] != "null" {
+			cpyd = p.Entityid[0]
+		} else {
+			cpyd = "DEFAULT"
+		}
+
+		if cmpy, errs = commonfuncs.CompanyCheck(app, w, r, cpyd); errs != nil {
 			return
 		}
 		cmpycp = *cmpy
@@ -41,12 +58,10 @@ func fetchCompany(app *application.Application) http.HandlerFunc {
 			cmpycp = []models.TblCompany{}
 		}
 
-		dd := []models.RefDatReq{
-			{Reftype: "group", Refname: "company"},
-		}
-
 		ddf := models.RefDatReqFinal{
-			Refs: dd,
+			Refs: []models.RefDatReq{
+				{Reftype: "group", Refname: "company"},
+			},
 		}
 
 		fmt.Println("-------------------\n fetchCompany Start 1 \n-------------------")
@@ -99,10 +114,9 @@ func saveCompany(app *application.Application) http.HandlerFunc {
 			http.Error(w, "text_field is expected", http.StatusBadRequest)
 			return
 		}
-		cpy := &models.Cpy{}
-		fmt.Println(p)
+		//cpy := &models.Cpy{}
+		cpy := &models.TblCompany{}
 		jsonDecoder := json.NewDecoder(p)
-
 		err = jsonDecoder.Decode(&cpy)
 
 		//_, err = p.Read(text)
@@ -207,47 +221,54 @@ func saveCompany(app *application.Application) http.HandlerFunc {
 		cmpycp = []models.TblCompany{}
 
 		if cpyop.Optype == "Update" {
-			if cmpy, errs = commonfuncs.CompanyCheck(app, w, r); errs != nil {
+			if cmpy, errs = commonfuncs.CompanyCheck(app, w, r, cpy.Companyid); errs != nil {
 				return
 			}
 			cmpycp = *cmpy
+			//layout := "2006-01-02T15:04:05.000Z"
 			/*
 				const layoutISO = "2006-01-02"
 				cpydd, _ := time.Parse(layoutISO, cpy.CompanyStartDate)
 				cpy.CompanyStartDate = cpydd.String()
+
+
+				fmt.Println(cmpycp[0].Companystartdate)
 			*/
 			if len(*cmpy) == 1 {
 				havcpydetail = true
 				status = "SUCCESS"
 
-				cpy1 := models.Cpy{
-					CompanyId:          cmpycp[0].Companyid.String,
-					CompanyName:        cmpycp[0].Companyname.String,
-					CompanyShortName:   cmpycp[0].Companyshortname.String,
-					CompanyAddLine1:    cmpycp[0].Companyaddline1.String,
-					CompanyAddLine2:    cmpycp[0].Companyaddline2.String,
-					CompanyCategory:    cmpycp[0].Companycategory.String,
-					CompanyStatus:      cmpycp[0].Companystatus.String,
-					CompanyLogoUrl:     cmpycp[0].Companyimageurl.String,
-					CompanyLogo:        cmpycp[0].Companylogo.String,
-					CompanyIndustry:    cmpycp[0].Companyindustry.String,
-					CompanyTaxID:       cmpycp[0].Companytaxid.String,
-					CompanyStartDate:   cmpycp[0].Companystartdate.Time.String(),
-					CompanyCountry:     cmpycp[0].Companycountry.String,
-					CompanyCity:        cmpycp[0].Companycity.String,
-					CompanyState:       cmpycp[0].Companystate.String,
-					CompanyPinCode:     cmpycp[0].Companypincode.String,
-					CompanyPhone:       cmpycp[0].Companyphone.String,
-					CompanyFax:         cmpycp[0].Companyfax.String,
-					CompanyMobile:      cmpycp[0].Companymobile.String,
-					CompanyEmail:       cmpycp[0].Companyemail.String,
-					CompanyWebsite:     cmpycp[0].Companywebsite.String,
-					CompanyFiscalYear:  cmpycp[0].Companyfiscalyear.String,
-					CompanyTimeZone:    cmpycp[0].Companytimezone.String,
-					CompanyBaseCurency: cmpycp[0].Companybasecurency.String,
-					CompanysParent:     cmpycp[0].Companysparent.String,
-				}
+				cpy1 := cmpycp[0]
 
+				/*
+					cpy1 := models.Cpy{
+						CompanyId:          cmpycp[0].Companyid.String,
+						CompanyName:        cmpycp[0].Companyname.String,
+						CompanyShortName:   cmpycp[0].Companyshortname.String,
+						CompanyAddLine1:    cmpycp[0].Companyaddline1.String,
+						CompanyAddLine2:    cmpycp[0].Companyaddline2.String,
+						CompanyCategory:    cmpycp[0].Companycategory.String,
+						CompanyStatus:      cmpycp[0].Companystatus.String,
+						CompanyLogoUrl:     cmpycp[0].Companyimageurl.String,
+						CompanyLogo:        cmpycp[0].Companylogo.String,
+						CompanyIndustry:    cmpycp[0].Companyindustry.String,
+						CompanyTaxID:       cmpycp[0].Companytaxid.String,
+						CompanyStartDate:   cmpycp[0].Companystartdate.Time.String(),
+						CompanyCountry:     cmpycp[0].Companycountry.String,
+						CompanyCity:        cmpycp[0].Companycity.String,
+						CompanyState:       cmpycp[0].Companystate.String,
+						CompanyPinCode:     cmpycp[0].Companypincode.String,
+						CompanyPhone:       cmpycp[0].Companyphone.String,
+						CompanyFax:         cmpycp[0].Companyfax.String,
+						CompanyMobile:      cmpycp[0].Companymobile.String,
+						CompanyEmail:       cmpycp[0].Companyemail.String,
+						CompanyWebsite:     cmpycp[0].Companywebsite.String,
+						CompanyFiscalYear:  cmpycp[0].Companyfiscalyear.String,
+						CompanyTimeZone:    cmpycp[0].Companytimezone.String,
+						CompanyBaseCurency: cmpycp[0].Companybasecurency.String,
+						CompanysParent:     cmpycp[0].Companysparent.String,
+					}
+				*/
 				if cmpy, errs = commonfuncs.Companyupdate(app, w, r, cpy, &cpy1); errs != nil {
 					return
 				}

@@ -106,7 +106,7 @@ func DomRegis(app *application.Application, w http.ResponseWriter, r *http.Reque
 		UUID string
 		Cpid string
 	}
-	args, err := json.Marshal(assingrole{UUID: userinfo.UUID, Cpid: myc1.Companyid.String})
+	args, err := json.Marshal(assingrole{UUID: userinfo.UUID, Cpid: *myc1.Companyid})
 
 	if err != nil {
 		dd := httpresponse.SlugResponse{

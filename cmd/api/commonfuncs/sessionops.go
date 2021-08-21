@@ -78,12 +78,13 @@ func SessionOps(app *application.Application, w http.ResponseWriter, r *http.Req
 		qry3 := `SELECT count(1) FROM ac.loginh 
 		WHERE userid = $1
 		AND companyid = $2
-		AND logoutime IS NULL`
+		AND logoutime IS NULL
+		AND sessionid = $3`
 
 		var myc3 []models.ResultCount
 
 		stmts := []*dbtran.PipelineStmt{
-			dbtran.NewPipelineStmt("select", qry3, &myc3, userinfo.UUID, userinfo.Companyid),
+			dbtran.NewPipelineStmt("select", qry3, &myc3, userinfo.UUID, userinfo.Companyid, userinfo.Session),
 		}
 
 		_, err := dbtran.WithTransaction(ctx, dbtran.TranTypeFullSet, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {

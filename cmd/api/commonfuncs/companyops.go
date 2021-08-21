@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -15,7 +16,7 @@ import (
 	"github.com/sveltegobackend/pkg/httpresponse"
 )
 
-func CompanyCheck(app *application.Application, w http.ResponseWriter, r *http.Request) (*[]models.TblCompany, error) {
+func CompanyCheck(app *application.Application, w http.ResponseWriter, r *http.Request, companyid string) (*[]models.TblCompany, error) {
 	fmt.Println("----------------- PACKAGE CHECK START -------------------")
 
 	var data string
@@ -28,6 +29,10 @@ func CompanyCheck(app *application.Application, w http.ResponseWriter, r *http.R
 		return &[]models.TblCompany{}, errs
 	}
 
+	if companyid == "DEFAULT" {
+		companyid = userinfo.Companyid
+	}
+
 	const qry = `SELECT * FROM ac.company 
 					WHERE companyid = $1
 					AND companyStatus in ('A')`
@@ -35,7 +40,7 @@ func CompanyCheck(app *application.Application, w http.ResponseWriter, r *http.R
 	var myc []models.TblCompany
 
 	stmts1 := []*dbtran.PipelineStmt{
-		dbtran.NewPipelineStmt("select", qry, &myc, userinfo.Companyid),
+		dbtran.NewPipelineStmt("select", qry, &myc, companyid),
 	}
 
 	_, err := dbtran.WithTransaction(ctx, dbtran.TranTypeFullSet, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {
@@ -70,7 +75,7 @@ func CompanyCheck(app *application.Application, w http.ResponseWriter, r *http.R
 	return &myc, nil
 }
 
-func CompanySave(app *application.Application, w http.ResponseWriter, r *http.Request, cpy *models.Cpy) (*[]models.TblCompany, error) {
+func CompanySave(app *application.Application, w http.ResponseWriter, r *http.Request, cpy *models.TblCompany) (*[]models.TblCompany, error) {
 	fmt.Println("----------------- CompanySave CHECK START -------------------")
 
 	var data string
@@ -93,11 +98,11 @@ func CompanySave(app *application.Application, w http.ResponseWriter, r *http.Re
 	//var myc dbtran.Resultset
 
 	stmts1 := []*dbtran.PipelineStmt{
-		dbtran.NewPipelineStmt("select", qry, &myc, userinfo.Companyid, cpy.CompanyName, cpy.CompanyShortName, cpy.CompanyCategory,
-			"A", "", "", "", cpy.CompanyIndustry, cpy.CompanyTaxID, cpy.CompanyAddLine1, cpy.CompanyAddLine2,
-			cpy.CompanyCity, cpy.CompanyState, cpy.CompanyCountry, cpy.CompanyPinCode, cpy.CompanyPhone, cpy.CompanyFax,
-			cpy.CompanyMobile, cpy.CompanyWebsite, cpy.CompanyEmail, cpy.CompanyStartDate, cpy.CompanyFiscalYear, cpy.CompanyTimeZone,
-			cpy.CompanyBaseCurency, cpy.CompanysParent, "Y", userinfo.UUID),
+		dbtran.NewPipelineStmt("select", qry, &myc, userinfo.Companyid, cpy.Companyname, cpy.Companyshortname, cpy.Companycategory,
+			"A", "", "", "", cpy.Companyindustry, cpy.Companytaxid, cpy.Companyaddline1, cpy.Companyaddline2,
+			cpy.Companycity, cpy.Companystate, cpy.Companycountry, cpy.Companypincode, cpy.Companyphone, cpy.Companyfax,
+			cpy.Companymobile, cpy.Companywebsite, cpy.Companyemail, cpy.Companystartdate, cpy.Companyfiscalyear, cpy.Companytimezone,
+			cpy.Companybasecurency, cpy.Companysparent, "Y", userinfo.UUID),
 	}
 
 	_, err := dbtran.WithTransaction(ctx, dbtran.TranTypeFullSet, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {
@@ -134,7 +139,7 @@ func CompanySave(app *application.Application, w http.ResponseWriter, r *http.Re
 	return &myc, nil
 }
 
-func Companyupdate(app *application.Application, w http.ResponseWriter, r *http.Request, cpynew *models.Cpy, cpyindb *models.Cpy) (*[]models.TblCompany, error) {
+func Companyupdate(app *application.Application, w http.ResponseWriter, r *http.Request, cpynew *models.TblCompany, cpyindb *models.TblCompany) (*[]models.TblCompany, error) {
 	fmt.Println("----------------- Company Update CHECK START -------------------")
 
 	//var data string
@@ -151,6 +156,8 @@ func Companyupdate(app *application.Application, w http.ResponseWriter, r *http.
 	if erre != nil {
 		return &[]models.TblCompany{}, errs
 	}
+	// do format for date
+	fmt.Println(changelog)
 
 	qry := "UPDATE ac.company SET "
 	if len(changelog) > 0 {
@@ -158,7 +165,14 @@ func Companyupdate(app *application.Application, w http.ResponseWriter, r *http.
 			if i != 0 {
 				qry = qry + " , "
 			}
-			qry = qry + s.Path[0] + ` =  '` + fmt.Sprintf("%v", s.To) + `' `
+			if s.Path[0] == "Companystartdate" {
+				const layoutISO = "2006-01-02"
+				cpydd := s.To.(time.Time).Format(layoutISO)
+				qry = qry + s.Path[0] + ` =  '` + fmt.Sprintf("%v", cpydd) + `' `
+			} else {
+				qry = qry + s.Path[0] + ` =  '` + fmt.Sprintf("%v", s.To) + `' `
+			}
+
 		}
 
 		qry = qry + ", lmtime = CURRENT_TIMESTAMP, lmuserid = $1 "
@@ -171,7 +185,7 @@ func Companyupdate(app *application.Application, w http.ResponseWriter, r *http.
 	//var myc dbtran.Resultset
 
 	stmts1 := []*dbtran.PipelineStmt{
-		dbtran.NewPipelineStmt("select", qry, &myc, userinfo.UUID, cpynew.CompanyId),
+		dbtran.NewPipelineStmt("select", qry, &myc, userinfo.UUID, cpynew.Companyid),
 	}
 
 	_, err := dbtran.WithTransaction(ctx, dbtran.TranTypeFullSet, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {

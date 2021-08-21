@@ -35,6 +35,7 @@ func userLogin(app *application.Application) http.HandlerFunc {
 		havdom := false
 		havpacks := false
 		havcpydetail := false
+		var ddf models.RefDatReqFinal
 		//havbrndetail := false
 
 		//gotolanding := true
@@ -135,30 +136,38 @@ func userLogin(app *application.Application) http.HandlerFunc {
 					}
 				*/
 				//TODO Check for COMPANY DETAILS CAPTURED... if none NAV to comapny details page
+				/*
+					if cmpy, errs = commonfuncs.CompanyCheck(app, w, r); errs != nil {
+						return
+					}
 
-				if cmpy, errs = commonfuncs.CompanyCheck(app, w, r); errs != nil {
+					if len(*cmpy) == 1 {
+						havcpydetail = true
+					} else {
+						nxtaction = "ADDCOMPANY"
+						goto NAVCHKEND
+					}
+
+					//TODO Check for BRANCH DETAILS CAPTURED... if none NAV to branch details page
+					if brnc, errs = commonfuncs.BranchCheck(app, w, r, []string{"all"}); errs != nil {
+						return
+					}
+
+					if len(*brnc) > 0 {
+						//havbrndetail = true
+					} else {
+						//havbrndetail = false
+						nxtaction = "ADDBRANCH"
+						goto NAVCHKEND
+					}
+				*/
+				if myc, errs = commonfuncs.PackageFetch(app, w, r, []string{"ALL"}, userinfo.Companyid); errs != nil {
 					return
 				}
-
-				if len(*cmpy) == 1 {
-					havcpydetail = true
-				} else {
-					nxtaction = "ADDCOMPANY"
-					goto NAVCHKEND
+				if myc.Navstring != "" {
+					nxtaction = myc.Navstring
 				}
-
-				//TODO Check for BRANCH DETAILS CAPTURED... if none NAV to branch details page
-				if brnc, errs = commonfuncs.BranchCheck(app, w, r, []string{"all"}); errs != nil {
-					return
-				}
-
-				if len(*brnc) > 0 {
-					//havbrndetail = true
-				} else {
-					//havbrndetail = false
-					nxtaction = "ADDBRANCH"
-					goto NAVCHKEND
-				}
+				goto NAVCHKEND
 
 				//TODO if all the above check satisfied, nav to landing page
 
@@ -167,28 +176,48 @@ func userLogin(app *application.Application) http.HandlerFunc {
 				switch nxtaction {
 				case "LANDING":
 
-					if myc, errs = commonfuncs.PackageFetch(app, w, r, []string{"ALL"}, "ALL"); errs != nil {
-						return
-					}
-
+					/*					if myc, errs = commonfuncs.PackageFetch(app, w, r, []string{"ALL"}, userinfo.Companyid); errs != nil {
+											return
+										}
+					*/
 					fmt.Println("LANDING so nothing to fetch")
 				case "ADDCOMPANY":
-					if myc, errs = commonfuncs.PackageFetch(app, w, r, []string{"PKS8"}, "ALL"); errs != nil {
-						return
-					}
+					/*
+						if myc, errs = commonfuncs.PackageFetch(app, w, r, []string{"PKS8"}, userinfo.Companyid); errs != nil {
+							return
+						}
+					*/
 					cmpy = &[]models.TblCompany{}
 					brnc = &[]models.TblBranch{}
 
 				case "ADDBRANCH":
-					if myc, errs = commonfuncs.PackageFetch(app, w, r, []string{"PKS8", "PKS9"}, "ALL"); errs != nil {
-						return
-					}
-
+					/*
+						if myc, errs = commonfuncs.PackageFetch(app, w, r, []string{"PKS8", "PKS9"}, userinfo.Companyid); errs != nil {
+							return
+						}
+					*/
+					fmt.Println("LANDING so nothing to fetch")
 				default:
 					myc = &models.PacksResp{}
 					cmpy = &[]models.TblCompany{}
 					brnc = &[]models.TblBranch{}
 				}
+
+				fmt.Println("-------------------\n fetchCompany Start 1 \n-------------------")
+
+				ddf = models.RefDatReqFinal{
+					Refs: []models.RefDatReq{
+						{Reftype: "single", Refname: "allowedops"},
+					},
+				}
+
+				if err := commonfuncs.RefDataFetch1(app, w, r, &ddf); err != nil {
+					return
+				}
+
+				fmt.Println(ddf.RefResult)
+
+				fmt.Println("-------------------\n fetchCompany Start 2 \n-------------------")
 
 				/*
 					if (nxtaction != "ADDPACKS") || (nxtaction != "ADDCOMPANY") {
@@ -239,7 +268,7 @@ func userLogin(app *application.Application) http.HandlerFunc {
 				ErrType:    httpresponse.ErrorTypeIncorrectInput,
 				RespWriter: w,
 				Request:    r,
-				Data:       map[string]interface{}{"message": data, "nextaction": nxtaction, "menu": myc, "company": cmpy, "branch": brnc, "sessionid": userinfo.Session},
+				Data:       map[string]interface{}{"message": data, "nextaction": nxtaction, "menu": myc, "company": cmpy, "branch": brnc, "refdata": ddf.RefResult},
 				Status:     "ERROR",
 				SlugCode:   "AUTH-USRNOTREG",
 				LogMsg:     "User trying to login with non registered user",
@@ -255,7 +284,7 @@ func userLogin(app *application.Application) http.HandlerFunc {
 		fmt.Println(userinfo)
 		fmt.Println(userinfo.Session)
 		data = "User registration successful."
-		ssd := map[string]interface{}{"message": data, "nextaction": nxtaction, "menu": myc, "company": cmpy, "branch": brnc}
+		ssd := map[string]interface{}{"message": data, "nextaction": nxtaction, "menu": myc, "company": cmpy, "branch": brnc, "refdata": ddf.RefResult}
 		//&nat{"nat1", "nat2"},
 		fmt.Println("registration completed ss sent")
 		ss := httpresponse.SlugResponse{

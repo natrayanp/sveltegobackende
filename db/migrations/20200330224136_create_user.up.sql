@@ -25,21 +25,21 @@ CREATE SCHEMA ac;
 
 ---Login table
 CREATE TABLE ac.userlogin (
-    userid 		               varchar(100) NOT NULL,
-	username    		       varchar(100),  --firebase. User.displayname
-    useremail                  varchar(100),
-    userpassword               varchar(1000),
-    userstatus		           varchar(2) NOT NULL, --> (A- Active, B-Blocked, D-Deleted) 
-    emailverified              boolean,
-    siteid                     varchar(100) NOT NULL,
-    hostname    text NOT NULL,          
-    selecthostname    text UNIQUE,          
-    companyid   varchar(100),
-    companyowner    varchar(3) NOT NULL, --> Y, N, DK
-    entityid    varchar(100)[],  --> This holds the ID enity id will have companyids tagged in another table which is TODO
-    userstatlstupdt	           timestamptz NOT NULL,    
-    octime			           timestamptz NOT NULL,
-    lmtime			           timestamptz NOT NULL,
+    userid 		                varchar(100) NOT NULL,
+	username    		        varchar(100),  --firebase. User.displayname
+    useremail                   varchar(100),
+    userpassword                varchar(1000),
+    userstatus		            varchar(2) NOT NULL, --> (A- Active, B-Blocked, D-Deleted) 
+    emailverified               boolean,
+    siteid                      varchar(100) NOT NULL,
+    hostname                    text NOT NULL,          
+    selecthostname              text UNIQUE,          
+    companyid                   varchar(100),
+    companyowner                varchar(3) NOT NULL, --> Y, N, DK
+    entityid                    varchar(100)[],  --> This holds the ID enity id will have companyids tagged in another table which is TODO
+    userstatlstupdt	            timestamptz NOT NULL,    
+    octime			            timestamptz NOT NULL,
+    lmtime			            timestamptz NOT NULL,
     CONSTRAINT uid PRIMARY KEY (userid, hostname,siteid)  
     );
 
@@ -96,6 +96,10 @@ CREATE TABLE ac.packs (
     displayname           varchar(50) NOT NULL,
     description           varchar NOT NULL,
     type                  varchar(30) NOT NULL,
+    menulevel             varchar(30) NOT NULL,
+    allowedops            boolean[] NOT NULL,  -- True-show checkbox; False-hide checkbox. link-roledetails.allowedopsval;ac.refdata.refcode = 'allowedops'
+                                                -- This should hold value for all values in refcode index should be equal to (sort order-1).
+                                                -- This value should rollup meaning...all function may not have export but the parent should have true for an ops if atleast one of it child has that ops
     parent                varchar(20)[],
     sortorder             smallserial NOT NULL,
     link                  varchar(1000),
@@ -106,21 +110,21 @@ CREATE TABLE ac.packs (
 );
 
 
-insert into ac.packs values ('PKS1','POS','POS','POS has all the POS functionalities','pack',ARRAY[NULL],1,'','radio_button_checked','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS2','POS Function','POS Function','Functions related to POS','module',ARRAY['PKS1'],1,'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS3','POS Reports','POS Reports','Reports related to POS','module',ARRAY['PKS1'],2,'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS4','POS Settings','POS Settings','Setting for POS module','module',ARRAY['PKS1’,’PKS6'],3,'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS5','POS Generic Settings','Generic Settings','Generic settings for POS','function',ARRAY['PKS4'],1,'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS6','Settings','Settings','Settings','pack',ARRAY[NULL],2,'/landing/settings','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS7','Entity Settings','Entity Configuration','This module has all the entity level settings','module',ARRAY['PKS6'],1,'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS8','companysettigs','Company','This has the functions for company set up','function',ARRAY['PKS7'],1,'/landing/settings/companysettings','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS9','branchsettings','Branch','This has the functions for Branch set up','function',ARRAY['PKS7'],2,'/landing/settings/branchsettings','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS10','User Settings','User Config','This module has all the user level settings','module',ARRAY['PKS6'],3,'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS11','user role','Roles','This has the functions for user role set up','function',ARRAY['PKS10'],1,'/landing/settings/roles','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS12','User Settings','Users','This has the functions for user set up','function',ARRAY['PKS10'],1,'/landing/settings/users','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS13','Pricing','Pricing','Pricing plans avaialble','pack',ARRAY[NULL],4,'/landing/pricing','fa-hand-holding-heart','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS14','Pricing','Pricing','Pricing plans avaialble','module',ARRAY['PKS13'],1,'','','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS15','Pricing','Pricing','Pricing plans avaialble','function',ARRAY['PKS14'],1,'','','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS1','POS','POS','POS has all the POS functionalities','pack','COMPANY', ARRAY[true,true,true,false],ARRAY[NULL],1,'','radio_button_checked','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS2','POS Function','POS Function','Functions related to POS','module','COMPANY', ARRAY[true,true,true,false],ARRAY['PKS1'],1,'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS3','POS Reports','POS Reports','Reports related to POS','module','COMPANY', ARRAY[true,true,true,false],ARRAY['PKS1'],2,'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS4','POS Settings','POS Settings','Setting for POS module','module','COMPANY', ARRAY[true,true,true,false],ARRAY['PKS1’,’PKS6'],3,'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS5','POS Generic Settings','Generic Settings','Generic settings for POS','function','COMPANY', ARRAY[true,true,true,false],ARRAY['PKS4'],1,'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS6','Settings','Settings','Settings','pack','COMPANY', ARRAY[true,true,true,false],ARRAY[NULL],2,'/landing/settings','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS7','Entity Settings','Entity Configuration','This module has all the entity level settings','module','COMPANY', ARRAY[true,true,true,false],ARRAY['PKS6'],1,'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS8','companysettigs','Company','This has the functions for company set up','function','COMPANY', ARRAY[true,true,true,false],ARRAY['PKS7'],1,'/landing/settings/companysettings','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS9','branchsettings','Branch','This has the functions for Branch set up','function','COMPANY', ARRAY[true,true,true,false],ARRAY['PKS7'],2,'/landing/settings/branchsettings','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS10','User Settings','User Config','This module has all the user level settings','module','COMPANY', ARRAY[true,true,true,false],ARRAY['PKS6'],3,'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS11','user role','Roles','This has the functions for user role set up','function','COMPANY', ARRAY[true,true,true,false],ARRAY['PKS10'],1,'/landing/settings/roles','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS12','User Settings','Users','This has the functions for user set up','function','COMPANY', ARRAY[true,true,true,false],ARRAY['PKS10'],1,'/landing/settings/users','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS13','Pricing','Pricing','Pricing plans avaialble','pack','COMPANY', ARRAY[true,true,true,false],ARRAY[NULL],4,'/landing/pricing','fa-hand-holding-heart','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS14','Pricing','Pricing','Pricing plans avaialble','module','COMPANY', ARRAY[true,true,true,false],ARRAY['PKS13'],1,'','','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS15','Pricing','Pricing','Pricing plans avaialble','function','COMPANY', ARRAY[true,true,true,false],ARRAY['PKS14'],1,'','','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 
 
 
@@ -139,7 +143,7 @@ CREATE TABLE ac.companypacks (
     userrolelimit         numeric(10),
     userlimit             numeric(10),  
     branchlimit           numeric(10),
-    status                varchar(3),
+    status                varchar(3) NOT NULL,
     octime			      timestamptz NOT NULL,
     lmtime			      timestamptz NOT NULL
 );
@@ -231,14 +235,15 @@ insert into ac.defaultrolemaster values ('ROLMA1','SignupAdmin','SignupAdmin','T
 
 */
 --RoleDetails
-
+/* PACKFUNCID will have the leaf node value*/
 CREATE TABLE ac.roledetails (    
     id                    varchar(20) NOT NULL CONSTRAINT roledetailsid PRIMARY KEY, 
     rolemasterid          varchar(100) NOT NULL,    
     packfuncid            varchar(20) NOT NULL,  --> This can have only function type from pack table
     planid               varchar(30) NOT NULL,
     companyid             varchar(30) NOT NULL,
-    branchid              varchar(30) NOT NULL,                    
+    branchid              varchar(30) NOT NULL,
+    allowedopsval         boolean[] NOT NULL,    -- True/False - represent checkbox Value. link-packs.allowedops;ac.refdata.refcode = 'allowedops'                                                                 
     octime			      timestamptz NOT NULL,
     lmtime			      timestamptz NOT NULL
 );
@@ -246,11 +251,11 @@ CREATE TABLE ac.roledetails (
 /*  All the Functions and Modules that are to be part of sign up admin should have should be included here   
     Eventhough we have entry in this table for sign up role.  User will get the modules/functions that are common between this and company packs
 */
-insert into ac.Roledetails values ('ROLDET1','ROLMA1','PKS8','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.Roledetails values ('ROLDET2','ROLMA1','PKS9','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.Roledetails values ('ROLDET3','ROLMA1','PKS14','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.Roledetails values ('ROLDET3','ROLMA1','PKS11','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.Roledetails values ('ROLDET3','ROLMA1','PKS12','PUBLIC','PUBLIC','PUBLIC',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.Roledetails values ('ROLDET1','ROLMA1','PKS8','PUBLIC','PUBLIC','PUBLIC', ARRAY[true,true,true,false],CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.Roledetails values ('ROLDET2','ROLMA1','PKS9','PUBLIC','PUBLIC','PUBLIC', ARRAY[true,true,true,false],CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.Roledetails values ('ROLDET3','ROLMA1','PKS14','PUBLIC','PUBLIC','PUBLIC',ARRAY[true,true,true,false],CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.Roledetails values ('ROLDET3','ROLMA1','PKS11','PUBLIC','PUBLIC','PUBLIC',ARRAY[true,true,true,false],CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.Roledetails values ('ROLDET3','ROLMA1','PKS12','PUBLIC','PUBLIC','PUBLIC',ARRAY[true,true,true,false],CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 
 /*
 --defaultRoleDetails
@@ -298,13 +303,19 @@ CREATE TABLE ac.refdata (
     description           varchar NOT NULL,
     parent                varchar(20)[],
     status                varchar(3),
+    sortorder             smallserial NOT NULL,
     octime			      timestamptz NOT NULL,
     lmtime			      timestamptz NOT NULL
 );
 /*
-INSERT INTO ac.refdata values (DEFAULT,'industype','industype','Hotel','industry type of the company',ARRAY[NULL],'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-INSERT INTO ac.refdata values (DEFAULT,'compcat','compcat','Food','Company type category',ARRAY[NULL],'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-INSERT INTO ac.refdata values (DEFAULT,'compcat','compcat','FMCG','Company type FMCG',ARRAY[NULL],'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);*/
+INSERT INTO ac.refdata values (DEFAULT,'industype','industype','Hotel','industry type of the company',ARRAY[NULL],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'compcat','compcat','Food','Company type category',ARRAY[NULL],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'compcat','compcat','FMCG','Company type FMCG',ARRAY[NULL],'A',2,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);*/
+INSERT INTO ac.refdata values (DEFAULT,'allowedops','allowedops','READ','allowed operations master used in packs.allowedops and roledetails.allowedopsval',ARRAY[NULL],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'allowedops','allowedops','WRITE','allowed operations master used in packs.allowedops and roledetails.allowedopsval',ARRAY[NULL],'A',2,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'allowedops','allowedops','DELETE','allowed operations master used in packs.allowedops and roledetails.allowedopsval',ARRAY[NULL],'A',3,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'allowedops','allowedops','EXPORT','allowed operations master used in packs.allowedops and roledetails.allowedopsval',ARRAY[NULL],'A',4,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+
 ---
 CREATE TABLE ac.company (
         companyid               varchar(100) NOT NULL UNIQUE,        
@@ -346,9 +357,9 @@ CREATE SEQUENCE ac.branchid_sequence START 1;
 
 
 CREATE TABLE ac.branch (
-            companyid           varchar(100) REFERENCES ac.company(companyid),
+            companyid           varchar(100) NOT NULL REFERENCES ac.company(companyid),
             branchId            varchar(100)  default (('BR'::text || to_char(CURRENT_TIMESTAMP, 'DDMMYYYY'::text)) ||
-                                        nextval('ac.branchid_sequence'::regclass)) not null
+                                        nextval('ac.branchid_sequence'::regclass)) NOT NULL
                                         constraint branch_pkey primary key,
             branchName          text NOT NULL,
             branchShortName     varchar(100) NOT NULL,
