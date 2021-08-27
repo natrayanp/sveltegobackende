@@ -264,7 +264,9 @@ func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.R
 					var mycpp []models.TtblMytree
 					qry = `WITH RECURSIVE MyTree AS 
 			(
-				SELECT *,false as open FROM ac.packs WHERE id IN
+				SELECT A.*,false as open,B.roledetailid,B.rolemasterid,B.allowedopsval,'Availablemodules' AS basketname  FROM ac.packs A
+				LEFT JOIN ac.roledetails B ON A.packid = B.PACKFUNCID
+				WHERE A.packid IN
 				(
 					(	SELECT PACKFUNCID FROM ac.roledetails 
 						WHERE rolemasterid IN 
@@ -282,10 +284,13 @@ func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.R
 							AND expirydate >= CURRENT_DATE							
 					)
 				) 
-				AND menulevel NOT IN ('COMPANY')
+				AND A.menulevel NOT IN ('COMPANY')
 				UNION
-				SELECT m.*,false as open FROM ac.packs AS m JOIN MyTree AS t ON m.id = ANY(t.parent)
-			)
+				SELECT M.*,false as open,N.roledetailid,N.rolemasterid,N.allowedopsval,'Availablemodules' AS basketname FROM ac.packs M
+				LEFT JOIN ac.roledetails N ON M.packid = N.PACKFUNCID
+				JOIN MyTree AS t ON M.packid = ANY(t.parent)
+					/*SELECT m.*,false as open FROM ac.packs AS m JOIN MyTree AS t ON m.packid = ANY(t.parent)*/
+		)
 			SELECT * FROM MyTree ORDER BY TYPE, SORTORDER,NAME;`
 
 					stmts = []*dbtran.PipelineStmt{
@@ -342,7 +347,9 @@ func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.R
 				var mycppp []models.TtblMytree
 				qry = `WITH RECURSIVE MyTree AS 
 				(
-					SELECT *,false as open FROM ac.packs WHERE id IN
+					SELECT A.*,false as open,B.roledetailid,B.rolemasterid,B.allowedopsval,'Selectedmodules' AS basketname FROM ac.packs A
+					LEFT JOIN ac.roledetails B ON A.packid = B.PACKFUNCID
+					WHERE A.packid IN
 					(
 						(	SELECT PACKFUNCID FROM ac.roledetails 
 							WHERE rolemasterid IN 
@@ -359,9 +366,13 @@ func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.R
 								AND expirydate >= CURRENT_DATE							
 						)
 					)
-					AND menulevel IN ('COMPANY')
+					AND A.menulevel IN ('COMPANY')
 					UNION
-					SELECT m.*,false as open FROM ac.packs AS m JOIN MyTree AS t ON m.id = ANY(t.parent)
+					SELECT M.*,false as open,N.roledetailid,N.rolemasterid,N.allowedopsval,'Selectedmodules' AS basketname FROM ac.packs M
+					LEFT JOIN ac.roledetails N ON M.packid = N.PACKFUNCID
+					JOIN MyTree AS t ON M.packid = ANY(t.parent)
+						/*SELECT m.*,false as open FROM ac.packs AS m JOIN MyTree AS t ON m.packid = ANY(t.parent)*/
+		
 				)
 				SELECT * FROM MyTree ORDER BY TYPE, SORTORDER,NAME;`
 
@@ -413,7 +424,7 @@ func createDataTree(mnodes *[]models.TtblMytree) {
 	m := make(map[string]*models.TtblMytree)
 	for i, _ := range nodes {
 		//fmt.Printf("Setting m[%d] = <node with ID=%d>\n", n.ID, n.ID)
-		m[nodes[i].Id] = &nodes[i]
+		m[nodes[i].Packid] = &nodes[i]
 	}
 	fmt.Println(m)
 	fmt.Println("---------------$$$end6a2")
@@ -433,7 +444,7 @@ func createDataTree(mnodes *[]models.TtblMytree) {
 				fmt.Println(t)
 
 				if t != nil {
-					m[*t].Submenu = append(m[*t].Submenu, m[nodes[i].Id])
+					m[*t].Submenu = append(m[*t].Submenu, m[nodes[i].Packid])
 				}
 				/*
 					if t.Status != pgtype.Null {

@@ -35,9 +35,9 @@ func refCountry(app *application.Application, w http.ResponseWriter, r *http.Req
 	var stmts []*dbtran.PipelineStmt
 
 	qry = `WITH RECURSIVE MyTree AS (
-			SELECT id,refvalcat,refvalue,parent FROM ac.refdata WHERE refcode = 'country'
+			SELECT refid,refvalcat,refvalue,parent FROM ac.refdata WHERE refcode = 'country'
 UNION
-SELECT m.id,m.refvalcat,m.refvalue,m.parent as open FROM ac.refdata AS m JOIN MyTree AS t ON t.id  = ANY(m.parent)
+SELECT m.refid,m.refvalcat,m.refvalue,m.parent as open FROM ac.refdata AS m JOIN MyTree AS t ON t.refid  = ANY(m.parent)
 )
 SELECT * FROM MyTree ORDER BY refvalcat,refvalue;`
 
@@ -98,7 +98,7 @@ func createDataTree1(mnodes *[]models.TblRefdata) {
 	m := make(map[string]*models.TblRefdata)
 	for i, _ := range nodes {
 		//fmt.Printf("Setting m[%d] = <node with ID=%d>\n", n.ID, n.ID)
-		m[nodes[i].Id] = &nodes[i]
+		m[nodes[i].Refid] = &nodes[i]
 	}
 	fmt.Println(m)
 	fmt.Println("---------------$$$end6a2")
@@ -117,7 +117,7 @@ func createDataTree1(mnodes *[]models.TblRefdata) {
 				fmt.Println(t)
 
 				if t != nil {
-					m[*t].Submenu = append(m[*t].Submenu, m[nodes[i].Id])
+					m[*t].Submenu = append(m[*t].Submenu, m[nodes[i].Refid])
 				}
 				fmt.Println(m)
 			}
@@ -143,7 +143,7 @@ func createDataTree1(mnodes *[]models.TblRefdata) {
 	fmt.Println("---------------$$$end6a5")
 }
 
-func refGenericType(app *application.Application, w http.ResponseWriter, r *http.Request, refcode string) (*[]models.TtblRefdata, error) {
+func refGenericType(app *application.Application, w http.ResponseWriter, r *http.Request, refcode string) (*[]models.TblRefdata, error) {
 	fmt.Println("----------------- refGenericType Fetch START -------------------")
 
 	var data string
@@ -152,10 +152,10 @@ func refGenericType(app *application.Application, w http.ResponseWriter, r *http
 
 	var qry string
 	//var myc []models.TblRefdata
-	var myc []models.TtblRefdata
+	var myc []models.TblRefdata
 	var stmts []*dbtran.PipelineStmt
 
-	qry = `SELECT id,refvalcat,refvalue,parent,sortorder FROM ac.refdata WHERE refcode = $1 ORDER BY refvalcat,refvalue,sortorder;`
+	qry = `SELECT refid,refvalcat,refvalue,parent,sortorder FROM ac.refdata WHERE refcode = $1 ORDER BY refvalcat,refvalue,sortorder;`
 
 	stmts = []*dbtran.PipelineStmt{
 		dbtran.NewPipelineStmt("select", qry, &myc, refcode),
@@ -187,14 +187,14 @@ func refGenericType(app *application.Application, w http.ResponseWriter, r *http
 			LogMsg:     pgErr.Error(),
 		}
 		dd.HttpRespond()
-		return &[]models.TtblRefdata{}, err
+		return &[]models.TblRefdata{}, err
 	}
 
 	fmt.Println("my length: ", len(myc))
 
 	if len(myc) == 0 {
 		//myc = []models.TblRefdata{}
-		myc = []models.TtblRefdata{}
+		myc = []models.TblRefdata{}
 	}
 
 	return &myc, nil

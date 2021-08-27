@@ -91,7 +91,7 @@ CREATE TABLE ac.loginh (
 
 -- Packages
 CREATE TABLE ac.packs (
-    id                    varchar(20) NOT NULL CONSTRAINT packid PRIMARY KEY,
+    packid                    varchar(20) NOT NULL CONSTRAINT packid PRIMARY KEY,
     name                  varchar(100) NOT NULL,
     displayname           varchar(50) NOT NULL,
     description           varchar NOT NULL,
@@ -134,7 +134,7 @@ CREATE SEQUENCE companypacksid_seq START 1;
 
 -- SITE Packages  (This attached to the company)
 CREATE TABLE ac.companypacks (
-    id                    text NOT NULL CONSTRAINT sitepackid PRIMARY KEY DEFAULT 'CPCKID'||nextval('companypacksid_seq'::regclass)::text,
+    cpypacksid                    text NOT NULL CONSTRAINT sitepackid PRIMARY KEY DEFAULT 'CPCKID'||nextval('companypacksid_seq'::regclass)::text,
     companyid             varchar(100) NOT NULL,
     planid                    varchar(20) NOT NULL ,
     packfuncid             varchar(20) NOT NULL,  --> This can have only PACK type from pack table
@@ -152,7 +152,7 @@ CREATE TABLE ac.companypacks (
 
 -- SITE Plan (This is the plan card)
 CREATE TABLE ac.plan (
-    id                    varchar(20) NOT NULL CONSTRAINT planid PRIMARY KEY,
+    planid                    varchar(20) NOT NULL CONSTRAINT planid PRIMARY KEY,
     name                  varchar(100) NOT NULL,
     displayname           varchar(50) NOT NULL,
     description           varchar NOT NULL,
@@ -171,7 +171,7 @@ insert into ac.plan values ('PLANID1','Free','Free','Free plan available for all
 
 -- SITE Plan PACKs  (This is the plan card)
 CREATE TABLE ac.planpacks (
-    id                    varchar(20) NOT NULL CONSTRAINT planpackid PRIMARY KEY,    
+    planpackid                    varchar(20) NOT NULL CONSTRAINT planpackid PRIMARY KEY,    
     packid                varchar(20) NOT NULL,  --> This can have only PACK type from pack table
     planid                varchar(20) NOT NULL,
     userrolelimit         numeric(10),
@@ -198,7 +198,7 @@ insert into ac.planpacks values ('PACKID5','PKS12','PLANID1',10,10,10,90,'A',CUR
 --RoleMaster
 
 CREATE TABLE ac.rolemaster (    
-    id                    varchar(20) NOT NULL CONSTRAINT rolemasterid PRIMARY KEY, 
+    rolemasterid                    varchar(20) NOT NULL CONSTRAINT rolemasterid PRIMARY KEY, 
     name                  varchar(100) NOT NULL,
     displayname           varchar(50) NOT NULL,
     description           varchar NOT NULL,
@@ -237,7 +237,7 @@ insert into ac.defaultrolemaster values ('ROLMA1','SignupAdmin','SignupAdmin','T
 --RoleDetails
 /* PACKFUNCID will have the leaf node value*/
 CREATE TABLE ac.roledetails (    
-    id                    varchar(20) NOT NULL CONSTRAINT roledetailsid PRIMARY KEY, 
+    roledetailid                    varchar(20) NOT NULL CONSTRAINT roledetailsid PRIMARY KEY, 
     rolemasterid          varchar(100) NOT NULL,    
     packfuncid            varchar(20) NOT NULL,  --> This can have only function type from pack table
     planid               varchar(30) NOT NULL,
@@ -296,7 +296,7 @@ CREATE SEQUENCE refid_seq START 1;
 
 
 CREATE TABLE ac.refdata (
-    id                     text NOT NULL CONSTRAINT refid PRIMARY KEY DEFAULT 'REFID'||nextval('refid_seq'::regclass)::text,
+    refid                     text NOT NULL CONSTRAINT refid PRIMARY KEY DEFAULT 'REFID'||nextval('refid_seq'::regclass)::text,
     refcode               varchar(100) NOT NULL,
     refvalcat              varchar(100) NOT NULL,
     refvalue               varchar(100) NOT NULL,

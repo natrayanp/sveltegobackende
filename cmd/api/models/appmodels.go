@@ -29,6 +29,7 @@ type RefDatReqFinal struct {
 	RefResult map[string]interface{}
 }
 
+/*
 type TtblRefdata struct {
 	Id        string         `json:"id"`
 	Refvalcat string         `json:"refvalcat"`
@@ -37,7 +38,7 @@ type TtblRefdata struct {
 	Parent    []*string      `json:"parent"`
 	Submenu   []*TtblRefdata `json:"submenu"`
 }
-
+*/
 type Cpy struct {
 	CompanyId          string
 	CompanyName        string

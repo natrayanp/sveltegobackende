@@ -63,22 +63,26 @@ type TblMytree struct {
 }
 */
 type TtblMytree struct {
-	Id          string    `json:"id"`
-	Name        string    `json:"name"`
-	Displayname string    `json:"displayname"`
-	Description string    `json:"description"`
-	Type        string    `json:"type"`
-	Menulevel   string    `json:"menulevel"`
-	Allowedops  []bool    `json:"allowedops"`
-	Parent      []*string `json:"parent"`
-	Sortorder   int       `json:"sortorder"`
-	Link        *string   `json:"link"`
-	Icon        *string   `json:"icon"`
-	Status      *string   `json:"status"`
-	Octime      time.Time
-	Lmtime      time.Time
-	Open        bool          `json:"open"`
-	Submenu     []*TtblMytree `json:"submenu"`
+	Packid        string    `json:"packid"`
+	Name          string    `json:"name"`
+	Displayname   string    `json:"displayname"`
+	Description   string    `json:"description"`
+	Type          string    `json:"type"`
+	Menulevel     string    `json:"menulevel"`
+	Allowedops    []bool    `json:"allowedops"`
+	Parent        []*string `json:"parent"`
+	Sortorder     int       `json:"sortorder"`
+	Link          *string   `json:"link"`
+	Icon          *string   `json:"icon"`
+	Status        *string   `json:"status"`
+	Octime        time.Time
+	Lmtime        time.Time
+	Open          bool          `json:"open"`
+	Submenu       []*TtblMytree `json:"submenu"`
+	Roledetailid  *string       `json:"roledetailid"`
+	Rolemasterid  *string       `json:"rolemasterid"`
+	Allowedopsval []bool        `json:"allowedopsval"`
+	Basketname    string        `json:"basketname"`
 }
 
 /*
@@ -99,7 +103,7 @@ type TblCompanyPacks struct {
 */
 
 type TblCompanyPacks struct {
-	Id            string    `json:"id"`
+	Cpypacksid    string    `json:"cpypacksid"`
 	Companyid     string    `json:"companyid"`
 	Planid        string    `json:"planid"`
 	Packfuncid    string    `json:"packfuncid"`
@@ -192,7 +196,7 @@ type TblRefdata struct {
 */
 
 type TblRefdata struct {
-	Id        string        `json:"id"`
+	Refid     string        `json:"Refid"`
 	Refvalcat string        `json:"refvalcat"`
 	Refvalue  string        `json:"refvalue"`
 	Sortorder int           `json:"sortorder"`
