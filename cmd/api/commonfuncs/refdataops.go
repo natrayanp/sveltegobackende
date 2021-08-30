@@ -155,7 +155,7 @@ func refGenericType(app *application.Application, w http.ResponseWriter, r *http
 	var myc []models.TblRefdata
 	var stmts []*dbtran.PipelineStmt
 
-	qry = `SELECT refid,refvalcat,refvalue,parent,sortorder FROM ac.refdata WHERE refcode = $1 ORDER BY refvalcat,refvalue,sortorder;`
+	qry = `SELECT refid,refvalcat,refvalue,parent,sortorder FROM ac.refdata WHERE refcode = $1 ORDER BY sortorder,refvalcat,refvalue;`
 
 	stmts = []*dbtran.PipelineStmt{
 		dbtran.NewPipelineStmt("select", qry, &myc, refcode),
@@ -230,6 +230,13 @@ func RefDataFetch1(app *application.Application, w http.ResponseWriter, r *http.
 			case "industype", "compcat":
 				ss, _ := refGenericType(app, w, r, t)
 				m[t] = ss
+			case "allowedops":
+				ss, _ := refGenericType(app, w, r, t)
+				dd := make([]string, len(*ss))
+				for _, n := range *ss {
+					dd[n.Sortorder-1] = n.Refvalue
+				}
+				m[t] = dd
 			default:
 				ss, _ := refGenericType(app, w, r, t)
 				/*

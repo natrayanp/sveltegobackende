@@ -312,9 +312,10 @@ INSERT INTO ac.refdata values (DEFAULT,'industype','industype','Hotel','industry
 INSERT INTO ac.refdata values (DEFAULT,'compcat','compcat','Food','Company type category',ARRAY[NULL],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 INSERT INTO ac.refdata values (DEFAULT,'compcat','compcat','FMCG','Company type FMCG',ARRAY[NULL],'A',2,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);*/
 INSERT INTO ac.refdata values (DEFAULT,'allowedops','allowedops','READ','allowed operations master used in packs.allowedops and roledetails.allowedopsval',ARRAY[NULL],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-INSERT INTO ac.refdata values (DEFAULT,'allowedops','allowedops','WRITE','allowed operations master used in packs.allowedops and roledetails.allowedopsval',ARRAY[NULL],'A',2,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-INSERT INTO ac.refdata values (DEFAULT,'allowedops','allowedops','DELETE','allowed operations master used in packs.allowedops and roledetails.allowedopsval',ARRAY[NULL],'A',3,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-INSERT INTO ac.refdata values (DEFAULT,'allowedops','allowedops','EXPORT','allowed operations master used in packs.allowedops and roledetails.allowedopsval',ARRAY[NULL],'A',4,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'allowedops','allowedops','ADD','allowed operations master used in packs.allowedops and roledetails.allowedopsval',ARRAY[NULL],'A',2,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'allowedops','allowedops','EDIT','allowed operations master used in packs.allowedops and roledetails.allowedopsval',ARRAY[NULL],'A',3,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'allowedops','allowedops','DELETE','allowed operations master used in packs.allowedops and roledetails.allowedopsval',ARRAY[NULL],'A',4,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'allowedops','allowedops','EXPORT','allowed operations master used in packs.allowedops and roledetails.allowedopsval',ARRAY[NULL],'A',5,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 
 ---
 CREATE TABLE ac.company (

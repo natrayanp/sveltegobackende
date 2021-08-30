@@ -187,7 +187,7 @@ func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.R
 					UNION
 					SELECT m.*,false as open FROM ac.packs AS m JOIN MyTree AS t ON m.id = ANY(t.parent)
 				)
-				SELECT * FROM MyTree ORDER BY TYPE, SORTORDER,NAME;`
+				SELECT * FROM MyTree ORDER BY SORTORDER,TYPE,NAME;`
 
 		stmts = []*dbtran.PipelineStmt{
 			dbtran.NewPipelineStmt("select", qry, &myc, userinfo.UUID, companyid, packfuncids),
@@ -263,35 +263,35 @@ func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.R
 					//var mycpp []models.TblMytree
 					var mycpp []models.TtblMytree
 					qry = `WITH RECURSIVE MyTree AS 
-			(
-				SELECT A.*,false as open,B.roledetailid,B.rolemasterid,B.allowedopsval,'Availablemodules' AS basketname  FROM ac.packs A
-				LEFT JOIN ac.roledetails B ON A.packid = B.PACKFUNCID
-				WHERE A.packid IN
-				(
-					(	SELECT PACKFUNCID FROM ac.roledetails 
-						WHERE rolemasterid IN 
-							(SELECT DISTINCT rolemasterid FROM ac.userrole 
-								WHERE userid = $1
-								AND status NOT IN ('D','I') 
-								AND companyid = $2
-								AND branchid && ARRAY['ALL'::VARCHAR,$3::VARCHAR]
-							)
-						INTERSECT	
-						SELECT PACKFUNCID from ac.companypacks 
-							WHERE companyid = $2
-							AND status NOT IN ('D','I')
-							AND startdate <=  CURRENT_DATE
-							AND expirydate >= CURRENT_DATE							
-					)
-				) 
-				AND A.menulevel NOT IN ('COMPANY')
-				UNION
-				SELECT M.*,false as open,N.roledetailid,N.rolemasterid,N.allowedopsval,'Availablemodules' AS basketname FROM ac.packs M
-				LEFT JOIN ac.roledetails N ON M.packid = N.PACKFUNCID
-				JOIN MyTree AS t ON M.packid = ANY(t.parent)
-					/*SELECT m.*,false as open FROM ac.packs AS m JOIN MyTree AS t ON m.packid = ANY(t.parent)*/
-		)
-			SELECT * FROM MyTree ORDER BY TYPE, SORTORDER,NAME;`
+						(
+							SELECT A.*,false as open,B.roledetailid,B.rolemasterid,B.allowedopsval,'Availablemodules' AS basketname  FROM ac.packs A
+							LEFT JOIN ac.roledetails B ON A.packid = B.PACKFUNCID
+							WHERE A.packid IN
+							(
+								(	SELECT PACKFUNCID FROM ac.roledetails 
+									WHERE rolemasterid IN 
+										(SELECT DISTINCT rolemasterid FROM ac.userrole 
+											WHERE userid = $1
+											AND status NOT IN ('D','I') 
+											AND companyid = $2
+											AND branchid && ARRAY['ALL'::VARCHAR,$3::VARCHAR]
+										)
+									INTERSECT	
+									SELECT PACKFUNCID from ac.companypacks 
+										WHERE companyid = $2
+										AND status NOT IN ('D','I')
+										AND startdate <=  CURRENT_DATE
+										AND expirydate >= CURRENT_DATE							
+								)
+							) 
+							AND A.menulevel NOT IN ('COMPANY')
+							UNION
+							SELECT M.*,false as open,N.roledetailid,N.rolemasterid,N.allowedopsval,'Availablemodules' AS basketname FROM ac.packs M
+							LEFT JOIN ac.roledetails N ON M.packid = N.PACKFUNCID
+							JOIN MyTree AS t ON M.packid = ANY(t.parent)
+								/*SELECT m.*,false as open FROM ac.packs AS m JOIN MyTree AS t ON m.packid = ANY(t.parent)*/
+						)
+						SELECT * FROM MyTree ORDER BY SORTORDER,TYPE,NAME;`
 
 					stmts = []*dbtran.PipelineStmt{
 						dbtran.NewPipelineStmt("select", qry, &mycpp, userinfo.UUID, companyid, s.Branchid),
@@ -374,7 +374,7 @@ func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.R
 						/*SELECT m.*,false as open FROM ac.packs AS m JOIN MyTree AS t ON m.packid = ANY(t.parent)*/
 		
 				)
-				SELECT * FROM MyTree ORDER BY TYPE, SORTORDER,NAME;`
+				SELECT * FROM MyTree ORDER BY SORTORDER,TYPE,NAME;`
 
 				stmts = []*dbtran.PipelineStmt{
 					dbtran.NewPipelineStmt("select", qry, &mycppp, userinfo.UUID, companyid),
