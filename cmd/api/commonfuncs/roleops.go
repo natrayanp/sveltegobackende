@@ -1,5 +1,6 @@
 package commonfuncs
 
+/*
 import (
 	"context"
 	"encoding/json"
@@ -55,6 +56,9 @@ func RoleFetch(app *application.Application, w http.ResponseWriter, r *http.Requ
 	datosend.ActiveEntity = ""
 
 	/* Company check start */
+
+/*
+
 	if cmpy, errs = CompanyCheck(app, w, r, companyid); errs != nil {
 		fmt.Println("TODO: Error handling")
 		return &models.PacksResp{}, errs
@@ -62,34 +66,35 @@ func RoleFetch(app *application.Application, w http.ResponseWriter, r *http.Requ
 
 
 
-	qry = `WITH RECURSIVE MyTree AS 
+	qry = `WITH RECURSIVE MyTree AS
 	(
 		SELECT A.*,false as open,B.roledetailid,B.rolemasterid,B.allowedopsval,'Availablemodules' AS basketname  FROM ac.packs A
 		LEFT JOIN ac.roledetails B ON A.packid = B.PACKFUNCID
 		WHERE A.packid IN
 		(
-			(	SELECT PACKFUNCID FROM ac.roledetails 
-				WHERE rolemasterid IN 
-					(SELECT DISTINCT rolemasterid FROM ac.userrole 
+			(	SELECT PACKFUNCID FROM ac.roledetails
+				WHERE rolemasterid IN
+					(SELECT DISTINCT rolemasterid FROM ac.userrole
 						WHERE userid = $1
-						AND status NOT IN ('D','I') 
+						AND status NOT IN ('D','I')
 						AND companyid = $2
 						AND branchid && ARRAY['ALL'::VARCHAR,$3::VARCHAR]
 					)
-				INTERSECT	
-				SELECT PACKFUNCID from ac.companypacks 
+				INTERSECT
+				SELECT PACKFUNCID from ac.companypacks
 					WHERE companyid = $2
 					AND status NOT IN ('D','I')
 					AND startdate <=  CURRENT_DATE
-					AND expirydate >= CURRENT_DATE							
+					AND expirydate >= CURRENT_DATE
 			)
-		) 
+		)
 		AND A.menulevel NOT IN ('COMPANY')
 		UNION
 		SELECT M.*,false as open,N.roledetailid,N.rolemasterid,N.allowedopsval,'Availablemodules' AS basketname FROM ac.packs M
 		LEFT JOIN ac.roledetails N ON M.packid = N.PACKFUNCID
 		JOIN MyTree AS t ON M.packid = ANY(t.parent)
 			/*SELECT m.*,false as open FROM ac.packs AS m JOIN MyTree AS t ON m.packid = ANY(t.parent)*/
+/*
 	)
 	SELECT * FROM MyTree ORDER BY SORTORDER,TYPE,NAME;`
 
@@ -204,50 +209,52 @@ func RoleFetch(app *application.Application, w http.ResponseWriter, r *http.Requ
 		} else {
 			/*
 				TODO: navigate to ADDBRANCH
-			*/
-			datosend.BrnLvlTreeforCpy = []models.ActiveEntityTree{}
-		}
+*/
+/*
+		datosend.BrnLvlTreeforCpy = []models.ActiveEntityTree{}
+	}
 
-		mycacp = make([]models.ActiveEntityTree, len(datosend.CompanyLst))
+	mycacp = make([]models.ActiveEntityTree, len(datosend.CompanyLst))
 
-		for i, s := range datosend.CompanyLst {
+	for i, s := range datosend.CompanyLst {
+		//var mycppp []models.TblMytree
+		mycacp[i].EntityType = "company"
+		mycacp[i].Entityid = s.Companyid
+		fmt.Println(i, s.Companyid)
+		wgcp.Add(1)
+		go func() {
+			defer wgcp.Done()
 			//var mycppp []models.TblMytree
-			mycacp[i].EntityType = "company"
-			mycacp[i].Entityid = s.Companyid
-			fmt.Println(i, s.Companyid)
-			wgcp.Add(1)
-			go func() {
-				defer wgcp.Done()
-				//var mycppp []models.TblMytree
-				var mycppp []models.TtblMytree
-				qry = `WITH RECURSIVE MyTree AS 
+			var mycppp []models.TtblMytree
+			qry = `WITH RECURSIVE MyTree AS
+			(
+				SELECT A.*,false as open,B.roledetailid,B.rolemasterid,B.allowedopsval,'Selectedmodules' AS basketname FROM ac.packs A
+				LEFT JOIN ac.roledetails B ON A.packid = B.PACKFUNCID
+				WHERE A.packid IN
 				(
-					SELECT A.*,false as open,B.roledetailid,B.rolemasterid,B.allowedopsval,'Selectedmodules' AS basketname FROM ac.packs A
-					LEFT JOIN ac.roledetails B ON A.packid = B.PACKFUNCID
-					WHERE A.packid IN
-					(
-						(	SELECT PACKFUNCID FROM ac.roledetails 
-							WHERE rolemasterid IN 
-								(SELECT DISTINCT rolemasterid FROM ac.userrole 
-									WHERE userid = $1
-									AND status NOT IN ('D','I') 
-									AND companyid = $2								
-								)
-							INTERSECT	
-							SELECT PACKFUNCID from ac.companypacks 
-								WHERE companyid = $2
+					(	SELECT PACKFUNCID FROM ac.roledetails
+						WHERE rolemasterid IN
+							(SELECT DISTINCT rolemasterid FROM ac.userrole
+								WHERE userid = $1
 								AND status NOT IN ('D','I')
-								AND startdate <=  CURRENT_DATE
-								AND expirydate >= CURRENT_DATE							
-						)
+								AND companyid = $2
+							)
+						INTERSECT
+						SELECT PACKFUNCID from ac.companypacks
+							WHERE companyid = $2
+							AND status NOT IN ('D','I')
+							AND startdate <=  CURRENT_DATE
+							AND expirydate >= CURRENT_DATE
 					)
-					AND A.menulevel IN ('COMPANY')
-					UNION
-					SELECT M.*,false as open,N.roledetailid,N.rolemasterid,N.allowedopsval,'Selectedmodules' AS basketname FROM ac.packs M
-					LEFT JOIN ac.roledetails N ON M.packid = N.PACKFUNCID
-					JOIN MyTree AS t ON M.packid = ANY(t.parent)
-						/*SELECT m.*,false as open FROM ac.packs AS m JOIN MyTree AS t ON m.packid = ANY(t.parent)*/
-		
+				)
+				AND A.menulevel IN ('COMPANY')
+				UNION
+				SELECT M.*,false as open,N.roledetailid,N.rolemasterid,N.allowedopsval,'Selectedmodules' AS basketname FROM ac.packs M
+				LEFT JOIN ac.roledetails N ON M.packid = N.PACKFUNCID
+				JOIN MyTree AS t ON M.packid = ANY(t.parent)
+					/*SELECT m.*,false as open FROM ac.packs AS m JOIN MyTree AS t ON m.packid = ANY(t.parent)*/
+
+/*
 				)
 				SELECT * FROM MyTree ORDER BY SORTORDER,TYPE,NAME;`
 
@@ -287,3 +294,4 @@ func RoleFetch(app *application.Application, w http.ResponseWriter, r *http.Requ
 
 	return &datosend, err
 }
+*/
