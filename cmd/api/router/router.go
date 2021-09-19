@@ -11,6 +11,7 @@ import (
 	"github.com/sveltegobackend/cmd/api/handlers/entity/branch"
 	"github.com/sveltegobackend/cmd/api/handlers/entity/company"
 	"github.com/sveltegobackend/cmd/api/handlers/refdata"
+	"github.com/sveltegobackend/cmd/api/handlers/roles"
 
 	"github.com/sveltegobackend/cmd/api/handlers/auth/signup"
 	"github.com/sveltegobackend/cmd/api/handlers/createuser"
@@ -129,6 +130,7 @@ func authorisedRouter(app *application.Application) chi.Router {
 	r.Post("/getrefdata", refdata.Do(app))
 	//r.Post("/getbranch", branch.DoBrFetch(app))
 	r.Post("/savebranch", branch.DoBrSave(app))
+	r.Post("/getroles", roles.Do(app))
 
 	/*
 

@@ -134,3 +134,27 @@ type PacksResp struct {
 	BrnLvlTreeforCpy []ActiveEntityTree
 	CpyLvlTreeforCpy []ActiveEntityTree
 }
+
+type RoleReq struct {
+	Optype    string //fetch,save,update
+	Companyid string
+	Branchid  string
+	Roledata  TtblMytree
+}
+
+type RoleSelectModu struct {
+	Rolemasterid string
+	Displayname  string
+	Modules      []TtblMytree
+}
+
+type RoleResp struct {
+	Selectedmodules  []RoleSelectModu
+	Availablemodules []TtblMytree
+}
+
+type TmpRoleSelectModu struct {
+	Rolemasterid string
+	Displayname  string
+	Modules      interface{}
+}

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sort"
 	"sync"
 
 	"github.com/jackc/pgconn"
@@ -17,7 +18,7 @@ import (
 )
 
 func GetPacks(app *application.Application, w http.ResponseWriter, r *http.Request) (*[]models.TblCompanyPacks, error) {
-	fmt.Println("----------------- PACKAGE CHECK START -------------------")
+	fmt.Println("----------------- PACKAGE CHECK START in GetPacks -------------------")
 
 	var data string
 
@@ -69,17 +70,17 @@ func GetPacks(app *application.Application, w http.ResponseWriter, r *http.Reque
 		return &[]models.TblCompanyPacks{}, err
 	}
 
-	fmt.Println("----------------- PACKAGE CHECK END -------------------")
+	fmt.Println("----------------- PACKAGE CHECK END in GetPacks -------------------")
 
 	return &myc, nil
 }
 
-// PackageFetch returns menus and access rights for it for a user.
+// PackageFetch returns menus and access rights for a user.
 // Parameters:
 // packfuncid --> If you want only the packsfuncs sent. Send the PACKID form AC.PACKS as array.
 //					This forcefully sent only those packs if it exists at company and user level(refer query)
 // companyid  --> Always send company id here
-//					Front don't send company id send userinfo.Companyid from calling side
+//					if Front don't send company id send userinfo.Companyid from calling function
 //					else send whatever company id received from front end
 // It returns PacksResp struct which is self explanatory and error.
 func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.Request, packfuncids []string, companyid string) (*models.PacksResp, error) {
@@ -163,34 +164,34 @@ func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.R
 
 	if packfuncids[0] != "ALL" {
 
-		qry = `WITH RECURSIVE MyTree AS 
-				(
-					SELECT *,false as open FROM ac.packs WHERE id IN
-					(
-						(	SELECT PACKFUNCID FROM ac.roledetails 
-								WHERE rolemasterid IN 
-								(SELECT DISTINCT rolemasterid FROM ac.userrole 
-									WHERE userid = $1
-									AND status NOT IN ('D','I') 
-									AND companyid = $2
-								)
-							INTERSECT	
-							SELECT PACKFUNCID from ac.companypacks 
-								WHERE companyid = $2
-								AND status NOT IN ('D','I')
-								AND startdate <=  CURRENT_DATE
-								AND expirydate >= CURRENT_DATE
-							INTERSECT	
-							SELECT * FROM UNNEST($3::VARCHAR[]) AS PACKFUNCID
-						)
-					)					
-					UNION
-					SELECT m.*,false as open FROM ac.packs AS m JOIN MyTree AS t ON m.id = ANY(t.parent)
-				)
-				SELECT * FROM MyTree ORDER BY SORTORDER,TYPE,NAME;`
+		qry = `WITH RECURSIVE MDATA AS 
+		(
+			SELECT * from ac.ROLE_USER_VIEW where userid = $1 AND companyid = $2 AND packfuncid = ANY($4::varchar[])
+				UNION
+			SELECT * from ac.ROLE_USER_VIEW where userid = $1 AND companyid = 'PUBLIC' AND packfuncid = ANY($4::varchar[])
+			AND (SELECT count(DISTINCT COMPANYID) from ac.ROLE_USER_VIEW where userid = $1 AND companyid = $2) = 0
+		),  
+		MyTree AS 
+		(
+			SELECT C.COMPANYID,$3 As branchid,A.ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,A.allowedopsval,A.USERID,
+			CASE WHEN (TRUE = ANY(A.ALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
+			'SELECTedmodules' AS basketname, false as open
+			from ac.COMPANYPACKS_PACKS_VIEW C
+			JOIN MDATA A ON A.packfuncid = C.PACKID AND C.menulevel NOT IN ('COMPANY')
+				UNION
+			SELECT C.COMPANYID,$3 As branchid,T.ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,A.allowedopsval,A.USERID,
+			CASE WHEN (TRUE = ANY(A.ALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
+			'SELECTedmodules' AS basketname, false as open
+			from ac.COMPANYPACKS_PACKS_VIEW C
+			LEFT JOIN MDATA A ON  A.packfuncid = C.PACKID AND C.menulevel NOT IN ('COMPANY')
+			JOIN MyTree AS t ON C.packid = ANY(t.parent)	
+		)
+		SELECT * FROM MyTree 
+		WHERE COMPANYID = $2	
+		ORDER BY COMPANYID,SORTORDER,TYPE,NAME;`
 
 		stmts = []*dbtran.PipelineStmt{
-			dbtran.NewPipelineStmt("select", qry, &myc, userinfo.UUID, companyid, packfuncids),
+			dbtran.NewPipelineStmt("SELECT", qry, &myc, userinfo.UUID, companyid, packfuncids, "ALL"),
 		}
 
 		_, err := dbtran.WithTransaction(ctx, dbtran.TranTypeFullSet, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {
@@ -250,7 +251,7 @@ func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.R
 		//https://stackoverflow.com/questions/18805416/waiting-on-an-indeterminate-number-of-goroutines
 
 		if havbrndetail {
-			fmt.Println("--- start for loop")
+			fmt.Println("--- start for loop packsops")
 			for i, s := range datosend.BranchLst {
 				//var mycpp []models.TblMytree
 				lo := i
@@ -258,43 +259,40 @@ func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.R
 				myca[lo].Entityid = s.Branchid
 				fmt.Println(lo, s.Branchid)
 				wgbr.Add(1)
-				go func() {
+				go func(brid string) {
 					defer wgbr.Done()
 					//var mycpp []models.TblMytree
 					var mycpp []models.TtblMytree
-					qry = `WITH RECURSIVE MyTree AS 
-						(
-							SELECT A.*,false as open,B.roledetailid,B.rolemasterid,B.allowedopsval,'Availablemodules' AS basketname  FROM ac.packs A
-							LEFT JOIN ac.roledetails B ON A.packid = B.PACKFUNCID
-							WHERE A.packid IN
-							(
-								(	SELECT PACKFUNCID FROM ac.roledetails 
-									WHERE rolemasterid IN 
-										(SELECT DISTINCT rolemasterid FROM ac.userrole 
-											WHERE userid = $1
-											AND status NOT IN ('D','I') 
-											AND companyid = $2
-											AND branchid && ARRAY['ALL'::VARCHAR,$3::VARCHAR]
-										)
-									INTERSECT	
-									SELECT PACKFUNCID from ac.companypacks 
-										WHERE companyid = $2
-										AND status NOT IN ('D','I')
-										AND startdate <=  CURRENT_DATE
-										AND expirydate >= CURRENT_DATE							
-								)
-							) 
-							AND A.menulevel NOT IN ('COMPANY')
+
+					qry = `WITH RECURSIVE MDATA AS 
+					(
+						SELECT * from ac.ROLE_USER_VIEW where userid = $1 AND companyid = $2 AND userbranchacess && ARRAY['ALL'::VARCHAR,$3::VARCHAR]
 							UNION
-							SELECT M.*,false as open,N.roledetailid,N.rolemasterid,N.allowedopsval,'Availablemodules' AS basketname FROM ac.packs M
-							LEFT JOIN ac.roledetails N ON M.packid = N.PACKFUNCID
-							JOIN MyTree AS t ON M.packid = ANY(t.parent)
-								/*SELECT m.*,false as open FROM ac.packs AS m JOIN MyTree AS t ON m.packid = ANY(t.parent)*/
-						)
-						SELECT * FROM MyTree ORDER BY SORTORDER,TYPE,NAME;`
+						SELECT * from ac.ROLE_USER_VIEW where userid = $1 AND companyid = 'PUBLIC'
+						AND (SELECT count(DISTINCT COMPANYID) from ac.ROLE_USER_VIEW where userid = $1 AND companyid = $2) = 0
+					),  
+					MyTree AS 
+					(
+						SELECT C.COMPANYID,$3 As branchid,A.ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,A.allowedopsval,A.USERID,
+						CASE WHEN (TRUE = ANY(A.ALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
+						'SELECTedmodules' AS basketname, false as open
+						from ac.COMPANYPACKS_PACKS_VIEW C
+						JOIN MDATA A ON A.packfuncid = C.PACKID AND C.menulevel NOT IN ('COMPANY')
+							UNION
+						SELECT C.COMPANYID,$3 As branchid,T.ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,A.allowedopsval,A.USERID,
+						CASE WHEN (TRUE = ANY(A.ALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
+						'SELECTedmodules' AS basketname, false as open
+						from ac.COMPANYPACKS_PACKS_VIEW C
+						LEFT JOIN MDATA A ON  A.packfuncid = C.PACKID AND C.menulevel NOT IN ('COMPANY')
+						JOIN MyTree AS t ON C.packid = ANY(t.parent)	
+				
+					)
+					SELECT * FROM MyTree 
+					WHERE COMPANYID = $2	
+					ORDER BY COMPANYID,SORTORDER,TYPE,NAME;`
 
 					stmts = []*dbtran.PipelineStmt{
-						dbtran.NewPipelineStmt("select", qry, &mycpp, userinfo.UUID, companyid, s.Branchid),
+						dbtran.NewPipelineStmt("select", qry, &mycpp, userinfo.UUID, companyid, brid),
 					}
 
 					_, err := dbtran.WithTransaction(ctx, dbtran.TranTypeFullSet, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {
@@ -317,7 +315,7 @@ func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.R
 					fmt.Printf("&myc is: %p\n", &myca[lo])
 					fmt.Println(string(dd1))
 					fmt.Println("---------------$$$end7w")
-				}()
+				}(s.Branchid)
 			}
 			wgbr.Wait()
 			fmt.Println("All routines completed")
@@ -335,49 +333,49 @@ func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.R
 
 		mycacp = make([]models.ActiveEntityTree, len(datosend.CompanyLst))
 
-		for i, s := range datosend.CompanyLst {
+		for i, sc := range datosend.CompanyLst {
 			//var mycppp []models.TblMytree
 			mycacp[i].EntityType = "company"
-			mycacp[i].Entityid = s.Companyid
-			fmt.Println(i, s.Companyid)
+			mycacp[i].Entityid = sc.Companyid
+
+			fmt.Println(i, sc.Companyid)
+			fmt.Println("STARTING MY ")
 			wgcp.Add(1)
-			go func() {
+			go func(cpid string) {
 				defer wgcp.Done()
 				//var mycppp []models.TblMytree
 				var mycppp []models.TtblMytree
-				qry = `WITH RECURSIVE MyTree AS 
+
+				qry = `WITH RECURSIVE MDATA AS 
 				(
-					SELECT A.*,false as open,B.roledetailid,B.rolemasterid,B.allowedopsval,'Selectedmodules' AS basketname FROM ac.packs A
-					LEFT JOIN ac.roledetails B ON A.packid = B.PACKFUNCID
-					WHERE A.packid IN
-					(
-						(	SELECT PACKFUNCID FROM ac.roledetails 
-							WHERE rolemasterid IN 
-								(SELECT DISTINCT rolemasterid FROM ac.userrole 
-									WHERE userid = $1
-									AND status NOT IN ('D','I') 
-									AND companyid = $2								
-								)
-							INTERSECT	
-							SELECT PACKFUNCID from ac.companypacks 
-								WHERE companyid = $2
-								AND status NOT IN ('D','I')
-								AND startdate <=  CURRENT_DATE
-								AND expirydate >= CURRENT_DATE							
-						)
-					)
-					AND A.menulevel IN ('COMPANY')
-					UNION
-					SELECT M.*,false as open,N.roledetailid,N.rolemasterid,N.allowedopsval,'Selectedmodules' AS basketname FROM ac.packs M
-					LEFT JOIN ac.roledetails N ON M.packid = N.PACKFUNCID
-					JOIN MyTree AS t ON M.packid = ANY(t.parent)
-						/*SELECT m.*,false as open FROM ac.packs AS m JOIN MyTree AS t ON m.packid = ANY(t.parent)*/
-		
+					SELECT * from ac.ROLE_USER_VIEW where userid = $1 AND companyid = $2
+						UNION
+					SELECT * from ac.ROLE_USER_VIEW where userid = $1 AND companyid = 'PUBLIC'
+					AND (SELECT count(DISTINCT COMPANYID) from ac.ROLE_USER_VIEW where userid = $1 AND companyid = $2) = 0
+				),  
+				MyTree AS 
+				(
+					SELECT C.COMPANYID,$3 As branchid,A.ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,A.allowedopsval,A.USERID,
+					CASE WHEN (TRUE = ANY(A.ALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
+					'SELECTedmodules' AS basketname, false as open
+					from ac.COMPANYPACKS_PACKS_VIEW C
+					JOIN MDATA A ON A.packfuncid = C.PACKID AND C.menulevel IN ('COMPANY')
+						UNION
+					SELECT C.COMPANYID,$3 As branchid,T.ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,A.allowedopsval,A.USERID,
+					CASE WHEN (TRUE = ANY(A.ALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
+					'SELECTedmodules' AS basketname, false as open
+					from ac.COMPANYPACKS_PACKS_VIEW C
+					LEFT JOIN MDATA A ON  A.packfuncid = C.PACKID AND C.menulevel IN ('COMPANY')
+					JOIN MyTree AS t ON C.packid = ANY(t.parent)	
+			
 				)
-				SELECT * FROM MyTree ORDER BY SORTORDER,TYPE,NAME;`
+				SELECT * FROM MyTree 
+				WHERE COMPANYID = $2	
+				ORDER BY COMPANYID,SORTORDER,TYPE,NAME;`
 
 				stmts = []*dbtran.PipelineStmt{
-					dbtran.NewPipelineStmt("select", qry, &mycppp, userinfo.UUID, companyid),
+					//dbtran.NewPipelineStmt("SELECT", qry, &mycppp, userinfo.UUID, cpid, defaultbranchid),
+					dbtran.NewPipelineStmt("select", qry, &mycppp, userinfo.UUID, cpid, "ALL"),
 				}
 
 				_, err := dbtran.WithTransaction(ctx, dbtran.TranTypeFullSet, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {
@@ -399,7 +397,7 @@ func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.R
 				fmt.Printf("&myc is: %p\n", &mycacp[i])
 				fmt.Println(string(dd1))
 				fmt.Println("---------------$$$end7w")
-			}()
+			}(sc.Companyid)
 		}
 		wgcp.Wait()
 
@@ -445,7 +443,13 @@ func createDataTree(mnodes *[]models.TtblMytree) {
 
 				if t != nil {
 					m[*t].Submenu = append(m[*t].Submenu, m[nodes[i].Packid])
+					if len(m[*t].Submenu) > 1 {
+						sort.Slice(m[*t].Submenu, func(i, j int) bool {
+							return m[*t].Submenu[i].Sortorder < m[*t].Submenu[j].Sortorder
+						})
+					}
 				}
+
 				/*
 					if t.Status != pgtype.Null {
 						m[t].Submenu = append(m[t].Submenu, m[nodes[i].Id])
@@ -468,6 +472,11 @@ func createDataTree(mnodes *[]models.TtblMytree) {
 			fmt.Println(newnodes)
 		}
 	}
+
+	sort.Slice(newnodes, func(i, j int) bool {
+		return newnodes[i].Sortorder < newnodes[j].Sortorder
+	})
+
 	fmt.Println("---------------$$$end6a4")
 	fmt.Printf("&mnodes is: %p\n", mnodes)
 	fmt.Printf("&newnodes is: %p\n", &newnodes)

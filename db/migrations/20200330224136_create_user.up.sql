@@ -284,7 +284,7 @@ CREATE TABLE ac.userrole (
     userid 		          varchar(100) NOT NULL,
     rolemasterid          varchar(20) NOT NULL,       
     companyid             varchar(30) NOT NULL,
-    branchid              varchar(30)[] NOT NULL,      
+    userbranchacess    varchar(30)[] NOT NULL,      
     status                varchar(3) NOT NULL,  --> D -Delete / A - Active
     isdefault             varchar(3) NOT NULL,  --> Y/N
     octime			      timestamptz NOT NULL,
@@ -293,6 +293,7 @@ CREATE TABLE ac.userrole (
 
 
 CREATE SEQUENCE refid_seq START 1;
+
 
 
 CREATE TABLE ac.refdata (
@@ -393,6 +394,53 @@ CREATE TABLE ac.branch (
 
 
 
+/* CREATE VIEWS */
+CREATE VIEW AC.COMPANYPACKS_PACKS_VIEW AS(
+WITH recursive COMPANYPACKSVIEW AS(
+	SELECT B.COMPANYID,b.packfuncid,b.startdate,b.expirydate,b.userrolelimit,B.USERLIMIT,B.BRANCHLIMIT,B.STATUS AS COMPSTATUS,A.* FROM AC.packs A
+	JOIN AC.COMPANYPACKS B ON B.PACKFUNCID = A.PACKID 	
+	UNION
+	SELECT CASE WHEN B.COMPANYID IS NULL THEN t.companyid END::VARCHAR(100),
+		   CASE WHEN B.packfuncid IS NULL THEN A.PACKID END::VARCHAR(20),	
+		   CASE WHEN B.startdate IS NULL THEN t.startdate END,
+		 	CASE WHEN B.expirydate IS NULL THEN t.expirydate END,
+			CASE WHEN B.userrolelimit IS NULL THEN t.userrolelimit END::numeric(10,0),			
+			CASE WHEN B.USERLIMIT IS NULL THEN t.USERLIMIT END::numeric(10,0),			
+			CASE WHEN B.BRANCHLIMIT IS NULL THEN t.BRANCHLIMIT END::numeric(10,0),
+			CASE WHEN B.STATUS IS NULL THEN t.STATUS END::varchar(3) AS COMPSTATUS ,
+			A.* FROM AC.packs A
+	LEFT JOIN AC.COMPANYPACKS B ON B.PACKFUNCID = A.PACKID
+	JOIN COMPANYPACKSVIEW AS t ON A.packid = ANY(t.parent)	
+) SELECT * FROM COMPANYPACKSVIEW
+	);
+
+
+/*
+CREATE VIEW COMPANYPACKS_PACKS_VIEW AS(
+WITH recursive COMPANYPACKSVIEW AS(
+	SELECT B.COMPANYID,b.packfuncid,b.startdate,b.expirydate,b.userrolelimit,B.USERLIMIT,B.BRANCHLIMIT,B.STATUS AS COMPSTATUS,A.* FROM AC.packs A
+	JOIN AC.COMPANYPACKS B ON B.PACKFUNCID = A.PACKID 	
+	UNION
+	SELECT B.COMPANYID,b.packfuncid,b.startdate,b.expirydate,b.userrolelimit,B.USERLIMIT,B.BRANCHLIMIT,B.STATUS AS COMPSTATUS,A.* FROM AC.packs A
+	LEFT JOIN AC.COMPANYPACKS B ON B.PACKFUNCID = A.PACKID
+	JOIN COMPANYPACKSVIEW AS t ON A.packid = ANY(t.parent)	
+) SELECT * FROM COMPANYPACKSVIEW
+	);
+*/
+
+CREATE VIEW ac.ROLE_USER_VIEW AS(
+ SELECT a.companyid,
+    a.branchid,
+    a.rolemasterid,
+    b.roledetailid,
+    b.packfuncid,
+    b.allowedopsval,
+    c.userid,
+    c.userbranchacess
+   FROM ac.rolemaster a
+     LEFT JOIN ac.roledetails b ON a.rolemasterid = b.rolemasterid
+     LEFT JOIN ac.userrole c ON a.rolemasterid = c.rolemasterid
+);
 
 
 

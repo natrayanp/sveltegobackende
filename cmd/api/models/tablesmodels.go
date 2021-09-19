@@ -63,26 +63,37 @@ type TblMytree struct {
 }
 */
 type TtblMytree struct {
-	Packid        string    `json:"packid"`
-	Name          string    `json:"name"`
-	Displayname   string    `json:"displayname"`
-	Description   string    `json:"description"`
-	Type          string    `json:"type"`
-	Menulevel     string    `json:"menulevel"`
-	Allowedops    []bool    `json:"allowedops"`
-	Parent        []*string `json:"parent"`
-	Sortorder     int       `json:"sortorder"`
-	Link          *string   `json:"link"`
-	Icon          *string   `json:"icon"`
-	Status        *string   `json:"status"`
-	Octime        time.Time
-	Lmtime        time.Time
+	Companyid     string        `json:"companyid"`
+	Branchid      string        `json:"branchid"`
+	Rolemasterid  string        `json:"rolemasterid"`
+	Packid        string        `json:"packid"`
+	Packfuncid    string        `json:"packfuncid"`
+	Status        string        `json:"Status"`
+	Name          string        `json:"name"`
+	Displayname   string        `json:"displayname"`
+	Description   string        `json:"description"`
+	Type          string        `json:"type"`
+	Parent        []*string     `json:"parent"`
+	Link          *string       `json:"link"`
+	Icon          *string       `json:"icon"`
+	Startdate     time.Time     `json:"startdate"`
+	Expirydate    time.Time     `json:"expirydate"`
+	Userrolelimit *int          `json:"userrolelimit"`
+	Userlimit     *int          `json:"userlimit"`
+	Branchlimit   *int          `json:"branchlimit"`
+	Compstatus    string        `json:"Compstatus"`
+	Sortorder     int           `json:"sortorder"`
+	Menulevel     string        `json:"menulevel"`
+	Allowedops    []bool        `json:"allowedops"`
+	Allowedopsval []bool        `json:"allowedopsval"`
+	Userid        *string       `json:"userid"`
+	Disablefunc   bool          `json:"disablefunc"`
+	Basketname    string        `json:"basketname"`
 	Open          bool          `json:"open"`
 	Submenu       []*TtblMytree `json:"submenu"`
 	Roledetailid  *string       `json:"roledetailid"`
-	Rolemasterid  *string       `json:"rolemasterid"`
-	Allowedopsval []bool        `json:"allowedopsval"`
-	Basketname    string        `json:"basketname"`
+	Octime        time.Time     `json:"creattime"`
+	Lmtime        time.Time     `json:"lasmodifytime"`
 }
 
 /*
