@@ -155,6 +155,6 @@ type RoleResp struct {
 
 type TmpRoleSelectModu struct {
 	Rolemasterid string
-	Displayname  string
+	Roledisplay  string
 	Modules      interface{}
 }

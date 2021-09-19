@@ -432,6 +432,7 @@ CREATE VIEW ac.ROLE_USER_VIEW AS(
  SELECT a.companyid,
     a.branchid,
     a.rolemasterid,
+    a.displayname,
     b.roledetailid,
     b.packfuncid,
     b.allowedopsval,
