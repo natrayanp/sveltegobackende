@@ -268,19 +268,22 @@ func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.R
 					(
 						SELECT * from ac.ROLE_USER_VIEW where userid = $1 AND companyid = $2 AND userbranchacess && ARRAY['ALL'::VARCHAR,$3::VARCHAR]
 							UNION
-						SELECT * from ac.ROLE_USER_VIEW where userid = $1 AND companyid = 'PUBLIC'
+						--SELECT * from ac.ROLE_USER_VIEW where userid = $1 AND companyid = 'PUBLIC'
+						SELECT $2 as companyid, branchid, rolemasterid, displayname, roledetailid, packfuncid,allowedopsval,userid,userbranchacess from ac.ROLE_USER_VIEW where userid = $1 AND companyid = 'PUBLIC'
 						AND (SELECT count(DISTINCT COMPANYID) from ac.ROLE_USER_VIEW where userid = $1 AND companyid = $2) = 0
 					),  
 					MyTree AS 
 					(
 						SELECT C.COMPANYID,$3 As branchid,A.ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,A.allowedopsval,A.USERID,
-						CASE WHEN (TRUE = ANY(A.ALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
+						--CASE WHEN (TRUE = ANY(A.ALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
+						CASE WHEN (NULLIF(A.allowedopsval, '{NULL}')) IS NULL AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
 						'SELECTedmodules' AS basketname, false as open
 						from ac.COMPANYPACKS_PACKS_VIEW C
 						JOIN MDATA A ON A.packfuncid = C.PACKID AND C.menulevel NOT IN ('COMPANY')
 							UNION
 						SELECT C.COMPANYID,$3 As branchid,T.ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,A.allowedopsval,A.USERID,
-						CASE WHEN (TRUE = ANY(A.ALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
+						--CASE WHEN (TRUE = ANY(A.ALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
+						CASE WHEN (NULLIF(A.allowedopsval, '{NULL}')) IS NULL AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
 						'SELECTedmodules' AS basketname, false as open
 						from ac.COMPANYPACKS_PACKS_VIEW C
 						LEFT JOIN MDATA A ON  A.packfuncid = C.PACKID AND C.menulevel NOT IN ('COMPANY')
@@ -350,19 +353,19 @@ func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.R
 				(
 					SELECT * from ac.ROLE_USER_VIEW where userid = $1 AND companyid = $2
 						UNION
-					SELECT * from ac.ROLE_USER_VIEW where userid = $1 AND companyid = 'PUBLIC'
+					SELECT $2 as companyid, branchid, rolemasterid, displayname, roledetailid, packfuncid,allowedopsval,userid,userbranchacess from ac.ROLE_USER_VIEW where userid = $1 AND companyid = 'PUBLIC'
 					AND (SELECT count(DISTINCT COMPANYID) from ac.ROLE_USER_VIEW where userid = $1 AND companyid = $2) = 0
 				),  
 				MyTree AS 
 				(
 					SELECT C.COMPANYID,$3 As branchid,A.ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,A.allowedopsval,A.USERID,
-					CASE WHEN (TRUE = ANY(A.ALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
+					CASE WHEN (NULLIF(A.allowedopsval, '{NULL}')) IS NULL AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
 					'SELECTedmodules' AS basketname, false as open
 					from ac.COMPANYPACKS_PACKS_VIEW C
 					JOIN MDATA A ON A.packfuncid = C.PACKID AND C.menulevel IN ('COMPANY')
 						UNION
 					SELECT C.COMPANYID,$3 As branchid,T.ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,A.allowedopsval,A.USERID,
-					CASE WHEN (TRUE = ANY(A.ALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
+					CASE WHEN (NULLIF(A.allowedopsval, '{NULL}')) IS NULL  AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
 					'SELECTedmodules' AS basketname, false as open
 					from ac.COMPANYPACKS_PACKS_VIEW C
 					LEFT JOIN MDATA A ON  A.packfuncid = C.PACKID AND C.menulevel IN ('COMPANY')

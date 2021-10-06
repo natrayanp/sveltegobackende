@@ -44,14 +44,18 @@ func RoleFetch(app *application.Application, w http.ResponseWriter, r *http.Requ
 
 	var availmod []models.TtblMytree
 
-	qry = `SELECT c.COMPANYID,'PUBLIC' AS BRANCHID,'' AS Roledetailid,'' AS ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,
+	qry = `WITH MYAA AS(
+			SELECT c.COMPANYID,'PUBLIC' AS BRANCHID,'' AS Roledetailid,'' AS ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,
 			c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,
 			array_fill(FALSE, ARRAY[array_length(c.allowedops,1)])  AS allowedopsval,$2 as userid,
-			CASE WHEN (TRUE = ANY(B.ALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
+			--CASE WHEN (TRUE = ANY(B.ALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
 			'Availablemodules' AS basketname, false as open
 			FROM ac.COMPANYPACKS_PACKS_VIEW C
 			LEFT JOIN ac.ROLE_USER_VIEW B ON C.COMPANYID = B.COMPANYID AND  B.packfuncid = C.PACKID AND B.USERID = $2
-			WHERE C.COMPANYID = $1;`
+			WHERE C.COMPANYID = $1
+			) SELECT Y.*,
+				CASE WHEN (NULLIF(Y.allowedopsval, '{NULL}')) IS NULL AND (Y.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc
+				FROM MYAA as Y;`
 
 	stmts := []*dbtran.PipelineStmt{
 		dbtran.NewPipelineStmt("select", qry, &availmod, rolereq.Companyid, userinfo.UUID),
@@ -99,7 +103,7 @@ func RoleFetch(app *application.Application, w http.ResponseWriter, r *http.Requ
 	qry = `WITH MYVA AS (
 				SELECT c.COMPANYID,A.BRANCHID,B.Roledetailid,A.ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,c.icon,
 				c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,B.USERID,A.displayname as roledisplay,
-				CASE WHEN (TRUE = ANY(B.ALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
+				--CASE WHEN (TRUE = ANY(B.ALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,				
 				'selectedmodules' AS basketname, false as open
 				from ac.COMPANYPACKS_PACKS_VIEW C
 				LEFT JOIN ac.rolemaster A ON A.COMPANYID = $1
@@ -108,7 +112,7 @@ func RoleFetch(app *application.Application, w http.ResponseWriter, r *http.Requ
 				ORDER BY A.ROLEMASTERID,SORTORDER
 			) , MYVAOS AS  (
 				SELECT  COMPANYID,branchid,rolemasterid,packfuncid,ALLOWEDOPSVAL FROM  ac.ROLE_USER_VIEW WHERE COMPANYID = $1 AND rolemasterid in (select distinct rolemasterid from myva) GROUP BY companyid,branchid,rolemasterid,packfuncid,ALLOWEDOPSVAL
-			), MYLAST AS (SELECT Y.*,PO.allowedopsval FROM MYVA y
+			), MYLAST AS (SELECT Y.*,PO.allowedopsval,CASE WHEN (NULLIF(PO.allowedopsval, '{NULL}')) IS NULL AND (Y.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc FROM MYVA y
 			 LEFT JOIN MYVAOS as PO ON PO.COMPANYID = Y.COMPANYID AND PO.rolemasterid=Y.rolemasterid AND PO.Branchid = y.branchid AND PO.packfuncid = y.packid
 			) SELECT sd.rolemasterid,sd.roledisplay,json_agg(SD) AS modules FROM mylast sd GROUP BY sd.rolemasterid,sd.roledisplay;`
 
