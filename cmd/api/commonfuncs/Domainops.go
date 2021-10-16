@@ -64,16 +64,18 @@ func DomRegis(app *application.Application, w http.ResponseWriter, r *http.Reque
 					RETURNING *`
 
 	//var myc1 dbtran.Resultset
-	var myc1 models.TblUserlogin
+	var myc1 []models.TblUserlogin
 
 	stmts1 := []*dbtran.PipelineStmt{
-		dbtran.NewPipelineStmt("update", qry1, &myc1, dom, userinfo.UUID, userinfo.Siteid),
+		dbtran.NewPipelineStmt("select", qry1, &myc1, dom, userinfo.UUID, userinfo.Siteid),
 	}
 
 	_, err := dbtran.WithTransaction(ctx, dbtran.TranTypeFullSet, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {
 		err := dbtran.RunPipeline(ctx, typ, db, ttx, stmts1...)
 		return err
 	})
+
+	fmt.Println("competed domainops")
 
 	if err != nil {
 		//https://github.com/jackc/pgx/issues/474
@@ -106,7 +108,7 @@ func DomRegis(app *application.Application, w http.ResponseWriter, r *http.Reque
 		UUID string
 		Cpid string
 	}
-	args, err := json.Marshal(assingrole{UUID: userinfo.UUID, Cpid: *myc1.Companyid})
+	args, err := json.Marshal(assingrole{UUID: userinfo.UUID, Cpid: *myc1[0].Companyid})
 
 	if err != nil {
 		dd := httpresponse.SlugResponse{
@@ -167,7 +169,7 @@ func ChkSubdomain(app *application.Application, w http.ResponseWriter, r *http.R
 
 	qry := `SELECT * FROM ac.userlogin WHERE userid = $1 AND siteid = $2 AND selecthostname = $3`
 
-	var myc models.TblUserlogin
+	var myc []models.TblUserlogin
 
 	stmts := []*dbtran.PipelineStmt{
 		dbtran.NewPipelineStmt("select", qry, &myc, userinfo.UUID, userinfo.Siteid, userinfo.Hostname),

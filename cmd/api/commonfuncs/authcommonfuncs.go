@@ -133,7 +133,7 @@ func RegisterUser(app *application.Application, w http.ResponseWriter, r *http.R
 	}
 
 	const qry = `INSERT INTO ac.userlogin (userid, username, useremail, userpassword, userstatus, emailverified, siteid, hostname, companyid, companyowner, userstatlstupdt, octime, lmtime) 
-	VALUES ($1, $2, $3, $4, $5,$6,$7,$8,'DK',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);`
+	VALUES ($1, $2, $3, $4, $5,$6,$7,$8,$9,'DK',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);`
 
 	//uspass := ""
 

@@ -101,11 +101,15 @@ func ParseHeadMiddleware(app *application.Application) func(next http.Handler) h
 
 			if len(myc) == 1 {
 				userinfo.Companyid = *myc[0].Companyid
+				userinfo.Entityid = myc[0].Entityid
 			} else {
 				userinfo.Companyid = "PUBLIC"
+				x := "PUBLIC"
+				y := []*string{&x}
+				userinfo.Entityid = y
 			}
+			fmt.Println(myc)
 
-			userinfo.Entityid = myc[0].Entityid
 			//myc[0].Entityid.AssignTo(userinfo.Entityid)
 
 			errs := commonfuncs.SessionOps(app, w, r, &userinfo)

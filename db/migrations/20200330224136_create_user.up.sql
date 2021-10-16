@@ -254,8 +254,8 @@ CREATE TABLE ac.roledetails (
 insert into ac.Roledetails values ('ROLDET1','ROLMA1','PKS8','PUBLIC','PUBLIC','PUBLIC', ARRAY[true,true,true,false],CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 insert into ac.Roledetails values ('ROLDET2','ROLMA1','PKS9','PUBLIC','PUBLIC','PUBLIC', ARRAY[true,true,true,false],CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 insert into ac.Roledetails values ('ROLDET3','ROLMA1','PKS14','PUBLIC','PUBLIC','PUBLIC',ARRAY[true,true,true,false],CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.Roledetails values ('ROLDET3','ROLMA1','PKS11','PUBLIC','PUBLIC','PUBLIC',ARRAY[true,true,true,false],CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.Roledetails values ('ROLDET3','ROLMA1','PKS12','PUBLIC','PUBLIC','PUBLIC',ARRAY[true,true,true,false],CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.Roledetails values ('ROLDET4','ROLMA1','PKS11','PUBLIC','PUBLIC','PUBLIC',ARRAY[true,true,true,false],CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.Roledetails values ('ROLDET5','ROLMA1','PKS12','PUBLIC','PUBLIC','PUBLIC',ARRAY[true,true,true,false],CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 
 /*
 --defaultRoleDetails
@@ -442,6 +442,14 @@ CREATE VIEW ac.ROLE_USER_VIEW AS(
      LEFT JOIN ac.roledetails b ON a.rolemasterid = b.rolemasterid
      LEFT JOIN ac.userrole c ON a.rolemasterid = c.rolemasterid
 );
+
+
+
+
+
+
+
+
 
 
 
