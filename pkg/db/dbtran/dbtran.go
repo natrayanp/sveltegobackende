@@ -196,6 +196,8 @@ func RunPipeline(ctx context.Context, typ TranType, db *pgxpool.Pool, tx Transac
 	var ps *PipelineStmt
 
 	for _, ps = range stmts {
+		fmt.Println("+++++++++++++++++++++$$$end1s")
+		fmt.Println(ps.querytype)
 		if ps.querytype != "select" {
 			if ps.Resultstruct == nil {
 				fmt.Println("assigned resulstset")

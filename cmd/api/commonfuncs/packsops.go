@@ -135,9 +135,11 @@ func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.R
 		havcpydetail = true
 	}
 	fmt.Println(havcpydetail)
+
 	/* Company check End */
 
 	/* Branch Check start */
+
 	if packfuncids[0] == "ALL" {
 		if mybr, err = BranchCheck(app, w, r, datosend.ActiveCompany.Companyid, []string{"all"}); err != nil {
 			fmt.Println("TODO: Error handling")
@@ -166,24 +168,24 @@ func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.R
 
 		qry = `WITH RECURSIVE MDATA AS 
 		(
-			SELECT * from ac.ROLE_USER_VIEW where userid = $1 AND companyid = $2 AND packfuncid = ANY($4::varchar[])
+			SELECT * from ac.ROLE_USER_VIEW where userid = $1 AND companyid = $2 AND packfuncid = ANY($3::varchar[])
 				UNION
-			SELECT * from ac.ROLE_USER_VIEW where userid = $1 AND companyid = 'PUBLIC' AND packfuncid = ANY($4::varchar[])
+			SELECT * from ac.ROLE_USER_VIEW where userid = $1 AND companyid = 'PUBLIC' AND packfuncid = ANY($3::varchar[])
 			AND (SELECT count(DISTINCT COMPANYID) from ac.ROLE_USER_VIEW where userid = $1 AND companyid = $2) = 0
 		),  
 		MyTree AS 
 		(
-			SELECT C.COMPANYID,$3 As branchid,A.ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,A.allowedopsval,A.USERID,
+			SELECT C.COMPANYID,'' As branchid,A.ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,A.allowedopsval,A.USERID,
 			CASE WHEN (TRUE = ANY(A.ALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
 			'SELECTedmodules' AS basketname, false as open
 			from ac.COMPANYPACKS_PACKS_VIEW C
-			JOIN MDATA A ON A.packfuncid = C.PACKID AND C.menulevel NOT IN ('COMPANY')
+			JOIN MDATA A ON A.packfuncid = C.PACKID AND C.menulevel IN ('COMPANY')
 				UNION
-			SELECT C.COMPANYID,$3 As branchid,T.ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,A.allowedopsval,A.USERID,
+			SELECT C.COMPANYID,'' As branchid,T.ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,A.allowedopsval,A.USERID,
 			CASE WHEN (TRUE = ANY(A.ALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
 			'SELECTedmodules' AS basketname, false as open
 			from ac.COMPANYPACKS_PACKS_VIEW C
-			LEFT JOIN MDATA A ON  A.packfuncid = C.PACKID AND C.menulevel NOT IN ('COMPANY')
+			LEFT JOIN MDATA A ON  A.packfuncid = C.PACKID AND C.menulevel IN ('COMPANY')
 			JOIN MyTree AS t ON C.packid = ANY(t.parent)	
 		)
 		SELECT * FROM MyTree 
@@ -191,7 +193,7 @@ func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.R
 		ORDER BY COMPANYID,SORTORDER,TYPE,NAME;`
 
 		stmts = []*dbtran.PipelineStmt{
-			dbtran.NewPipelineStmt("SELECT", qry, &myc, userinfo.UUID, companyid, packfuncids, "ALL"),
+			dbtran.NewPipelineStmt("select", qry, &myc, userinfo.UUID, companyid, packfuncids),
 		}
 
 		_, err := dbtran.WithTransaction(ctx, dbtran.TranTypeFullSet, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {

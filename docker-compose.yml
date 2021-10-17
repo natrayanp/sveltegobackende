@@ -17,7 +17,7 @@ services:
     ports:
       - "${POSTGRES_PORT}:${POSTGRES_PORT}"
     volumes:
-      - sveltegobackendvolume:/var/lib/postgresql/data
+      - /home/nirudhi/Projects/golang/DB:/var/lib/postgresql/data
       - ./db/scripts:/docker-entrypoint-initdb.d/
     networks:
       - sveltegobackendnetwork

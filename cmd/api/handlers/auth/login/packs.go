@@ -98,8 +98,11 @@ func setPacks(app *application.Application) http.HandlerFunc {
 			return
 		}
 
-		const qry = `INSERT INTO ac.companypacks (COMPANYID,PLANID,PACKID,STARTDATE,EXPIRYDATE,USERROLELiMIT,USERLIMIT,BRANCHLIMIT,STATUS,OCTIME,LMTIME)
-						SELECT $1::varchar,PLANID,packid,CURRENT_DATE,CURRENT_DATE+  make_interval(days => durationdays) ,userrolelimit,userlimit,branchlimit,'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP 
+		fmt.Println(userinfo.Companyid)
+		fmt.Println(p.Planid)
+
+		const qry = `INSERT INTO ac.companypacks (COMPANYID,PLANID,PACKFUNCID,STARTDATE,EXPIRYDATE,USERROLELiMIT,USERLIMIT,BRANCHLIMIT,STATUS,OCTIME,LMTIME)
+						SELECT $1::varchar AS COMPANYID,PLANID,packid,CURRENT_DATE,CURRENT_DATE+  make_interval(days => durationdays) ,userrolelimit,userlimit,branchlimit,'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP 
 						FROM ac.planpacks WHERE planid = $2
 						AND NOT EXISTS (SELECT 1 FROM ac.companypacks WHERE companyid= $1 AND   planid = $2 )`
 

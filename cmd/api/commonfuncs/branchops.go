@@ -16,7 +16,7 @@ import (
 )
 
 func BranchCheck(app *application.Application, w http.ResponseWriter, r *http.Request, companyid string, branchidlist []string) (*[]models.TblBranch, error) {
-	fmt.Println("----------------- PACKAGE CHECK START -------------------")
+	fmt.Println("----------------- BRANCH CHECK START -------------------")
 
 	var data string
 	var myc []models.TblBranch
@@ -78,7 +78,7 @@ func BranchCheck(app *application.Application, w http.ResponseWriter, r *http.Re
 		return &[]models.TblBranch{}, err
 	}
 
-	fmt.Println("----------------- PACKAGE CHECK END -------------------")
+	fmt.Println("----------------- BRANCH CHECK END -------------------")
 	fmt.Println(myc)
 	return &myc, nil
 }

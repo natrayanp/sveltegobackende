@@ -38,7 +38,7 @@ var assign_role_after_domain_regis = func(j *gue.Job) error {
 	}
 
 	//Apply "SignupAdmin" = 'ROLMA1' role to the user after domain registration
-	const qry = `INSERT INTO ac.userrole VALUES ($1,'ROLMA1',$2,'PUBLIC','A','Y',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`
+	const qry = `INSERT INTO ac.userrole VALUES ($1,'ROLMA1',$2,ARRAY['ALL'],'A','Y',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`
 
 	_, err := j.Tx().Exec(context.Background(), qry, args.UUID, args.Cpid)
 

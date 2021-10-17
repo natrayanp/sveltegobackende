@@ -17,7 +17,7 @@ import (
 )
 
 func CompanyCheck(app *application.Application, w http.ResponseWriter, r *http.Request, companyid string) (*[]models.TblCompany, error) {
-	fmt.Println("----------------- PACKAGE CHECK START -------------------")
+	fmt.Println("----------------- COMPANYCHECK CHECK START -------------------")
 
 	var data string
 
@@ -70,7 +70,7 @@ func CompanyCheck(app *application.Application, w http.ResponseWriter, r *http.R
 		return &[]models.TblCompany{}, err
 	}
 
-	fmt.Println("----------------- PACKAGE CHECK END -------------------")
+	fmt.Println("----------------- COMPANYCHECK CHECK END -------------------")
 
 	return &myc, nil
 }
