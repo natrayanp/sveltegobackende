@@ -70,7 +70,7 @@ func registerdomain(app *application.Application) http.HandlerFunc {
 		}
 
 		data = "Your domain registration successful. Login with your url - " + hostname
-		ssd := map[string]interface{}{"message": data}
+		ssd := map[string]interface{}{"message": data, "URL": hostname}
 		//&nat{"nat1", "nat2"},
 		fmt.Println("domain registration completed ss sent")
 		ss := httpresponse.SlugResponse{

@@ -51,15 +51,15 @@ CREATE TABLE ac.userlogin (
 --VALUES ('userid1','testuser@gmail.com','testuser@gmail.com','testpas1!','A','S','I','ac',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 
 
-CREATE SEQUENCE companyid_seq START 1;
+CREATE SEQUENCE ac.companyid_seq START 1;
 
 --- Domain map table which allow user to user their own URL
 
 CREATE TABLE ac.domainmap (
-    domainmapid varchar(100) NOT NULL DEFAULT 'DMAPID'||nextval('companyid_seq'::regclass)::varchar(100),
+    domainmapid varchar(100) NOT NULL DEFAULT 'DMAPID'||nextval('ac.companyid_seq'::regclass)::varchar(100),
     hostname    text NOT NULL UNIQUE,    
     siteid      text NOT NULL,
-    companyid   varchar(100) NOT NULL DEFAULT 'CPYID'||nextval('companyid_seq'::regclass)::varchar(100),
+    companyid   varchar(100) NOT NULL DEFAULT 'CPYID'||nextval('ac.companyid_seq'::regclass)::varchar(100),
     status      varchar(3) NOT NULL,
     octime      timestamptz NOT NULL,
     lmtime      timestamptz NOT NULL
@@ -130,11 +130,11 @@ insert into ac.packs values ('PKS15','Pricing','Pricing','Pricing plans avaialbl
 
 
 
-CREATE SEQUENCE companypacksid_seq START 1;
+CREATE SEQUENCE ac.companypacksid_seq START 1;
 
 -- SITE Packages  (This attached to the company)
 CREATE TABLE ac.companypacks (
-    cpypacksid                    text NOT NULL CONSTRAINT sitepackid PRIMARY KEY DEFAULT 'CPCKID'||nextval('companypacksid_seq'::regclass)::text,
+    cpypacksid                    text NOT NULL CONSTRAINT sitepackid PRIMARY KEY DEFAULT 'CPCKID'||nextval('ac.companypacksid_seq'::regclass)::text,
     companyid             varchar(100) NOT NULL,
     planid                    varchar(20) NOT NULL ,
     packfuncid             varchar(20) NOT NULL,  --> This can have only PACK type from pack table
@@ -292,12 +292,12 @@ CREATE TABLE ac.userrole (
 );
 
 
-CREATE SEQUENCE refid_seq START 1;
+CREATE SEQUENCE ac.refid_seq START 1;
 
 
 
 CREATE TABLE ac.refdata (
-    refid                     text NOT NULL CONSTRAINT refid PRIMARY KEY DEFAULT 'REFID'||nextval('refid_seq'::regclass)::text,
+    refid                     text NOT NULL CONSTRAINT refid PRIMARY KEY DEFAULT 'REFID'||nextval('ac.refid_seq'::regclass)::text,
     refcode               varchar(100) NOT NULL,
     refvalcat              varchar(100) NOT NULL,
     refvalue               varchar(100) NOT NULL,
@@ -308,15 +308,48 @@ CREATE TABLE ac.refdata (
     octime			      timestamptz NOT NULL,
     lmtime			      timestamptz NOT NULL
 );
-/*
-INSERT INTO ac.refdata values (DEFAULT,'industype','industype','Hotel','industry type of the company',ARRAY[NULL],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-INSERT INTO ac.refdata values (DEFAULT,'compcat','compcat','Food','Company type category',ARRAY[NULL],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-INSERT INTO ac.refdata values (DEFAULT,'compcat','compcat','FMCG','Company type FMCG',ARRAY[NULL],'A',2,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);*/
+
+
 INSERT INTO ac.refdata values (DEFAULT,'allowedops','allowedops','READ','allowed operations master used in packs.allowedops and roledetails.allowedopsval',ARRAY[NULL],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 INSERT INTO ac.refdata values (DEFAULT,'allowedops','allowedops','ADD','allowed operations master used in packs.allowedops and roledetails.allowedopsval',ARRAY[NULL],'A',2,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 INSERT INTO ac.refdata values (DEFAULT,'allowedops','allowedops','EDIT','allowed operations master used in packs.allowedops and roledetails.allowedopsval',ARRAY[NULL],'A',3,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 INSERT INTO ac.refdata values (DEFAULT,'allowedops','allowedops','DELETE','allowed operations master used in packs.allowedops and roledetails.allowedopsval',ARRAY[NULL],'A',4,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 INSERT INTO ac.refdata values (DEFAULT,'allowedops','allowedops','EXPORT','allowed operations master used in packs.allowedops and roledetails.allowedopsval',ARRAY[NULL],'A',5,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+
+INSERT INTO ac.refdata values (DEFAULT,'country','country','India','Country',ARRAY[NULL],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'state','state','Tamilnadu','Country',ARRAY['REFID6'],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'state','state','Karnataka','Country',ARRAY['REFID6'],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'state','state','Kerala','Country',ARRAY['REFID6'],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'state','state','Andhrapradesh','Country',ARRAY['REFID6'],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'city','city','Chennai','cities in a state',ARRAY['REFID7'],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'city','city','Coimbatore','cities in a state',ARRAY['REFID7'],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'city','city','Salem','cities in a state',ARRAY['REFID7'],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'city','city','Namakkal','cities in a state',ARRAY['REFID7'],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'city','city','Bangalore','cities in a state',ARRAY['REFID8'],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'city','city','Mangalore','cities in a state',ARRAY['REFID8'],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'city','city','Cochin','cities in a state',ARRAY['REFID9'],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'city','city','Tiruvandapuram','cities in a state',ARRAY['REFID9'],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'city','city','Guruvayur','cities in a state',ARRAY['REFID9'],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'city','city','Hyrderabad','cities in a state',ARRAY['REFID10'],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'city','city','Secundrabad','cities in a state',ARRAY['REFID10'],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'city','city','Vijayawada','cities in a state',ARRAY['REFID10'],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+
+INSERT INTO ac.refdata values (DEFAULT,'industype','industype','Hotel','industry type of the company',ARRAY[NULL],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'compcat','compcat','Food','Company type category',ARRAY[NULL],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'compcat','compcat','FMCG','Company type FMCG',ARRAY[NULL],'A',2,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+
+INSERT INTO ac.refdata values (DEFAULT,'timezone','timezone','IST','Country timezone',ARRAY[NULL],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'timezone','timezone','SGT','Country timezone',ARRAY[NULL],'A',2,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'timezone','timezone','GMT','Country timezone',ARRAY[NULL],'A',3,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+
+INSERT INTO ac.refdata values (DEFAULT,'currency','currency','INR','iso currency code',ARRAY[NULL],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'currency','currency','SGD','iso currency code',ARRAY[NULL],'A',2,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'currency','currency','USD','iso currency code',ARRAY[NULL],'A',3,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'currency','currency','EUR','iso currency code',ARRAY[NULL],'A',4,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+
+INSERT INTO ac.refdata values (DEFAULT,'finyear','Financial year','JAN-DEC','financial year',ARRAY[NULL],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'finyear','Financial year','APR-MAR','financial year',ARRAY[NULL],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+
 
 ---
 CREATE TABLE ac.company (
@@ -456,109 +489,3 @@ CREATE VIEW ac.ROLE_USER_VIEW AS(
 
 
 
-
-
-
-
----Entity details
-create table entity
-(
-    entityid          varchar(100)  default (('EN'::text || to_char(CURRENT_TIMESTAMP, 'DDMMYYYY'::text)) ||
-                                            nextval('unihot.entityid_sequence'::regclass)) not null
-                                             constraint enity_pkey primary key,
-    entityname        varchar(100)  not null,
-    entityshortname   varchar(100),
-    entitycategory    varchar(100),
-    entitystatus      varchar(1),    
-    entityimageurl    varchar(100),
-    entitylogo        varchar(100),
-    entityindustry    varchar(100),
-    entitytaxid       varchar(100),
-    entityaddline1    varchar(100),
-    entityaddline2    varchar(100),
-    entitycity        varchar(100),
-    entitystate       varchar(100),
-    entitycountry     varchar(100),
-    entitypincode     varchar(100),
-    entityphone       varchar(100),
-    entityfax         varchar(100),
-    entitymobile      varchar(100),
-    entitywebsite     varchar(100),
-    entityemail       varchar(100),
-    entitystartdate   varchar(100),
-    entityfiscalyear  varchar(100),
-    entitytimezone    varchar(100),
-    octime            timestamp with time zone                                             not null,
-    lmtime            timestamp with time zone                                             not null
-);
-
-
-
---INSERT for public entity
-
----Entity details
-create table entitybranch
-(
-    entitybranchid          varchar(100) default (('BR'::text || to_char(CURRENT_TIMESTAMP, 'DDMMYYYY'::text)) ||
-                                                  nextval('unihot.entitybranchid_sequence'::regclass)) not null
-        constraint enitybranch_pkey
-            primary key,
-    entityid                varchar(100)                                                               not null
-        constraint entitybranch_entityid_fkey
-            references entity,
-    entitybranchname        varchar(100),
-    entitybranchshortname   varchar(100),
-    entitybranchcategory    varchar(100),
-    entitybranchstatus      varchar(100),
-    entitybranchdescription varchar(100),
-    entitybranchimageurl    varchar(100),
-    entitybranchaddline1    varchar(100),
-    entitybranchaddline2    varchar(100),
-    entitybranchcity        varchar(100),
-    entitybranchstate       varchar(100),
-    entitybranchcountry     varchar(100),
-    entitybranchpincode     varchar(100),
-    entitybranchphone       varchar(100),
-    entitybranchfax         varchar(100),
-    entitybranchmobile      varchar(100),
-    entitybranchwebsite     varchar(100),
-    entitybranchemail       varchar(100),
-    entitybranchstartdate   varchar(100),
-    octime                  timestamp with time zone                                                   not null,
-    lmtime                  timestamp with time zone                                                   not null
-);
---INSERT for public entity
-
----user access permission table
-CREATE TABLE unihot.useraccess (
-    userid 		               varchar(100) NOT NULL,
-    logintype                  varchar(2) NOT NULL,  --> based on admin user (T - Thirdparty, S - Standalone)
-    usertype                   varchar(2) NOT NULL, --> based on admin user (C - Thirdparty COMPANY, I - Thirdparty individual, S - Standalone Company)
-    entity                     varchar(20) NOT NULL ,
-    entitybranch               varchar(10) NOT NULL ,
-    defaultindicator           varchar(1) NOT NULL,
-    roleid                     varchar(100),  --> from role setup table ADMIN,READONLY,WRITE,NODELETE
-    site                       varchar(100),  --> nc - Nawalcube, dv - developer, au - auth
-    accessstatus	           varchar(2) NOT NULL, --> (A- Active, B-Blocked) for the site
-    octime			           timestamptz NOT NULL,
-    lmtime			           timestamptz NOT NULL,
-    CONSTRAINT usac PRIMARY KEY (userid, logintype, usertype, entity, entitybranch, site)  
-    );
-
---INSERT for public entity
-INSERT INTO unihot.useraccess VALUES ('01','PUBLIC','01','nc','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-
----role id table
-CREATE TABLE unihot.roledetails (
-    roleid 		               varchar(100) NOT NULL,
-    rolename                   varchar(100) NOT NULL,
-    entity                     varchar(20) NOT NULL REFERENCES unihot.enity(entityid),
-    site                       varchar(100),  --> nc - Nawalcube, dv - developer, au - auth
-    roleidstatus	           varchar(2) NOT NULL, --> (A- Active, B-Blocked) for the site
-    octime			           timestamptz NOT NULL,
-    lmtime			           timestamptz NOT NULL,
-    CONSTRAINT us PRIMARY KEY (roleid, entity, site)  
-    );
-
---INSERT for public entity
-INSERT INTO unihot.roledetails VALUES ('01','PUBLIC','01','nc','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);

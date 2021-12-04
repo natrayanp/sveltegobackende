@@ -491,7 +491,10 @@ func createDataTree(mnodes *[]models.TtblMytree) {
 }
 
 func getActiveCompany(cmpy *[]models.TblCompany, companyid string) (models.TblCompany, error) {
-
+	fmt.Println("---------------\n-")
+	fmt.Println("Active company")
+	fmt.Println("---------------\n-")
+	fmt.Println(*cmpy)
 	if len(*cmpy) == 1 {
 		if companyid == "" || companyid == (*cmpy)[0].Companyid {
 			return (*cmpy)[0], nil
@@ -513,6 +516,7 @@ func getActiveCompany(cmpy *[]models.TblCompany, companyid string) (models.TblCo
 			return (*cmpy)[0], nil
 		}
 	}
+	fmt.Println("I return default")
 	return models.TblCompany{}, errors.New("Company/Requested Company setup doesnot exists")
 }
 
