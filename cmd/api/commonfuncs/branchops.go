@@ -100,15 +100,15 @@ func BranchSave(app *application.Application, w http.ResponseWriter, r *http.Req
 	}
 
 	const qry = `INSERT INTO ac.branch VALUES
-						($1,DEFAULT,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,
+						($1,DEFAULT,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,
 							CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)  RETURNING *;`
 
 	var myc []models.TblBranch
 	//var myc dbtran.Resultset
 	fmt.Println(cpy)
 	stmts1 := []*dbtran.PipelineStmt{
-		dbtran.NewPipelineStmt("select", qry, &myc, cpy.Companyid, cpy.Branchname, cpy.Branchshortname, "ca",
-			"A", "desc", "imgur", cpy.Branchaddline1, cpy.Branchaddline2, cpy.Branchcity, cpy.Branchstate, cpy.Branchcountry, cpy.Branchpincode,
+		dbtran.NewPipelineStmt("select", qry, &myc, cpy.Companyid, cpy.Branchname, cpy.Branchshortname,
+			"A", "imgur", cpy.Branchaddline1, cpy.Branchaddline2, cpy.Branchcity, cpy.Branchstate, cpy.Branchcountry, cpy.Branchpincode,
 			cpy.Branchphone, cpy.Branchfax, cpy.Branchmobile, cpy.Branchwebsite, cpy.Branchemail, cpy.Branchstartdate, cpy.Isdefault, userinfo.UUID),
 	}
 

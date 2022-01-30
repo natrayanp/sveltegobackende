@@ -108,8 +108,8 @@ func RoleFetch(app *application.Application, w http.ResponseWriter, r *http.Requ
 				from ac.COMPANYPACKS_PACKS_VIEW C
 				LEFT JOIN ac.rolemaster A ON A.COMPANYID = $1
 				LEFT JOIN ac.ROLE_USER_VIEW B ON A.COMPANYID = B.COMPANYID AND  B.packfuncid = C.PACKID AND B.USERID = $2 AND B.ROLEMASTERID = A.ROLEMASTERID
-				WHERE C.COMPANYID = $1
-				ORDER BY A.ROLEMASTERID,SORTORDER
+				WHERE C.COMPANYID = $1 AND A.ROLEMASTERID is NOT NULL
+				ORDER BY A.ROLEMASTERID
 			) , MYVAOS AS  (
 				SELECT  COMPANYID,branchid,rolemasterid,packfuncid,ALLOWEDOPSVAL FROM  ac.ROLE_USER_VIEW WHERE COMPANYID = $1 AND rolemasterid in (select distinct rolemasterid from myva) GROUP BY companyid,branchid,rolemasterid,packfuncid,ALLOWEDOPSVAL
 			), MYLAST AS (SELECT Y.*,PO.allowedopsval,CASE WHEN (NULLIF(PO.allowedopsval, '{NULL}')) IS NULL AND (Y.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc FROM MYVA y

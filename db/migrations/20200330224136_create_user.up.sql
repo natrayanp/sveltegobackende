@@ -110,21 +110,21 @@ CREATE TABLE ac.packs (
 );
 
 
-insert into ac.packs values ('PKS1','POS','POS','POS has all the POS functionalities','pack','COMPANY', ARRAY[true,true,true,false],ARRAY[NULL],1,'','radio_button_checked','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS2','POS Function','POS Function','Functions related to POS','module','COMPANY', ARRAY[true,true,true,false],ARRAY['PKS1'],1,'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS3','POS Reports','POS Reports','Reports related to POS','module','COMPANY', ARRAY[true,true,true,false],ARRAY['PKS1'],2,'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS4','POS Settings','POS Settings','Setting for POS module','module','COMPANY', ARRAY[true,true,true,false],ARRAY['PKS1’,’PKS6'],3,'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS5','POS Generic Settings','Generic Settings','Generic settings for POS','function','COMPANY', ARRAY[true,true,true,false],ARRAY['PKS4'],1,'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS6','Settings','Settings','Settings','pack','COMPANY', ARRAY[true,true,true,false],ARRAY[NULL],2,'/landing/settings','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS7','Entity Settings','Entity Configuration','This module has all the entity level settings','module','COMPANY', ARRAY[true,true,true,false],ARRAY['PKS6'],1,'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS8','companysettigs','Company','This has the functions for company set up','function','COMPANY', ARRAY[true,true,true,false],ARRAY['PKS7'],1,'/landing/settings/companysettings','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS9','branchsettings','Branch','This has the functions for Branch set up','function','COMPANY', ARRAY[true,true,true,false],ARRAY['PKS7'],2,'/landing/settings/branchsettings','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS10','User Settings','User Config','This module has all the user level settings','module','COMPANY', ARRAY[true,true,true,false],ARRAY['PKS6'],3,'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS11','user role','Roles','This has the functions for user role set up','function','COMPANY', ARRAY[true,true,true,false],ARRAY['PKS10'],1,'/landing/settings/roles','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS12','User Settings','Users','This has the functions for user set up','function','COMPANY', ARRAY[true,true,true,false],ARRAY['PKS10'],1,'/landing/settings/users','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS13','Pricing','Pricing','Pricing plans avaialble','pack','COMPANY', ARRAY[true,true,true,false],ARRAY[NULL],4,'/landing/pricing','fa-hand-holding-heart','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS14','Pricing','Pricing','Pricing plans avaialble','module','COMPANY', ARRAY[true,true,true,false],ARRAY['PKS13'],1,'','','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.packs values ('PKS15','Pricing','Pricing','Pricing plans avaialble','function','COMPANY', ARRAY[true,true,true,false],ARRAY['PKS14'],1,'','','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS1','POS','POS','POS has all the POS functionalities','pack','COMPANY', ARRAY[true,true,true,true,false],ARRAY[NULL],1,'','radio_button_checked','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS2','POS Function','POS Function','Functions related to POS','module','COMPANY', ARRAY[true,true,true,true,false],ARRAY['PKS1'],1,'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS3','POS Reports','POS Reports','Reports related to POS','module','COMPANY', ARRAY[true,true,true,true,false],ARRAY['PKS1'],2,'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS4','POS Settings','POS Settings','Setting for POS module','module','COMPANY', ARRAY[true,true,true,true,false],ARRAY['PKS1’,’PKS6'],3,'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS5','POS Generic Settings','Generic Settings','Generic settings for POS','function','COMPANY', ARRAY[true,true,true,true,false],ARRAY['PKS4'],1,'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS6','Settings','Settings','Settings','pack','COMPANY', ARRAY[true,true,true,true,false],ARRAY[NULL],2,'/landing/settings','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS7','Entity Settings','Entity Configuration','This module has all the entity level settings','module','COMPANY', ARRAY[true,true,true,true,false],ARRAY['PKS6'],1,'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS8','companysettigs','Company','This has the functions for company set up','function','COMPANY', ARRAY[true,true,true,true,false],ARRAY['PKS7'],1,'/landing/settings/companysettings','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS9','branchsettings','Branch','This has the functions for Branch set up','function','COMPANY', ARRAY[true,true,true,true,false],ARRAY['PKS7'],2,'/landing/settings/branchsettings','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS10','User Settings','User Config','This module has all the user level settings','module','COMPANY', ARRAY[true,true,true,true,false],ARRAY['PKS6'],3,'','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS11','user role','Roles','This has the functions for user role set up','function','COMPANY', ARRAY[true,true,true,true,false],ARRAY['PKS10'],1,'/landing/settings/roles','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS12','User Settings','Users','This has the functions for user set up','function','COMPANY', ARRAY[true,true,true,true,false],ARRAY['PKS10'],1,'/landing/settings/users','fa-cog','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS13','Pricing','Pricing','Pricing plans avaialble','pack','COMPANY', ARRAY[true,true,true,true,false],ARRAY[NULL],4,'/landing/pricing','fa-hand-holding-heart','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS14','Pricing','Pricing','Pricing plans avaialble','module','COMPANY', ARRAY[true,true,true,true,false],ARRAY['PKS13'],1,'','','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.packs values ('PKS15','Pricing','Pricing','Pricing plans avaialble','function','COMPANY', ARRAY[true,true,true,true,false],ARRAY['PKS14'],1,'','','A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 
 
 
@@ -251,11 +251,11 @@ CREATE TABLE ac.roledetails (
 /*  All the Functions and Modules that are to be part of sign up admin should have should be included here   
     Eventhough we have entry in this table for sign up role.  User will get the modules/functions that are common between this and company packs
 */
-insert into ac.Roledetails values ('ROLDET1','ROLMA1','PKS8','PUBLIC','PUBLIC','PUBLIC', ARRAY[true,true,true,false],CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.Roledetails values ('ROLDET2','ROLMA1','PKS9','PUBLIC','PUBLIC','PUBLIC', ARRAY[true,true,true,false],CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.Roledetails values ('ROLDET3','ROLMA1','PKS14','PUBLIC','PUBLIC','PUBLIC',ARRAY[true,true,true,false],CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.Roledetails values ('ROLDET4','ROLMA1','PKS11','PUBLIC','PUBLIC','PUBLIC',ARRAY[true,true,true,false],CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
-insert into ac.Roledetails values ('ROLDET5','ROLMA1','PKS12','PUBLIC','PUBLIC','PUBLIC',ARRAY[true,true,true,false],CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.Roledetails values ('ROLDET1','ROLMA1','PKS8','PUBLIC','PUBLIC','PUBLIC', ARRAY[true,true,true,true,false],CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.Roledetails values ('ROLDET2','ROLMA1','PKS9','PUBLIC','PUBLIC','PUBLIC', ARRAY[true,true,true,true,false],CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.Roledetails values ('ROLDET3','ROLMA1','PKS14','PUBLIC','PUBLIC','PUBLIC',ARRAY[true,true,true,true,false],CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.Roledetails values ('ROLDET4','ROLMA1','PKS11','PUBLIC','PUBLIC','PUBLIC',ARRAY[true,true,true,true,false],CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+insert into ac.Roledetails values ('ROLDET5','ROLMA1','PKS12','PUBLIC','PUBLIC','PUBLIC',ARRAY[true,true,true,true,false],CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 
 /*
 --defaultRoleDetails
@@ -398,9 +398,7 @@ CREATE TABLE ac.branch (
                                         constraint branch_pkey primary key,
             branchName          text NOT NULL,
             branchShortName     varchar(100) NOT NULL,
-            branchCategory      varchar(100) NOT NULL,
             branchStatus        varchar(3) NOT NULL,  --> D -Delete / A - Active
-            branchDescription   text NOT NULL,
             branchImageUrl      text,
             branchAddLine1      varchar(100) NOT NULL,
             branchAddLine2      varchar(100) NOT NULL,
