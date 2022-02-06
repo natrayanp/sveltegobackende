@@ -43,6 +43,19 @@ func FetchRoles(app *application.Application) http.HandlerFunc {
 	}
 }
 
-func Do(app *application.Application) http.HandlerFunc {
+func SaveRoles(app *application.Application) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("-------------------\n Save Role Start \n-------------------")
+
+		defer r.Body.Close()
+
+	}
+}
+
+func DoGet(app *application.Application) http.HandlerFunc {
 	return mymiddleware.Chain(FetchRoles(app))
+}
+
+func DoSave(app *application.Application) http.HandlerFunc {
+	return mymiddleware.Chain(SaveRoles(app))
 }

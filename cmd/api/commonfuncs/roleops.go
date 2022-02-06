@@ -114,7 +114,7 @@ func RoleFetch(app *application.Application, w http.ResponseWriter, r *http.Requ
 				SELECT  COMPANYID,branchid,rolemasterid,packfuncid,ALLOWEDOPSVAL FROM  ac.ROLE_USER_VIEW WHERE COMPANYID = $1 AND rolemasterid in (select distinct rolemasterid from myva) GROUP BY companyid,branchid,rolemasterid,packfuncid,ALLOWEDOPSVAL
 			), MYLAST AS (SELECT Y.*,PO.allowedopsval,CASE WHEN (NULLIF(PO.allowedopsval, '{NULL}')) IS NULL AND (Y.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc FROM MYVA y
 			 LEFT JOIN MYVAOS as PO ON PO.COMPANYID = Y.COMPANYID AND PO.rolemasterid=Y.rolemasterid AND PO.Branchid = y.branchid AND PO.packfuncid = y.packid
-			) SELECT sd.rolemasterid,sd.roledisplay,json_agg(SD) AS modules FROM mylast sd GROUP BY sd.rolemasterid,sd.roledisplay;`
+			) SELECT sd.rolemasterid,sd.name,sd.roledisplay,sd.description,json_agg(SD) AS modules FROM mylast sd GROUP BY  sd.rolemasterid,sd.name,sd.roledisplay,sd.description;`
 
 	stmts = []*dbtran.PipelineStmt{
 		dbtran.NewPipelineStmt("select", qry, &selmod, rolereq.Companyid, userinfo.UUID),
@@ -149,7 +149,9 @@ func RoleFetch(app *application.Application, w http.ResponseWriter, r *http.Requ
 	fselmod = make([]models.RoleSelectModu, len(selmod))
 	for i, s := range selmod {
 		fselmod[i].Rolemasterid = s.Rolemasterid
-		fselmod[i].Displayname = s.Roledisplay
+		fselmod[i].Rolename = s.Name
+		fselmod[i].Roledisplayname = s.Roledisplay
+		fselmod[i].Roledescription = s.Description
 		mapstructure.Decode(s.Modules, &fselmod[i].Modules)
 		createDataTree(&fselmod[i].Modules)
 	}

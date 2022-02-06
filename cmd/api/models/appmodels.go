@@ -143,9 +143,11 @@ type RoleReq struct {
 }
 
 type RoleSelectModu struct {
-	Rolemasterid string
-	Displayname  string
-	Modules      []TtblMytree
+	Rolemasterid    string
+	Rolename        string
+	Roledisplayname string
+	Roledescription string
+	Modules         []TtblMytree
 }
 
 type RoleResp struct {
@@ -155,6 +157,8 @@ type RoleResp struct {
 
 type TmpRoleSelectModu struct {
 	Rolemasterid string
+	Name         string
 	Roledisplay  string
+	Description  string
 	Modules      interface{}
 }
