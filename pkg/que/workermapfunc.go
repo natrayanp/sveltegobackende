@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/vgarvardt/gue/v2"
 )
@@ -11,6 +12,7 @@ import (
 var wm = gue.WorkMap{
 	"PrintName":  printName,
 	"AssignRole": assign_role_after_domain_regis,
+	"Auditentry": audit_entry,
 }
 
 type printNameArgs struct {
@@ -59,4 +61,26 @@ var assign_role_after_domain_regis = func(j *gue.Job) error {
 	fmt.Println(err)
 	return nil
 
+}
+
+type auditentryargs struct {
+	Itemid string
+	Action string
+	Oldval interface{}
+	Newval interface{}
+	User   string
+	Time   time.Time
+}
+
+var audit_entry = func(j *gue.Job) error {
+	var args auditentryargs
+	if err := json.Unmarshal(j.Args, &args); err != nil {
+		return err
+	}
+
+	const qry = `INSERT INTO ac.audit VALUES (DEFAULT,$1,$2,$3,$4,$5,$6)`
+
+	_, err := j.Tx().Exec(context.Background(), qry, args.Itemid, args.Action, args.Oldval, args.Newval, args.User, args.Time)
+	fmt.Println(err)
+	return nil
 }

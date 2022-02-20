@@ -92,6 +92,7 @@ type TtblMytree struct {
 	Open          bool          `json:"open"`
 	Submenu       []*TtblMytree `json:"submenu"`
 	Roledetailid  *string       `json:"roledetailid"`
+	Packgroupid   []*string     `json:"packgroupid"`
 	Octime        time.Time     `json:"creattime"`
 	Lmtime        time.Time     `json:"lasmodifytime"`
 }
@@ -270,4 +271,27 @@ type TblBranch struct {
 	Lmuserid          string    `json:"lmuserid"`
 	Octime            time.Time `json:"octime"`
 	Lmtime            time.Time `json:"lmtime"`
+}
+
+type TblRolemaster struct {
+	Rolemasterid  string    `json:"rolemasterid"`
+	Rmname        string    `json:"name"`
+	Rmdisplayname string    `json:"displayname"`
+	Rmdescription string    `json:"description"`
+	Companyid     string    `json:"companyid"`
+	Branchid      string    `json:"branchid"`
+	Rmstatus      *string   `json:"status"`
+	Octime        time.Time `json:"octime"`
+	Lmtime        time.Time `json:"lmtime"`
+}
+
+type TblRoledetail struct {
+	Roledetailid  string    `json:"roledetailid"`
+	Rolemasterid  string    `json:"rolemasterid"`
+	Packfuncid    string    `json:"packfuncid"`
+	Companyid     string    `json:"companyid"`
+	Branchid      string    `json:"branchid"`
+	Allowedopsval []bool    `json:"allowedopsval"`
+	Octime        time.Time `json:"octime"`
+	Lmtime        time.Time `json:"lmtime"`
 }

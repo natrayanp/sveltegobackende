@@ -266,12 +266,12 @@ func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.R
 					//var mycpp []models.TblMytree
 					var mycpp []models.TtblMytree
 
-					qry = `WITH RECURSIVE MDATA AS 
+					qry = `WITH RECURSIVE MDATA1 AS 
 					(
 						SELECT * from ac.ROLE_USER_VIEW where userid = $1 AND companyid = $2 AND userbranchacess && ARRAY['ALL'::VARCHAR,$3::VARCHAR]
 							UNION
-						--SELECT * from ac.ROLE_USER_VIEW where userid = $1 AND companyid = 'PUBLIC'
-						SELECT $2 as companyid, branchid, rolemasterid, displayname, roledetailid, packfuncid,allowedopsval,userid,userbranchacess from ac.ROLE_USER_VIEW where userid = $1 AND companyid = 'PUBLIC'
+						SELECT * from ac.ROLE_USER_VIEW where userid = $1 AND companyid = 'PUBLIC'
+						--SELECT $2 as companyid, branchid, rolemasterid, displayname, roledetailid, packfuncid,allowedopsval,userid,userbranchacess from ac.ROLE_USER_VIEW where userid = $1 AND companyid = 'PUBLIC'
 						AND (SELECT count(DISTINCT COMPANYID) from ac.ROLE_USER_VIEW where userid = $1 AND companyid = $2) = 0
 					),  
 					MyTree AS 
@@ -281,14 +281,14 @@ func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.R
 						CASE WHEN (NULLIF(A.allowedopsval, '{NULL}')) IS NULL AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
 						'SELECTedmodules' AS basketname, false as open
 						from ac.COMPANYPACKS_PACKS_VIEW C
-						JOIN MDATA A ON A.packfuncid = C.PACKID AND C.menulevel NOT IN ('COMPANY')
+						JOIN MDATA1 A ON A.packfuncid = C.PACKID AND C.menulevel NOT IN ('COMPANY')
 							UNION
 						SELECT C.COMPANYID,$3 As branchid,T.ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,A.allowedopsval,A.USERID,
 						--CASE WHEN (TRUE = ANY(A.ALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
 						CASE WHEN (NULLIF(A.allowedopsval, '{NULL}')) IS NULL AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
 						'SELECTedmodules' AS basketname, false as open
 						from ac.COMPANYPACKS_PACKS_VIEW C
-						LEFT JOIN MDATA A ON  A.packfuncid = C.PACKID AND C.menulevel NOT IN ('COMPANY')
+						LEFT JOIN MDATA1 A ON  A.packfuncid = C.PACKID AND C.menulevel NOT IN ('COMPANY')
 						JOIN MyTree AS t ON C.packid = ANY(t.parent)	
 				
 					)
@@ -350,29 +350,57 @@ func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.R
 				defer wgcp.Done()
 				//var mycppp []models.TblMytree
 				var mycppp []models.TtblMytree
+				/*
+					qry = `WITH RECURSIVE MDATA AS
+					(
+						SELECT * from ac.ROLE_USER_VIEW where userid = $1 AND companyid = $2
+							UNION
+						SELECT $2 as companyid, branchid, rolemasterid, displayname, roledetailid, packfuncid,allowedopsval,userid,userbranchacess from ac.ROLE_USER_VIEW where userid = $1 AND companyid = 'PUBLIC'
+						AND (SELECT count(DISTINCT COMPANYID) from ac.ROLE_USER_VIEW where userid = $1 AND companyid = $2) = 0
+					),
+					MyTree AS
+					(
+						SELECT C.COMPANYID,$3 As branchid,A.ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,A.allowedopsval,A.USERID,
+						CASE WHEN (NULLIF(A.allowedopsval, '{NULL}')) IS NULL AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
+						'SELECTedmodules' AS basketname, false as open
+						from ac.COMPANYPACKS_PACKS_VIEW C
+						JOIN MDATA A ON A.packfuncid = C.PACKID AND C.menulevel IN ('COMPANY')
+							UNION
+						SELECT C.COMPANYID,$3 As branchid,T.ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,A.allowedopsval,A.USERID,
+						CASE WHEN (NULLIF(A.allowedopsval, '{NULL}')) IS NULL  AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
+						'SELECTedmodules' AS basketname, false as open
+						from ac.COMPANYPACKS_PACKS_VIEW C
+						LEFT JOIN MDATA A ON  A.packfuncid = C.PACKID AND C.menulevel IN ('COMPANY')
+						JOIN MyTree AS t ON C.packid = ANY(t.parent)
 
-				qry = `WITH RECURSIVE MDATA AS 
+					)
+					SELECT * FROM MyTree
+					WHERE COMPANYID = $2
+					ORDER BY COMPANYID,SORTORDER,TYPE,NAME;`
+
+				*/
+
+				qry = `WITH RECURSIVE MDATAC AS 
 				(
 					SELECT * from ac.ROLE_USER_VIEW where userid = $1 AND companyid = $2
 						UNION
-					SELECT $2 as companyid, branchid, rolemasterid, displayname, roledetailid, packfuncid,allowedopsval,userid,userbranchacess from ac.ROLE_USER_VIEW where userid = $1 AND companyid = 'PUBLIC'
+					SELECT * from ac.ROLE_USER_VIEW where userid = $1 AND companyid = 'PUBLIC' 
 					AND (SELECT count(DISTINCT COMPANYID) from ac.ROLE_USER_VIEW where userid = $1 AND companyid = $2) = 0
 				),  
 				MyTree AS 
 				(
-					SELECT C.COMPANYID,$3 As branchid,A.ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,A.allowedopsval,A.USERID,
-					CASE WHEN (NULLIF(A.allowedopsval, '{NULL}')) IS NULL AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
+					SELECT C.COMPANYID,'' As branchid,A.ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,A.allowedopsval,A.USERID,
+					CASE WHEN (TRUE = ANY(A.ALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
 					'SELECTedmodules' AS basketname, false as open
 					from ac.COMPANYPACKS_PACKS_VIEW C
-					JOIN MDATA A ON A.packfuncid = C.PACKID AND C.menulevel IN ('COMPANY')
+					JOIN MDATAC A ON A.packfuncid = C.PACKID AND C.menulevel IN ('COMPANY')
 						UNION
-					SELECT C.COMPANYID,$3 As branchid,T.ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,A.allowedopsval,A.USERID,
-					CASE WHEN (NULLIF(A.allowedopsval, '{NULL}')) IS NULL  AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
+					SELECT C.COMPANYID,'' As branchid,T.ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,A.allowedopsval,A.USERID,
+					CASE WHEN (TRUE = ANY(A.ALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
 					'SELECTedmodules' AS basketname, false as open
 					from ac.COMPANYPACKS_PACKS_VIEW C
-					LEFT JOIN MDATA A ON  A.packfuncid = C.PACKID AND C.menulevel IN ('COMPANY')
+					LEFT JOIN MDATAC A ON  A.packfuncid = C.PACKID AND C.menulevel IN ('COMPANY')
 					JOIN MyTree AS t ON C.packid = ANY(t.parent)	
-			
 				)
 				SELECT * FROM MyTree 
 				WHERE COMPANYID = $2	
@@ -380,7 +408,7 @@ func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.R
 
 				stmts = []*dbtran.PipelineStmt{
 					//dbtran.NewPipelineStmt("SELECT", qry, &mycppp, userinfo.UUID, cpid, defaultbranchid),
-					dbtran.NewPipelineStmt("select", qry, &mycppp, userinfo.UUID, cpid, "ALL"),
+					dbtran.NewPipelineStmt("select", qry, &mycppp, userinfo.UUID, cpid),
 				}
 
 				_, err := dbtran.WithTransaction(ctx, dbtran.TranTypeFullSet, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {
@@ -419,62 +447,56 @@ func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.R
 //func createDataTree(mnodes *[]models.TblMytree) {
 func createDataTree(mnodes *[]models.TtblMytree) {
 	nodes := *mnodes
-	fmt.Printf("&mnodes is: %p\n", mnodes)
-	//var newnodes []models.TblMytree
+	//fmt.Printf("&mnodes is: %p\n", mnodes)
+
 	var newnodes []models.TtblMytree
-	fmt.Println("---------------$$$end6a1")
-	//m := make(map[pgtype.Varchar]*models.TblMytree)
+	//fmt.Println("---------------$$$end6a1")
+
 	m := make(map[string]*models.TtblMytree)
 	for i, _ := range nodes {
-		//fmt.Printf("Setting m[%d] = <node with ID=%d>\n", n.ID, n.ID)
+
 		m[nodes[i].Packid] = &nodes[i]
 	}
-	fmt.Println(m)
-	fmt.Println("---------------$$$end6a2")
+	//fmt.Println(m)
+
 	for i, n := range nodes {
-		//fmt.Printf("Setting <node with ID=%d>.Child to <node with ID=%d>\n", n.ID, m[n.ParentID].ID)
-		fmt.Println(n)
-		//fmt.Println(n.Parent.Dimensions[0].Length)
-		fmt.Println(len(n.Parent))
-		fmt.Println("---------------$$$end6a2a")
-		//if n.Parent.Dimensions[0].Length > 0 {
+		//fmt.Println(n)
+		//fmt.Println(len(n.Parent))
+		//fmt.Println("---------------$$$end6a2a")
+
 		if len(n.Parent) > 0 {
-			//for _, t := range n.Parent.Elements {
+			//fmt.Println(n.Parent)
+
 			for _, t := range n.Parent {
-				//fmt.Println(t.Status)
-				//fmt.Println(t.Status == pgtype.Null)
-				fmt.Println("---------------$$$end6a2a1")
-				fmt.Println(t)
+				//fmt.Println("---------------$$$end6a2a1")
+				//fmt.Println(t)
 
 				if t != nil {
+					//fmt.Println("---------------$$$end6a2a1a")
+					//fmt.Println(*t)
 					m[*t].Submenu = append(m[*t].Submenu, m[nodes[i].Packid])
+					//fmt.Println("---------------$$$end6a2a1a++")
 					if len(m[*t].Submenu) > 1 {
+						//fmt.Println("---------------$$$end6a2a1a++1")
 						sort.Slice(m[*t].Submenu, func(i, j int) bool {
 							return m[*t].Submenu[i].Sortorder < m[*t].Submenu[j].Sortorder
 						})
 					}
+					//fmt.Println("---------------$$$end6a2a1a++end")
 				}
 
-				/*
-					if t.Status != pgtype.Null {
-						m[t].Submenu = append(m[t].Submenu, m[nodes[i].Id])
-					}
-				*/
 			}
 		}
 	}
-	fmt.Println("---------------$$$end6a3")
+	//fmt.Println("---------------$$$end6a3")
 	for _, n := range m {
-		fmt.Println(n)
-		//fmt.Println(n.Parent.Elements[0].Status)
-		//fmt.Println(n.Parent.Elements[0].Status == pgtype.Null)
-		//if n.Parent.Elements[0].Status == pgtype.Null {
-		fmt.Println(n.Parent[0])
+		//fmt.Println(n)
+		//fmt.Println(n.Parent[0])
 		if n.Parent[0] == nil {
-			fmt.Println(n)
-			fmt.Println(newnodes)
+			//fmt.Println(n)
+			//fmt.Println(newnodes)
 			newnodes = append(newnodes, *n)
-			fmt.Println(newnodes)
+			//fmt.Println(newnodes)
 		}
 	}
 
@@ -482,12 +504,12 @@ func createDataTree(mnodes *[]models.TtblMytree) {
 		return newnodes[i].Sortorder < newnodes[j].Sortorder
 	})
 
-	fmt.Println("---------------$$$end6a4")
-	fmt.Printf("&mnodes is: %p\n", mnodes)
-	fmt.Printf("&newnodes is: %p\n", &newnodes)
+	//fmt.Println("---------------$$$end6a4")
+	//fmt.Printf("&mnodes is: %p\n", mnodes)
+	//fmt.Printf("&newnodes is: %p\n", &newnodes)
 	*mnodes = newnodes
-	fmt.Printf("&mnodes is: %p\n", mnodes)
-	fmt.Println("---------------$$$end6a5")
+	//fmt.Printf("&mnodes is: %p\n", mnodes)
+	//fmt.Println("---------------$$$end6a5")
 }
 
 func getActiveCompany(cmpy *[]models.TblCompany, companyid string) (models.TblCompany, error) {

@@ -48,12 +48,20 @@ func (s SlugResponse) ErrorType() ErrorType {
 
 //s.Data can be stuct pointer or a map[string]interface}{} type for it to work
 func (s SlugResponse) HttpRespond() {
+	fmt.Println(s.Err)
+	fmt.Println(s.Err != nil)
 	if s.Err != nil {
 		log.GetLogEntry(s.Request).WithError(s.Err).WithField("error-slug", map[string]interface{}{"error": s.Data, "slugcode": s.SlugCode}).Warn(s.LogMsg)
+		if s.Status == "" {
+			s.Status = "ERROR"
+		}
 	} else {
 		log.GetLogEntry(s.Request).WithField("slugcode", s.SlugCode).Info(s.LogMsg)
 	}
-
+	fmt.Println(s)
+	fmt.Println("s.Status")
+	fmt.Println(s.Status)
+	fmt.Println("s.Status")
 	resp := finalResponse{structToMap(s.Data), s.Status, s.Userinfo.Session, s.SlugCode, s.getStatucode()}
 
 	fmt.Println("chek data resp")

@@ -156,9 +156,51 @@ type RoleResp struct {
 }
 
 type TmpRoleSelectModu struct {
+	Rolemasterid  string
+	Rmname        string
+	Rmdisplayname string
+	Rmdescription string
+	Modules       interface{}
+}
+
+type RolesaveReq struct {
+	Rolemaster  Rolemaster
+	Roledetails []Roledetail
+	Audit       Roleaudit
+	Companyid   string
+	Branchid    string
+}
+
+type Rolemaster struct {
+	Roledescription string
+	Roledisplayname string
+	Rolemasterid    string
+	Rolename        string
+	Action          string
+}
+
+type Roledetail struct {
+	Action        string
+	Allowedopsval []bool
+	Packid        string
+	Roledetailid  string
+	Rolemasterid  string
+}
+
+type Roleaudit struct {
+	Action   string
+	Itemid   string
+	Itemkeys Roleitmkey
+	Newvalue []Roleauditval
+	Oldvalue []Roleauditval
+}
+
+type Roleitmkey struct {
 	Rolemasterid string
-	Name         string
-	Roledisplay  string
-	Description  string
-	Modules      interface{}
+}
+
+type Roleauditval struct {
+	Roledetailid  string
+	Packid        string
+	Allowedopsval []bool
 }

@@ -132,6 +132,11 @@ func (ps *PipelineStmt) Exec(ctx context.Context, typ TranType, db *pgxpool.Pool
 		ct, err = db.Exec(ctx, ps.query, ps.args...)
 	}
 	fmt.Println("Peieiei")
+	fmt.Println("query up:", ps.query)
+	fmt.Println("args up:", ps.args)
+	fmt.Println("printrow up:", ct)
+	fmt.Println("printrow up:", ct)
+	fmt.Println("error:", err)
 
 	dd := (ps.Resultstruct).(*Resultset)
 	fmt.Println(ps.Resultstruct)
@@ -201,6 +206,8 @@ func RunPipeline(ctx context.Context, typ TranType, db *pgxpool.Pool, tx Transac
 		if ps.querytype != "select" {
 			if ps.Resultstruct == nil {
 				fmt.Println("assigned resulstset")
+				fmt.Println(err)
+				fmt.Println(ps)
 				ps.Resultstruct = &Resultset{}
 			}
 			err = ps.Exec(ctx, typ, db, tx)

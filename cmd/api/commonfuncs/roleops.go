@@ -2,17 +2,21 @@ package commonfuncs
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/jackc/pgconn"
+	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/mitchellh/mapstructure"
 	"github.com/sveltegobackend/cmd/api/models"
 	"github.com/sveltegobackend/pkg/application"
 	"github.com/sveltegobackend/pkg/db/dbtran"
 	"github.com/sveltegobackend/pkg/httpresponse"
+	"github.com/vgarvardt/gue/v2"
 )
 
 // PackageFetch returns menus and access rights for it for a user.
@@ -43,22 +47,39 @@ func RoleFetch(app *application.Application, w http.ResponseWriter, r *http.Requ
 	//This is always has same value irrespective of company has role or not.
 
 	var availmod []models.TtblMytree
+	/*
+		qry = `WITH MYAA AS(
+				SELECT c.COMPANYID,'PUBLIC' AS BRANCHID,'' AS Roledetailid,'' AS ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,
+				c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,
+				array_fill(FALSE, ARRAY[array_length(c.allowedops,1)])  AS allowedopsval,$2 as userid,
+				--CASE WHEN (TRUE = ANY(B.ALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
+				'Availablemodules' AS basketname, false as open
+				FROM ac.COMPANYPACKS_PACKS_VIEW C
+				LEFT JOIN ac.ROLE_USER_VIEW B ON C.COMPANYID = B.COMPANYID AND  B.packfuncid = C.PACKID AND B.USERID = $2
+				WHERE C.COMPANYID = $1
+				) SELECT Y.*,
+					CASE WHEN (NULLIF(Y.allowedopsval, '{NULL}')) IS NULL AND (Y.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc
+					FROM MYAA as Y;`
+	*/
 
-	qry = `WITH MYAA AS(
-			SELECT c.COMPANYID,'PUBLIC' AS BRANCHID,'' AS Roledetailid,'' AS ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,
-			c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,
-			array_fill(FALSE, ARRAY[array_length(c.allowedops,1)])  AS allowedopsval,$2 as userid,
-			--CASE WHEN (TRUE = ANY(B.ALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
-			'Availablemodules' AS basketname, false as open
-			FROM ac.COMPANYPACKS_PACKS_VIEW C
-			LEFT JOIN ac.ROLE_USER_VIEW B ON C.COMPANYID = B.COMPANYID AND  B.packfuncid = C.PACKID AND B.USERID = $2
-			WHERE C.COMPANYID = $1
-			) SELECT Y.*,
-				CASE WHEN (NULLIF(Y.allowedopsval, '{NULL}')) IS NULL AND (Y.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc
-				FROM MYAA as Y;`
+	qry = `WITH MY AS (
+				SELECT DISTINCT RDPACKFUNCID FROM AC.ROLEDETAILS WHERE RDROLEMASTERID IN (SELECT ROLEMASTERID FROM AC.userrole WHERE userid = $1 AND COMPANYID = $2)
+			), MYPF AS (
+		   		SELECT z.*,'PUBLIC' AS BRANCHID,'' AS Roledetailid,'' AS ROLEMASTERID,
+				CASE WHEN d.RDPACKFUNCID IS NULL THEN TRUE ELSE FALSE END as disablefunc,
+				array_fill(FALSE, ARRAY[array_length(Z.allowedops,1)])  AS allowedopsval,
+				--CASE WHEN (NULLIF(b.rdallowedopsval, '{NULL}')) IS NULL AND (z.TYPE IN ('function','module')) THEN TRUE ELSE FALSE END AS disablefunc,
+				'Availablemodules' AS basketname, false as open
+		   		FROM AC.COMPANYPACKS_PACKS_VIEW z
+		   		--CROSS JOIN ac.rolemaster a
+		   		--LEFT JOIN ac.roledetails b ON a.rolemasterid = b.rdrolemasterid AND z.packid = b.rdpackfuncid AND B.COMPANYID = Z.COMPANYID
+		   		LEFT JOIN MY d ON z.PACKFUNCID = d.RDPACKFUNCID
+				--JOIN MYP c on a.rolemasterid = c.rdrolemasterid AND z.packgroupid = c.gid
+		   		WHERE  z.COMPANYID =  $2
+	  		) SELECT * FROM MYPF;`
 
 	stmts := []*dbtran.PipelineStmt{
-		dbtran.NewPipelineStmt("select", qry, &availmod, rolereq.Companyid, userinfo.UUID),
+		dbtran.NewPipelineStmt("select", qry, &availmod, userinfo.UUID, rolereq.Companyid),
 	}
 
 	_, err = dbtran.WithTransaction(ctx, dbtran.TranTypeFullSet, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {
@@ -89,6 +110,9 @@ func RoleFetch(app *application.Application, w http.ResponseWriter, r *http.Requ
 	fmt.Println(availmod)
 	createDataTree(&availmod)
 	datosend.Availablemodules = availmod
+	fmt.Println(availmod)
+	fmt.Println(datosend)
+	fmt.Println("-====++++datosend-====++++")
 
 	//This will give all the rolewise details for the company if Roles are already created -- END
 
@@ -100,24 +124,29 @@ func RoleFetch(app *application.Application, w http.ResponseWriter, r *http.Requ
 	var selmod []models.TmpRoleSelectModu
 	var fselmod []models.RoleSelectModu
 
-	qry = `WITH MYVA AS (
-				SELECT c.COMPANYID,A.BRANCHID,B.Roledetailid,A.ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,c.icon,
-				c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,B.USERID,A.displayname as roledisplay,
-				--CASE WHEN (TRUE = ANY(B.ALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,				
+	/* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@*/
+	qry = ` WITH MY AS (
+				SELECT DISTINCT RDPACKFUNCID FROM AC.ROLEDETAILS WHERE RDROLEMASTERID IN (SELECT ROLEMASTERID FROM AC.userrole WHERE userid = $1 AND COMPANYID = $2)
+		), MYP AS(
+	   			
+				   SELECT distinct rdrolemasterid,packgroupid gid FROM AC.ROLEDETAILS A
+				   LEFT JOIN AC.PACKS B ON A.rdpackfuncid = B.PACKID			   
+	   	), MYPF AS (
+	   			SELECT z.*,a.*,b.roledetailid,b.rdallowedopsval as allowedopsval,
+	   			CASE WHEN d.RDPACKFUNCID IS NULL THEN TRUE ELSE FALSE END as disablefunc,
+				--CASE WHEN (NULLIF(b.rdallowedopsval, '{NULL}')) IS NULL AND (z.TYPE IN ('function','module')) THEN TRUE ELSE FALSE END AS disablefunc,
 				'selectedmodules' AS basketname, false as open
-				from ac.COMPANYPACKS_PACKS_VIEW C
-				LEFT JOIN ac.rolemaster A ON A.COMPANYID = $1
-				LEFT JOIN ac.ROLE_USER_VIEW B ON A.COMPANYID = B.COMPANYID AND  B.packfuncid = C.PACKID AND B.USERID = $2 AND B.ROLEMASTERID = A.ROLEMASTERID
-				WHERE C.COMPANYID = $1 AND A.ROLEMASTERID is NOT NULL
-				ORDER BY A.ROLEMASTERID
-			) , MYVAOS AS  (
-				SELECT  COMPANYID,branchid,rolemasterid,packfuncid,ALLOWEDOPSVAL FROM  ac.ROLE_USER_VIEW WHERE COMPANYID = $1 AND rolemasterid in (select distinct rolemasterid from myva) GROUP BY companyid,branchid,rolemasterid,packfuncid,ALLOWEDOPSVAL
-			), MYLAST AS (SELECT Y.*,PO.allowedopsval,CASE WHEN (NULLIF(PO.allowedopsval, '{NULL}')) IS NULL AND (Y.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc FROM MYVA y
-			 LEFT JOIN MYVAOS as PO ON PO.COMPANYID = Y.COMPANYID AND PO.rolemasterid=Y.rolemasterid AND PO.Branchid = y.branchid AND PO.packfuncid = y.packid
-			) SELECT sd.rolemasterid,sd.name,sd.roledisplay,sd.description,json_agg(SD) AS modules FROM mylast sd GROUP BY  sd.rolemasterid,sd.name,sd.roledisplay,sd.description;`
+	   			FROM AC.COMPANYPACKS_PACKS_VIEW z
+	   			CROSS JOIN ac.rolemaster a
+	   			LEFT JOIN ac.roledetails b ON a.rolemasterid = b.rdrolemasterid AND z.packid = b.rdpackfuncid AND B.COMPANYID = Z.COMPANYID
+	   			LEFT JOIN MY d ON z.PACKFUNCID = d.RDPACKFUNCID
+				JOIN MYP c on a.rolemasterid = c.rdrolemasterid AND z.packgroupid = c.gid 
+	   			where  a.COMPANYID != 'PUBLIC' AND z.COMPANYID =  $2 AND a.rmstatus NOT IN ('D')
+	   		) select SD.ROLEMASTERID,SD.RMNAME,SD.RMDISPLAYNAME,SD.RMDESCRIPTION,json_agg(SD) AS modules FROM MYPF sd GROUP BY  sd.rolemasterid,sd.rmname,sd.rmdisplayname ,sd.rmdescription;`
+	/*@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@*/
 
 	stmts = []*dbtran.PipelineStmt{
-		dbtran.NewPipelineStmt("select", qry, &selmod, rolereq.Companyid, userinfo.UUID),
+		dbtran.NewPipelineStmt("select", qry, &selmod, userinfo.UUID, rolereq.Companyid),
 	}
 
 	_, err = dbtran.WithTransaction(ctx, dbtran.TranTypeFullSet, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {
@@ -149,9 +178,9 @@ func RoleFetch(app *application.Application, w http.ResponseWriter, r *http.Requ
 	fselmod = make([]models.RoleSelectModu, len(selmod))
 	for i, s := range selmod {
 		fselmod[i].Rolemasterid = s.Rolemasterid
-		fselmod[i].Rolename = s.Name
-		fselmod[i].Roledisplayname = s.Roledisplay
-		fselmod[i].Roledescription = s.Description
+		fselmod[i].Rolename = s.Rmname
+		fselmod[i].Roledisplayname = s.Rmdisplayname
+		fselmod[i].Roledescription = s.Rmdescription
 		mapstructure.Decode(s.Modules, &fselmod[i].Modules)
 		createDataTree(&fselmod[i].Modules)
 	}
@@ -161,6 +190,299 @@ func RoleFetch(app *application.Application, w http.ResponseWriter, r *http.Requ
 
 }
 
+// PackageFetch returns menus and access rights for it for a user.
+// Parameters:
+// packfuncid --> If you want only the packsfuncs sent. Send the PACKID form AC.PACKS as array.
+//					This forcefully sent only those packs if it exists at company and user level(refer query)
+// companyid  --> Always send company id here
+//					Front don't send company id send userinfo.Companyid from calling side
+//					else send whatever company id received from front end
+// It returns PacksResp struct which is self explanatory and error.
+func Roleupdate(app *application.Application, w http.ResponseWriter, r *http.Request, rolereq *models.RolesaveReq) error {
+	fmt.Println("----------------- ROLE Update START -------------------")
+
+	var data string
+	var qry string
+	var err error
+	var rlmasid string
+	var mtx pgx.Tx
+	var dbtt dbtran.TranType
+
+	ctx := r.Context()
+	//userinfo, ok := ctx.Value(fireauth.UserContextKey).(fireauth.User)
+
+	userinfo, errs := FetchUserinfoFromcontext(w, r, "ROLE-MASTER-UPDATE")
+	if errs != nil {
+		return errs
+	}
+
+	fmt.Println(userinfo)
+	//This will give all the modules available for role creation for the company -- START
+	//This is always has same value irrespective of company has role or not.
+
+	var rolemastresp []models.TblRolemaster
+	var stmts []*dbtran.PipelineStmt
+	var stmtcp *dbtran.PipelineStmt
+	var myc dbtran.Resultset
+	rlmas := rolereq.Rolemaster
+	rldet := rolereq.Roledetails
+	rladt := rolereq.Audit
+	dbtt = dbtran.TranTypeFullSet
+	mtx = nil
+	valid := map[string]bool{"I": true, "U": true}
+	validadt := map[string]bool{"I": true, "U": true, "M": true}
+	fmt.Println(rlmas)
+	if rlmas.Action != "D" {
+		if valid[rlmas.Action] {
+			switch rlmas.Action {
+			case "I":
+				fmt.Println("Inside delete")
+				qry = `INSERT INTO ac.ROLEMASTER VALUES (DEFAULT,$1,$2,$3,$4,$5,$6,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) RETURNING *;`
+
+				stmts = []*dbtran.PipelineStmt{
+					dbtran.NewPipelineStmt("select", qry, &rolemastresp, rlmas.Rolename, rlmas.Roledisplayname, rlmas.Roledescription, rolereq.Companyid, rolereq.Branchid, "A"),
+				}
+
+			case "U":
+				fmt.Println("Inside update")
+				qry = `UPDATE ac.ROLEMASTER 
+				SET rmname = $1, rmdisplayname = $2, rmdescription = $3, lmtime = CURRENT_TIMESTAMP
+				WHERE rolemasterid = $4 AND companyid = $5 
+		    		RETURNING *;`
+
+				stmts = []*dbtran.PipelineStmt{
+					dbtran.NewPipelineStmt("select", qry, &rolemastresp, rlmas.Rolename, rlmas.Roledisplayname, rlmas.Roledescription, rlmas.Rolemasterid, rolereq.Companyid),
+				}
+			}
+
+			mtx, err = dbtran.WithTransaction(ctx, dbtt, app.DB.Client, mtx, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {
+				err := dbtran.RunPipeline(ctx, typ, db, ttx, stmts...)
+				return err
+			})
+
+			fmt.Println("Just outside ")
+			fmt.Println(rolemastresp)
+			fmt.Println(err)
+
+			if err != nil {
+				goto mydberr
+			}
+			dbtt = dbtran.TranTypeLastSet
+		}
+
+		fmt.Println("----------------- ROLE master Update done -------------------")
+		fmt.Println(rolemastresp)
+		if rlmas.Rolemasterid == "NEW" {
+			rlmasid = rolemastresp[0].Rolemasterid
+		} else {
+			rlmasid = rlmas.Rolemasterid
+		}
+
+		fmt.Println(len(rldet))
+		stmts = []*dbtran.PipelineStmt{}
+
+		if len(rldet) > 0 {
+			fmt.Println("rldet count")
+			for _, s := range rldet {
+				s.Rolemasterid = rlmasid
+				stmtcp = nil
+				fmt.Println("record val", s)
+				switch s.Action {
+				case "I":
+					qry = `INSERT INTO ac.ROLEDETAILS (rdrolemasterid, rdpackfuncid,  companyid, branchid,rdallowedopsval,octime,lmtime) 
+			VALUES ($1,$2,$3,$4,$5,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ;`
+					stmts = append(stmts, dbtran.NewPipelineStmt("insert", qry, &myc, s.Rolemasterid, s.Packid, rolereq.Companyid, rolereq.Branchid, s.Allowedopsval))
+
+				case "U":
+					qry = `UPDATE ac.ROLEDETAILS 
+					SET rdallowedopsval = $1, lmtime = CURRENT_TIMESTAMP
+					WHERE rdrolemasterid = $2 AND roledetailid = $3 AND  companyid = $4 ;`
+
+					stmts = append(stmts, dbtran.NewPipelineStmt("update", qry, &myc, s.Allowedopsval, s.Rolemasterid, s.Roledetailid, rolereq.Companyid))
+
+				case "D":
+					qry = `DELETE FROM ac.ROLEDETAILS 				
+						WHERE rolemasterid = $1 AND rdroledetailid = $2 AND rdpackfuncid = $3 AND companyid = $4;`
+
+					stmts = append(stmts, dbtran.NewPipelineStmt("delete", qry, &myc, s.Rolemasterid, s.Roledetailid, s.Packid, rolereq.Companyid))
+
+				}
+				fmt.Println("-------------------stmts both--------------")
+				fmt.Println(stmtcp)
+				fmt.Println(stmts)
+
+			}
+
+			fmt.Println("-------------------stmts--------------")
+			fmt.Println(stmts)
+
+			_, err = dbtran.WithTransaction(ctx, dbtt, app.DB.Client, mtx, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {
+				err := dbtran.RunPipeline(ctx, typ, db, ttx, stmts...)
+				return err
+			})
+
+			if err != nil {
+				goto mydberr
+			}
+
+		}
+	} else {
+		//Delete Rolemaster and its Roledetails
+		fmt.Println("Delete the rolemaster")
+		qry = `UPDATE ac.ROLEMASTER 
+	SET rmstatus = 'D' , lmtime = CURRENT_TIMESTAMP
+	WHERE rolemasterid = $1 AND companyid = $2 ;`
+		fmt.Println(rlmas)
+		fmt.Println(rlmas.Rolemasterid)
+		stmts = []*dbtran.PipelineStmt{
+			dbtran.NewPipelineStmt("update", qry, &myc, rlmas.Rolemasterid, rolereq.Companyid),
+		}
+
+		_, err = dbtran.WithTransaction(ctx, dbtran.TranTypeFullSet, app.DB.Client, nil, func(ctx context.Context, typ dbtran.TranType, db *pgxpool.Pool, ttx dbtran.Transaction) error {
+			err := dbtran.RunPipeline(ctx, typ, db, ttx, stmts...)
+			return err
+		})
+
+		if err != nil {
+			goto mydberr
+		}
+	}
+
+	type auditentryargs struct {
+		Itemid string
+		Action string
+		Oldval interface{}
+		Newval interface{}
+		User   string
+		Time   time.Time
+	}
+
+	if validadt[rladt.Action] {
+
+		rladt.Itemkeys.Rolemasterid = rlmasid
+
+		args, err1 := json.Marshal(auditentryargs{Itemid: rladt.Itemid, Action: rladt.Action,
+			Oldval: rladt.Oldvalue, Newval: rladt.Newvalue,
+			User: userinfo.UUID, Time: time.Now()})
+
+		fmt.Println(err1)
+
+		if err := app.Que.Enquejob(&gue.Job{Type: "Auditentry", Args: args}); err != nil {
+
+			dd := httpresponse.SlugResponse{
+				Err:        err,
+				ErrType:    httpresponse.ErrorTypeDatabase,
+				RespWriter: w,
+				Request:    r,
+				Data:       map[string]interface{}{"message": data},
+				SlugCode:   "ROLE-MASTER-UPDATE-ENQUE",
+				LogMsg:     "update audit table -> Role audit update failed~rolemasterid: " + rlmasid,
+			}
+			//dd.HttpRespondWithError()
+			dd.HttpRespond()
+			return err
+			//return err
+		}
+	}
+
+mydberr:
+	if err != nil {
+		//https://github.com/jackc/pgx/issues/474
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			data = "Technical Error.  Please contact support"
+		}
+
+		//		dd := errors.SlugError{
+		dd := httpresponse.SlugResponse{
+			Err:        err,
+			ErrType:    httpresponse.ErrorTypeDatabase,
+			RespWriter: w,
+			Request:    r,
+			Data:       map[string]interface{}{"message": data},
+			SlugCode:   "ROLE-MASTER-UPDATE",
+			LogMsg:     pgErr.Error(),
+		}
+		dd.HttpRespond()
+		return err
+	}
+
+	//fmt.Println(availmod)
+	return err
+}
+
+/*
+
+fmt.Println("**********************&&&&&&&&&&&&&&&&&&&&&&&&&&&&^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+fmt.Println(rolereq)
+fmt.Println("**********************&&&&&&&&&&&&&&&&&&&&&&&&&&&&^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+
+					qry = `WITH MYVA AS (
+								SELECT c.COMPANYID,A.BRANCHID,B.Roledetailid,A.ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,c.icon,
+								c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,B.USERID,A.displayname as roledisplay,
+								--CASE WHEN (TRUE = ANY(B.ALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
+								'selectedmodules' AS basketname, false as open
+								from ac.COMPANYPACKS_PACKS_VIEW C
+								LEFT JOIN ac.rolemaster A ON A.COMPANYID = $1
+								LEFT JOIN ac.ROLE_USER_VIEW B ON A.COMPANYID = B.COMPANYID AND  B.packfuncid = C.PACKID AND B.USERID = $2 AND B.ROLEMASTERID = A.ROLEMASTERID
+								WHERE C.COMPANYID = $1 AND A.ROLEMASTERID is NOT NULL
+								ORDER BY A.ROLEMASTERID
+							) , MYVAOS AS  (
+								SELECT  COMPANYID,branchid,rolemasterid,packfuncid,ALLOWEDOPSVAL FROM  ac.ROLE_USER_VIEW WHERE COMPANYID = $1 AND rolemasterid in (select distinct rolemasterid from myva) GROUP BY companyid,branchid,rolemasterid,packfuncid,ALLOWEDOPSVAL
+							), MYLAST AS (SELECT Y.*,PO.allowedopsval,CASE WHEN (NULLIF(PO.allowedopsval, '{NULL}')) IS NULL AND (Y.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc FROM MYVA y
+								  JOIN MYVAOS as PO ON PO.COMPANYID = Y.COMPANYID AND PO.rolemasterid=Y.rolemasterid AND PO.Branchid = y.branchid AND PO.packfuncid = y.packid
+							) SELECT sd.rolemasterid,sd.name,sd.roledisplay,sd.description,json_agg(SD) AS modules FROM mylast sd GROUP BY  sd.rolemasterid,sd.name,sd.roledisplay,sd.description;`
+
+
+				qry = `WITH RECURSIVE MDATAR AS
+				(
+					SELECT * from ac.ROLE_USER_VIEW where companyid = $1
+				),
+				MyTree AS
+				(
+					SELECT C.COMPANYID,$2 As branchid,A.ROLEMASTERID,C.packid,c.name ,c.displayname ,c.description,c.type,c.parent,c.link,c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,A.allowedopsval,A.USERID,
+					A.rmDISPLAYNAME,A.rmname,A.rmdescription,A.rmstatus,
+					--CASE WHEN (TRUE = ANY(A.ALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
+					CASE WHEN (NULLIF(A.allowedopsval, '{NULL}')) IS NULL AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
+					'SELECTedmodules' AS basketname, false as open
+					from ac.COMPANYPACKS_PACKS_VIEW C
+					LEFT JOIN MDATAR A ON A.packfuncid = C.PACKID
+					WHERE PACKGROUPID = (SELECT DISTINCT unnest(PACKGROUPID) FROM AC.PACKS where PACKID IN (SELECT DISTINCT PACKID FROM MDATAR))
+						UNION
+					SELECT C.COMPANYID,$2 As branchid,T.ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,A.allowedopsval,A.USERID,
+					t.rmDISPLAYNAME,t.rmname,t.rmdescription,t.rmstatus,
+					--CASE WHEN (TRUE = ANY(A.ALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
+					CASE WHEN (NULLIF(A.allowedopsval, '{NULL}')) IS NULL AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
+					'SELECTedmodules' AS basketname, false as open
+					from ac.COMPANYPACKS_PACKS_VIEW C
+					LEFT JOIN MDATAR A ON  A.packfuncid = C.PACKID
+					JOIN MyTree AS t ON C.packid = ANY(t.parent)
+
+				),MYLAST AS (
+				SELECT * FROM MyTree
+				WHERE COMPANYID = $1
+			)SELECT sd.rolemasterid,sd.rmname,sd.rmdisplayname ,sd.rmdescription,json_agg(SD) AS modules FROM mylast sd GROUP BY  sd.rolemasterid,sd.rmname,sd.rmdisplayname ,sd.rmdescription;`
+
+
+		qry = `WITH RECURSIVE MDATAR AS
+		(
+			SELECT * from ac.ROLE_USER_VIEW where companyid = $1
+		),
+		MyTree AS
+		(
+			SELECT C.COMPANYID,$2 As branchid,A.ROLEMASTERID,C.packid,c.name ,c.displayname ,c.description,c.type,c.parent,c.link,c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,A.allowedopsval,A.USERID,
+			A.rmDISPLAYNAME,A.rmname,A.rmdescription,A.rmstatus,
+			--CASE WHEN (TRUE = ANY(A.ALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
+			CASE WHEN (NULLIF(A.allowedopsval, '{NULL}')) IS NULL AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
+			'SELECTedmodules' AS basketname, false as open
+			from ac.COMPANYPACKS_PACKS_VIEW C
+			LEFT JOIN MDATAR A ON A.packfuncid = C.PACKID
+			WHERE PACKGROUPID && (SELECT DISTINCT unnest(PACKGROUPID) FROM AC.PACKS where PACKID IN (SELECT DISTINCT PACKID FROM MDATAR))
+		),MYLAST AS (
+		SELECT * FROM MyTree
+		WHERE COMPANYID = $1
+	)SELECT sd.rolemasterid,sd.rmname,sd.rmdisplayname ,sd.rmdescription,json_agg(SD) AS modules FROM mylast sd GROUP BY  sd.rolemasterid,sd.rmname,sd.rmdisplayname ,sd.rmdescription;`
+*/
 /*
 func remove(slice []models.TtblMytree, s int) []models.TtblMytree {
 	return append(slice[:s], slice[s+1:]...)
@@ -696,7 +1018,17 @@ func remove(slice []models.TtblMytree, s int) []models.TtblMytree {
 																			AND startdate <=  CURRENT_DATE
 																			AND expirydate >= CURRENT_DATE
 																	)
-																)
+																)WITH MYP AS(
+SELECT DISTINCT RDPACKFUNCID FROM AC.ROLEDETAILS WHERE RDROLEMASTERID IN (SELECT ROLEMASTERID FROM AC.userrole WHERE userid = 'aeMhBaHZB0ShHXf8QmhLSZ4Ap9m2' AND COMPANYID = 'CPYID21')
+	), MYPF AS (
+			SELECT z.*,a.*,b.roledetailid,b.rdallowedopsval,
+			CASE WHEN c.RDPACKFUNCID IS NULL THEN FALSE ELSE TRUE END as USERPACKSIDACCESS
+			FROM AC.COMPANYPACKS_PACKS_VIEW z
+			CROSS JOIN ac.rolemaster a
+			LEFT JOIN ac.roledetails b ON a.rolemasterid = b.rdrolemasterid AND z.packid = b.rdpackfuncid AND B.COMPANYID = Z.COMPANYID
+			LEFT JOIN MYP c ON z.PACKFUNCID = c.RDPACKFUNCID
+		) select *
+		from MYPF
 																UNION
 																SELECT M.*,false as open,N.roledetailid,N.rolemasterid,N.allowedopsval,'Selectedmodules' AS basketname FROM ac.packs M
 																LEFT JOIN ac.roledetails N ON M.packid = N.PACKFUNCID
