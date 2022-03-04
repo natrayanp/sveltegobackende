@@ -53,7 +53,7 @@ CREATE TABLE ac.userlogin (
 
 CREATE SEQUENCE ac.companyid_seq START 1;
 
---- Domain map table which allow user to user their own URL
+--- Domain map table which allow user to use their own URL
 
 CREATE TABLE ac.domainmap (
     domainmapid varchar(100) NOT NULL DEFAULT 'DMAPID'||nextval('ac.companyid_seq'::regclass)::varchar(100),
@@ -87,6 +87,37 @@ CREATE TABLE ac.loginh (
     logintime                  timestamptz NOT NULL, 
     logoutime                  timestamptz 
 );
+
+
+
+CREATE TABLE ac.userprofile (
+    usrprof_userid 		        varchar(100) NOT NULL,  -- User id from ac.userlogin
+    usrprof_firstname           varchar(100) NOT NULL,
+    usrprof_lastname            varchar(100) NOT NULL,
+    usrprof_designation         varchar(100) NOT NULL,
+    usrprof_department          varchar(100) NOT NULL,
+    usrprof_gender              varchar(100) NOT NULL,
+    usrprof_dob                 date NOT NULL,
+    usrprof_AddLine1            varchar(100) NOT NULL,
+    usrprof_AddLine2            varchar(100) NOT NULL,
+    usrprof_city                varchar(100) NOT NULL,
+    usrprof_state               varchar(100) NOT NULL,
+    usrprof_country             varchar(100) NOT NULL,
+    usrprof_pinCode             varchar(50)	 NOT NULL,
+    usrprof_mobile              text,
+    usrprof_email               text,
+    usrprof_joiningdate         date NOT NULL,
+    usrprof_lastdate            date NOT NULL,
+    usrprof_taxid               date NOT NULL,
+    usrprof_companyid           varchar(100),
+    usrprof_edurefid            varchar(50),  -- future implementation
+    usrprof_exprefid            varchar(50),  -- future implementation
+    usrprof_octime			    timestamptz NOT NULL,
+    usrprof_lmtime			    timestamptz NOT NULL
+);
+
+
+
 
 
 -- Packages
@@ -289,7 +320,7 @@ insert into ac.defaultroledetails values ('DROLDET6','ROLMA2','PKS12','PUBLIC','
 */
 
 --userrole
-
+/*
 CREATE TABLE ac.userrole ( 
     userid 		          varchar(100) NOT NULL,
     rolemasterid          varchar(20) NOT NULL,       
@@ -300,6 +331,19 @@ CREATE TABLE ac.userrole (
     octime			      timestamptz NOT NULL,
     lmtime			      timestamptz NOT NULL
 );
+*/
+
+CREATE TABLE ac.userrole ( 
+    usrrole_userid 		          varchar(100) NOT NULL,
+    usrrole_rolemasterid          varchar(20)[] NOT NULL,       
+    usrrole_companyid             varchar(30) NOT NULL,
+    usrrole_userbranchacess       varchar(30) NOT NULL,      
+    usrrole_status                varchar(3) NOT NULL,  --> D -Delete / A - Active
+    usrrole_isdefault             varchar(3) NOT NULL,  --> Y/N
+    usrrole_octime			      timestamptz NOT NULL,
+    usrrole_lmtime			      timestamptz NOT NULL
+);
+
 
 
 CREATE SEQUENCE ac.refid_seq START 1;
@@ -430,13 +474,6 @@ CREATE TABLE ac.branch (
 
 
 
-
-
-
-
-
-
-
 CREATE SEQUENCE ac.auditid_sequence START 1;
 
 CREATE TABLE ac.audit (
@@ -446,19 +483,12 @@ CREATE TABLE ac.audit (
     itemid         varchar(100) NOT NULL,-- Role/packs
     itemkeys        JSONB NOT NULL,
     action          varchar(3) NOT NULL,-- A-ADD/E-EDIT/D-DELETE
-    oldvalue        JSONB NOT NULL,-- old value of the fields
-    newvalue        JSONB NOT NULL,-- New values of the fields
+    oldvalue        JSONB[] NOT NULL,-- old value of the fields
+    newvalue        JSONB[] NOT NULL,-- New values of the fields
     companyid       varchar(100),
     actionuser      varchar(100) NOT NULL,-- modified user
     octime          timestamptz NOT NULL -- server time of the update
 );
-
-
-
-
-
-
-
 
 
 
@@ -498,19 +528,19 @@ WITH recursive COMPANYPACKSVIEW AS(
 */
 
 CREATE VIEW ac.ROLE_USER_VIEW AS(
- SELECT a.companyid,
-    a.branchid,
+ SELECT a.rmcompanyid,
+    a.rmbranchid,
     a.rolemasterid,
     a.rmname,
     a.rmdisplayname,
     a.rmdescription,
     a.rmstatus,
     b.roledetailid,
-    b.packfuncid,
-    b.allowedopsval,
-    c.userid,
-    c.userbranchacess
+    b.rdpackfuncid,
+    b.rdallowedopsval,
+    c.usrrole_userid as userid,
+    c.usrrole_userbranchacess as userbranchacess
    FROM ac.rolemaster a
-     LEFT JOIN ac.roledetails b ON a.rolemasterid = b.rolemasterid
-     LEFT JOIN ac.userrole c ON a.rolemasterid = c.rolemasterid
+     LEFT JOIN ac.roledetails b ON a.rolemasterid = b.rdrolemasterid
+     LEFT JOIN ac.userrole c ON a.rolemasterid = ANY(c.usrrole_rolemasterid)
 );

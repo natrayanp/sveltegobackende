@@ -63,11 +63,11 @@ func RoleFetch(app *application.Application, w http.ResponseWriter, r *http.Requ
 	*/
 
 	qry = `WITH MY AS (
-				SELECT DISTINCT RDPACKFUNCID FROM AC.ROLEDETAILS WHERE RDROLEMASTERID IN (SELECT ROLEMASTERID FROM AC.userrole WHERE userid = $1 AND COMPANYID = $2)
+				SELECT DISTINCT RDPACKFUNCID FROM AC.ROLEDETAILS WHERE RDROLEMASTERID IN (SELECT RDROLEMASTERID FROM AC.userrole WHERE usrrole_userid = $1 AND usrrole_companyid = $2)
 			), MYPF AS (
 		   		SELECT z.*,'PUBLIC' AS BRANCHID,'' AS Roledetailid,'' AS ROLEMASTERID,
 				CASE WHEN d.RDPACKFUNCID IS NULL THEN TRUE ELSE FALSE END as disablefunc,
-				array_fill(FALSE, ARRAY[array_length(Z.allowedops,1)])  AS allowedopsval,
+				array_fill(FALSE, ARRAY[array_length(Z.allowedops,1)])  AS rdallowedopsval,
 				--CASE WHEN (NULLIF(b.rdallowedopsval, '{NULL}')) IS NULL AND (z.TYPE IN ('function','module')) THEN TRUE ELSE FALSE END AS disablefunc,
 				'Availablemodules' AS basketname, false as open
 		   		FROM AC.COMPANYPACKS_PACKS_VIEW z
@@ -126,22 +126,22 @@ func RoleFetch(app *application.Application, w http.ResponseWriter, r *http.Requ
 
 	/* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@*/
 	qry = ` WITH MY AS (
-				SELECT DISTINCT RDPACKFUNCID FROM AC.ROLEDETAILS WHERE RDROLEMASTERID IN (SELECT ROLEMASTERID FROM AC.userrole WHERE userid = $1 AND COMPANYID = $2)
+				SELECT DISTINCT RDPACKFUNCID FROM AC.ROLEDETAILS WHERE RDROLEMASTERID IN (SELECT RDROLEMASTERID FROM AC.userrole WHERE usrrole_userid = $1 AND usrrole_companyid = $2)
 		), MYP AS(
 	   			
 				   SELECT distinct rdrolemasterid,packgroupid gid FROM AC.ROLEDETAILS A
 				   LEFT JOIN AC.PACKS B ON A.rdpackfuncid = B.PACKID			   
 	   	), MYPF AS (
-	   			SELECT z.*,a.*,b.roledetailid,b.rdallowedopsval as allowedopsval,
+	   			SELECT z.*,a.*,b.roledetailid,b.rdallowedopsval,
 	   			CASE WHEN d.RDPACKFUNCID IS NULL THEN TRUE ELSE FALSE END as disablefunc,
 				--CASE WHEN (NULLIF(b.rdallowedopsval, '{NULL}')) IS NULL AND (z.TYPE IN ('function','module')) THEN TRUE ELSE FALSE END AS disablefunc,
 				'selectedmodules' AS basketname, false as open
 	   			FROM AC.COMPANYPACKS_PACKS_VIEW z
 	   			CROSS JOIN ac.rolemaster a
-	   			LEFT JOIN ac.roledetails b ON a.rolemasterid = b.rdrolemasterid AND z.packid = b.rdpackfuncid AND B.COMPANYID = Z.COMPANYID
+	   			LEFT JOIN ac.roledetails b ON a.rolemasterid = b.rdrolemasterid AND z.packid = b.rdpackfuncid AND B.rdcompanyid = Z.COMPANYID
 	   			LEFT JOIN MY d ON z.PACKFUNCID = d.RDPACKFUNCID
 				JOIN MYP c on a.rolemasterid = c.rdrolemasterid AND z.packgroupid = c.gid 
-	   			where  a.COMPANYID != 'PUBLIC' AND z.COMPANYID =  $2 AND a.rmstatus NOT IN ('D')
+	   			where  a.rmcompanyid != 'PUBLIC' AND z.COMPANYID =  $2 AND a.rmstatus NOT IN ('D')
 	   		) select SD.ROLEMASTERID,SD.RMNAME,SD.RMDISPLAYNAME,SD.RMDESCRIPTION,json_agg(SD) AS modules FROM MYPF sd GROUP BY  sd.rolemasterid,sd.rmname,sd.rmdisplayname ,sd.rmdescription;`
 	/*@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@*/
 
@@ -230,8 +230,10 @@ func Roleupdate(app *application.Application, w http.ResponseWriter, r *http.Req
 	dbtt = dbtran.TranTypeFullSet
 	mtx = nil
 	valid := map[string]bool{"I": true, "U": true}
-	validadt := map[string]bool{"I": true, "U": true, "M": true}
+	validadt := map[string]bool{"I": true, "U": true, "M": true, "D": true}
 	fmt.Println(rlmas)
+	fmt.Println(rldet)
+	fmt.Println(rladt)
 	if rlmas.Action != "D" {
 		if valid[rlmas.Action] {
 			switch rlmas.Action {
@@ -247,7 +249,7 @@ func Roleupdate(app *application.Application, w http.ResponseWriter, r *http.Req
 				fmt.Println("Inside update")
 				qry = `UPDATE ac.ROLEMASTER 
 				SET rmname = $1, rmdisplayname = $2, rmdescription = $3, lmtime = CURRENT_TIMESTAMP
-				WHERE rolemasterid = $4 AND companyid = $5 
+				WHERE rolemasterid = $4 AND rmcompanyid = $5 
 		    		RETURNING *;`
 
 				stmts = []*dbtran.PipelineStmt{
@@ -289,20 +291,20 @@ func Roleupdate(app *application.Application, w http.ResponseWriter, r *http.Req
 				fmt.Println("record val", s)
 				switch s.Action {
 				case "I":
-					qry = `INSERT INTO ac.ROLEDETAILS (rdrolemasterid, rdpackfuncid,  companyid, branchid,rdallowedopsval,octime,lmtime) 
+					qry = `INSERT INTO ac.ROLEDETAILS (rdrolemasterid, rdpackfuncid,  rdcompanyid, rdbranchid,rdallowedopsval,octime,lmtime) 
 			VALUES ($1,$2,$3,$4,$5,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) ;`
 					stmts = append(stmts, dbtran.NewPipelineStmt("insert", qry, &myc, s.Rolemasterid, s.Packid, rolereq.Companyid, rolereq.Branchid, s.Allowedopsval))
 
 				case "U":
 					qry = `UPDATE ac.ROLEDETAILS 
 					SET rdallowedopsval = $1, lmtime = CURRENT_TIMESTAMP
-					WHERE rdrolemasterid = $2 AND roledetailid = $3 AND  companyid = $4 ;`
+					WHERE rdrolemasterid = $2 AND roledetailid = $3 AND  rdcompanyid = $4 ;`
 
 					stmts = append(stmts, dbtran.NewPipelineStmt("update", qry, &myc, s.Allowedopsval, s.Rolemasterid, s.Roledetailid, rolereq.Companyid))
 
 				case "D":
 					qry = `DELETE FROM ac.ROLEDETAILS 				
-						WHERE rolemasterid = $1 AND rdroledetailid = $2 AND rdpackfuncid = $3 AND companyid = $4;`
+						WHERE rdrolemasterid = $1 AND roledetailid = $2 AND rdpackfuncid = $3 AND rdcompanyid = $4;`
 
 					stmts = append(stmts, dbtran.NewPipelineStmt("delete", qry, &myc, s.Rolemasterid, s.Roledetailid, s.Packid, rolereq.Companyid))
 
@@ -330,8 +332,8 @@ func Roleupdate(app *application.Application, w http.ResponseWriter, r *http.Req
 		//Delete Rolemaster and its Roledetails
 		fmt.Println("Delete the rolemaster")
 		qry = `UPDATE ac.ROLEMASTER 
-	SET rmstatus = 'D' , lmtime = CURRENT_TIMESTAMP
-	WHERE rolemasterid = $1 AND companyid = $2 ;`
+				SET rmstatus = 'D' , lmtime = CURRENT_TIMESTAMP
+				WHERE rolemasterid = $1 AND rmcompanyid = $2 ;`
 		fmt.Println(rlmas)
 		fmt.Println(rlmas.Rolemasterid)
 		stmts = []*dbtran.PipelineStmt{
@@ -349,21 +351,35 @@ func Roleupdate(app *application.Application, w http.ResponseWriter, r *http.Req
 	}
 
 	type auditentryargs struct {
-		Itemid string
-		Action string
-		Oldval interface{}
-		Newval interface{}
-		User   string
-		Time   time.Time
+		Itemid    string
+		Itemkeys  interface{}
+		Action    string
+		Oldval    interface{}
+		Newval    interface{}
+		Companyid string
+		User      string
+		Time      time.Time
 	}
+
+	fmt.Println("reoleops audit")
+	fmt.Println(rladt)
+	fmt.Println(rladt.Action)
+	fmt.Println(validadt[rladt.Action])
+	fmt.Println(rlmasid)
 
 	if validadt[rladt.Action] {
 
 		rladt.Itemkeys.Rolemasterid = rlmasid
 
-		args, err1 := json.Marshal(auditentryargs{Itemid: rladt.Itemid, Action: rladt.Action,
-			Oldval: rladt.Oldvalue, Newval: rladt.Newvalue,
-			User: userinfo.UUID, Time: time.Now()})
+		args, err1 := json.Marshal(auditentryargs{
+			Itemid:    rladt.Itemid,
+			Itemkeys:  rladt.Itemkeys,
+			Action:    rladt.Action,
+			Oldval:    rladt.Oldvalue,
+			Newval:    rladt.Newvalue,
+			Companyid: rolereq.Companyid,
+			User:      userinfo.UUID,
+			Time:      time.Now()})
 
 		fmt.Println(err1)
 

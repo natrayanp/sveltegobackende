@@ -40,7 +40,8 @@ var assign_role_after_domain_regis = func(j *gue.Job) error {
 	}
 
 	//Apply "SignupAdmin" = 'ROLMA1' role to the user after domain registration
-	const qry = `INSERT INTO ac.userrole VALUES ($1,'ROLMA1',$2,ARRAY['ALL'],'A','Y',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`
+	//const qry = `INSERT INTO ac.userrole VALUES ($1,'ROLMA1',$2,ARRAY['ALL'],'A','Y',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`
+	const qry = `INSERT INTO ac.userrole VALUES ($1,ARRAY['ROLMA1'],$2,'ALL','A','Y',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`
 
 	_, err := j.Tx().Exec(context.Background(), qry, args.UUID, args.Cpid)
 
@@ -64,23 +65,36 @@ var assign_role_after_domain_regis = func(j *gue.Job) error {
 }
 
 type auditentryargs struct {
-	Itemid string
-	Action string
-	Oldval interface{}
-	Newval interface{}
-	User   string
-	Time   time.Time
+	Itemid    string
+	Itemkeys  interface{}
+	Action    string
+	Oldval    interface{}
+	Newval    interface{}
+	Companyid string
+	User      string
+	Time      time.Time
 }
 
 var audit_entry = func(j *gue.Job) error {
+	fmt.Println("---------------- AUDIT STARTS ------------------")
+	fmt.Println("i am printing inside audit entry")
 	var args auditentryargs
 	if err := json.Unmarshal(j.Args, &args); err != nil {
+		fmt.Println(")))))))))))))")
+		fmt.Println(err)
 		return err
 	}
 
-	const qry = `INSERT INTO ac.audit VALUES (DEFAULT,$1,$2,$3,$4,$5,$6)`
-
-	_, err := j.Tx().Exec(context.Background(), qry, args.Itemid, args.Action, args.Oldval, args.Newval, args.User, args.Time)
+	fmt.Println(args)
+	const qry = `INSERT INTO ac.audit VALUES (DEFAULT,$1,$2,$3,$4,$5,$6,$7,$8)`
+	ol := fmt.Sprintf("%v", args.Oldval)
+	ne := fmt.Sprintf("%v", args.Newval)
+	fmt.Println(ol)
+	fmt.Println(ne)
+	//_, err := j.Tx().Exec(context.Background(), qry, args.Itemid, args.Action, args.Oldval, args.Newval, args.User, args.Time)
+	_, err := j.Tx().Exec(context.Background(), qry, args.Itemid, args.Itemkeys, args.Action, args.Oldval, args.Newval, args.Companyid, args.User, args.Time)
+	fmt.Println(")))))))))))))+++++++++++++++")
 	fmt.Println(err)
+	fmt.Println("---------------- AUDIT ENDS ------------------")
 	return nil
 }

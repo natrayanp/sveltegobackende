@@ -63,38 +63,38 @@ type TblMytree struct {
 }
 */
 type TtblMytree struct {
-	Companyid     string        `json:"companyid"`
-	Branchid      string        `json:"branchid"`
-	Rolemasterid  string        `json:"rolemasterid"`
-	Packid        string        `json:"packid"`
-	Packfuncid    string        `json:"packfuncid"`
-	Status        string        `json:"Status"`
-	Name          string        `json:"name"`
-	Displayname   string        `json:"displayname"`
-	Description   string        `json:"description"`
-	Type          string        `json:"type"`
-	Parent        []*string     `json:"parent"`
-	Link          *string       `json:"link"`
-	Icon          *string       `json:"icon"`
-	Startdate     time.Time     `json:"startdate"`
-	Expirydate    time.Time     `json:"expirydate"`
-	Userrolelimit *int          `json:"userrolelimit"`
-	Userlimit     *int          `json:"userlimit"`
-	Branchlimit   *int          `json:"branchlimit"`
-	Compstatus    string        `json:"Compstatus"`
-	Sortorder     int           `json:"sortorder"`
-	Menulevel     string        `json:"menulevel"`
-	Allowedops    []bool        `json:"allowedops"`
-	Allowedopsval []bool        `json:"allowedopsval"`
-	Userid        *string       `json:"userid"`
-	Disablefunc   bool          `json:"disablefunc"`
-	Basketname    string        `json:"basketname"`
-	Open          bool          `json:"open"`
-	Submenu       []*TtblMytree `json:"submenu"`
-	Roledetailid  *string       `json:"roledetailid"`
-	Packgroupid   []*string     `json:"packgroupid"`
-	Octime        time.Time     `json:"creattime"`
-	Lmtime        time.Time     `json:"lasmodifytime"`
+	Companyid       string        `json:"companyid"`
+	Branchid        string        `json:"branchid"`
+	Rolemasterid    string        `json:"rolemasterid"`
+	Packid          string        `json:"packid"`
+	Packfuncid      string        `json:"packfuncid"`
+	Status          string        `json:"Status"`
+	Name            string        `json:"name"`
+	Displayname     string        `json:"displayname"`
+	Description     string        `json:"description"`
+	Type            string        `json:"type"`
+	Parent          []*string     `json:"parent"`
+	Link            *string       `json:"link"`
+	Icon            *string       `json:"icon"`
+	Startdate       time.Time     `json:"startdate"`
+	Expirydate      time.Time     `json:"expirydate"`
+	Userrolelimit   *int          `json:"userrolelimit"`
+	Userlimit       *int          `json:"userlimit"`
+	Branchlimit     *int          `json:"branchlimit"`
+	Compstatus      string        `json:"Compstatus"`
+	Sortorder       int           `json:"sortorder"`
+	Menulevel       string        `json:"menulevel"`
+	Allowedops      []bool        `json:"allowedops"`
+	Rdallowedopsval []bool        `json:"allowedopsval"`
+	Userid          *string       `json:"userid"`
+	Disablefunc     bool          `json:"disablefunc"`
+	Basketname      string        `json:"basketname"`
+	Open            bool          `json:"open"`
+	Submenu         []*TtblMytree `json:"submenu"`
+	Roledetailid    *string       `json:"roledetailid"`
+	Packgroupid     []*string     `json:"packgroupid"`
+	Octime          time.Time     `json:"creattime"`
+	Lmtime          time.Time     `json:"lasmodifytime"`
 }
 
 /*
@@ -278,8 +278,8 @@ type TblRolemaster struct {
 	Rmname        string    `json:"name"`
 	Rmdisplayname string    `json:"displayname"`
 	Rmdescription string    `json:"description"`
-	Companyid     string    `json:"companyid"`
-	Branchid      string    `json:"branchid"`
+	Rmcompanyid   string    `json:"companyid"`
+	Rmbranchid    string    `json:"branchid"`
 	Rmstatus      *string   `json:"status"`
 	Octime        time.Time `json:"octime"`
 	Lmtime        time.Time `json:"lmtime"`

@@ -168,24 +168,24 @@ func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.R
 
 		qry = `WITH RECURSIVE MDATA AS 
 		(
-			SELECT * from ac.ROLE_USER_VIEW where userid = $1 AND companyid = $2 AND packfuncid = ANY($3::varchar[])
+			SELECT * from ac.ROLE_USER_VIEW where userid = $1 AND rmcompanyid = $2 AND rdpackfuncid = ANY($3::varchar[])
 				UNION
-			SELECT * from ac.ROLE_USER_VIEW where userid = $1 AND companyid = 'PUBLIC' AND packfuncid = ANY($3::varchar[])
-			AND (SELECT count(DISTINCT COMPANYID) from ac.ROLE_USER_VIEW where userid = $1 AND companyid = $2) = 0
+			SELECT * from ac.ROLE_USER_VIEW where userid = $1 AND rmcompanyid = 'PUBLIC' AND rdpackfuncid = ANY($3::varchar[])
+			AND (SELECT count(DISTINCT RMCOMPANYID) from ac.ROLE_USER_VIEW where userid = $1 AND rmcompanyid = $2) = 0
 		),  
 		MyTree AS 
 		(
-			SELECT C.COMPANYID,'' As branchid,A.ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,A.allowedopsval,A.USERID,
-			CASE WHEN (TRUE = ANY(A.ALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
+			SELECT C.COMPANYID,'' As branchid,A.ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,A.rdallowedopsval,A.USERID,
+			CASE WHEN (TRUE = ANY(A.RDALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
 			'SELECTedmodules' AS basketname, false as open
 			from ac.COMPANYPACKS_PACKS_VIEW C
-			JOIN MDATA A ON A.packfuncid = C.PACKID AND C.menulevel IN ('COMPANY')
+			JOIN MDATA A ON A.rdpackfuncid = C.PACKID AND C.menulevel IN ('COMPANY')
 				UNION
-			SELECT C.COMPANYID,'' As branchid,T.ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,A.allowedopsval,A.USERID,
-			CASE WHEN (TRUE = ANY(A.ALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
+			SELECT C.COMPANYID,'' As branchid,T.ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,A.rdallowedopsval,A.USERID,
+			CASE WHEN (TRUE = ANY(A.RDALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
 			'SELECTedmodules' AS basketname, false as open
 			from ac.COMPANYPACKS_PACKS_VIEW C
-			LEFT JOIN MDATA A ON  A.packfuncid = C.PACKID AND C.menulevel IN ('COMPANY')
+			LEFT JOIN MDATA A ON  A.rdpackfuncid = C.PACKID AND C.menulevel IN ('COMPANY')
 			JOIN MyTree AS t ON C.packid = ANY(t.parent)	
 		)
 		SELECT * FROM MyTree 
@@ -382,24 +382,24 @@ func PackageFetch(app *application.Application, w http.ResponseWriter, r *http.R
 
 				qry = `WITH RECURSIVE MDATAC AS 
 				(
-					SELECT * from ac.ROLE_USER_VIEW where userid = $1 AND companyid = $2
+					SELECT * from ac.ROLE_USER_VIEW where userid = $1 AND rmcompanyid = $2
 						UNION
-					SELECT * from ac.ROLE_USER_VIEW where userid = $1 AND companyid = 'PUBLIC' 
-					AND (SELECT count(DISTINCT COMPANYID) from ac.ROLE_USER_VIEW where userid = $1 AND companyid = $2) = 0
+					SELECT * from ac.ROLE_USER_VIEW where userid = $1 AND rmcompanyid = 'PUBLIC' 
+					AND (SELECT count(DISTINCT RMCOMPANYID) from ac.ROLE_USER_VIEW where userid = $1 AND rmcompanyid = $2) = 0
 				),  
 				MyTree AS 
 				(
-					SELECT C.COMPANYID,'' As branchid,A.ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,A.allowedopsval,A.USERID,
-					CASE WHEN (TRUE = ANY(A.ALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
+					SELECT C.COMPANYID,'' As branchid,A.ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,A.rdallowedopsval,A.USERID,
+					CASE WHEN (TRUE = ANY(A.RDALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
 					'SELECTedmodules' AS basketname, false as open
 					from ac.COMPANYPACKS_PACKS_VIEW C
-					JOIN MDATAC A ON A.packfuncid = C.PACKID AND C.menulevel IN ('COMPANY')
+					JOIN MDATAC A ON A.rdpackfuncid = C.PACKID AND C.menulevel IN ('COMPANY')
 						UNION
-					SELECT C.COMPANYID,'' As branchid,T.ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,A.allowedopsval,A.USERID,
-					CASE WHEN (TRUE = ANY(A.ALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
+					SELECT C.COMPANYID,'' As branchid,T.ROLEMASTERID,C.packid,c.name,c.displayname,c.description,c.type,c.parent,c.link,c.icon,c.startdate,c.expirydate,c.userrolelimit,c.userlimit,c.branchlimit,c.compstatus,c.sortorder,c.menulevel,c.allowedops,A.rdallowedopsval,A.USERID,
+					CASE WHEN (TRUE = ANY(A.RDALLOWEDOPSVAL) IS NULL) AND (C.TYPE = 'function') THEN TRUE ELSE FALSE END AS disablefunc,
 					'SELECTedmodules' AS basketname, false as open
 					from ac.COMPANYPACKS_PACKS_VIEW C
-					LEFT JOIN MDATAC A ON  A.packfuncid = C.PACKID AND C.menulevel IN ('COMPANY')
+					LEFT JOIN MDATAC A ON  A.rdpackfuncid = C.PACKID AND C.menulevel IN ('COMPANY')
 					JOIN MyTree AS t ON C.packid = ANY(t.parent)	
 				)
 				SELECT * FROM MyTree 
