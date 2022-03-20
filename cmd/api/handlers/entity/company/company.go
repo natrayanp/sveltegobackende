@@ -64,7 +64,7 @@ func fetchCompany(app *application.Application) http.HandlerFunc {
 			},
 		}
 
-		fmt.Println("-------------------\n fetchCompany Start 1 \n-------------------")
+		fmt.Println("-------------------\n fetchCompany Start 1  comp\n-------------------")
 
 		if err := commonfuncs.RefDataFetch1(app, w, r, &ddf); err != nil {
 			return
@@ -72,7 +72,7 @@ func fetchCompany(app *application.Application) http.HandlerFunc {
 
 		fmt.Println(ddf.RefResult)
 
-		fmt.Println("-------------------\n fetchCompany Start 2 \n-------------------")
+		fmt.Println("-------------------\n fetchCompany Start 2 comp \n-------------------")
 
 		lgmsg := "Company Fetch successful.  But havecpy detail? = " + strconv.FormatBool(havcpydetail)
 		ssd := map[string]interface{}{"message": lgmsg, "company": cmpycp, "refdata": ddf.RefResult}

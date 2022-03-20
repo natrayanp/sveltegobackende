@@ -132,6 +132,8 @@ func authorisedRouter(app *application.Application) chi.Router {
 	r.Post("/savebranch", branch.DoBrSave(app))
 	r.Post("/getroles", roles.DoGet(app))
 	r.Post("/saveroles", roles.DoSave(app))
+	r.Post("/getmatrix", roles.DoGetmatrix(app))
+	r.Post("/savematrix", roles.DoSavematrix(app))
 
 	/*
 

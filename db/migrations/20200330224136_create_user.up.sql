@@ -112,6 +112,7 @@ CREATE TABLE ac.userprofile (
     usrprof_companyid           varchar(100),
     usrprof_edurefid            varchar(50),  -- future implementation
     usrprof_exprefid            varchar(50),  -- future implementation
+    usrprof_imagelink           text,
     usrprof_octime			    timestamptz NOT NULL,
     usrprof_lmtime			    timestamptz NOT NULL
 );
@@ -337,7 +338,7 @@ CREATE TABLE ac.userrole (
     usrrole_userid 		          varchar(100) NOT NULL,
     usrrole_rolemasterid          varchar(20)[] NOT NULL,       
     usrrole_companyid             varchar(30) NOT NULL,
-    usrrole_userbranchacess       varchar(30) NOT NULL,      
+    usrrole_branchidaccess       varchar(30) NOT NULL,      
     usrrole_status                varchar(3) NOT NULL,  --> D -Delete / A - Active
     usrrole_isdefault             varchar(3) NOT NULL,  --> Y/N
     usrrole_octime			      timestamptz NOT NULL,
@@ -539,8 +540,26 @@ CREATE VIEW ac.ROLE_USER_VIEW AS(
     b.rdpackfuncid,
     b.rdallowedopsval,
     c.usrrole_userid as userid,
-    c.usrrole_userbranchacess as userbranchacess
+    c.usrrole_branchidaccess as userbranchacess
    FROM ac.rolemaster a
      LEFT JOIN ac.roledetails b ON a.rolemasterid = b.rdrolemasterid
      LEFT JOIN ac.userrole c ON a.rolemasterid = ANY(c.usrrole_rolemasterid)
 );
+
+
+/*To get back the value as JSON format
+select json_agg(art)
+from (
+	select *,
+    	(select json_agg(b)
+		from (
+			select * 
+            from pfstklist where pfportfolioid = a.pfportfolioid ) as b
+         ) as pfstklist,
+        	(select json_agg(c)
+		from (
+			select * 
+            from pfmflist where pfportfolioid = a.pfportfolioid ) as c
+         ) as pfmflist
+	from pfmaindetail as a) art
+*/

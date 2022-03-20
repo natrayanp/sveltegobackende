@@ -12,37 +12,41 @@ import (
 	"github.com/sveltegobackend/pkg/mymiddleware"
 )
 
-func FetchRoles(app *application.Application) http.HandlerFunc {
+func FetchUserMatrix(app *application.Application) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("-------------------\n Fetch Role Start \n-------------------")
+		var datosend models.UserMatrixResp
 
 		defer r.Body.Close()
 
-		roledata := &models.RoleReq{}
-		json.NewDecoder(r.Body).Decode(roledata)
-		fmt.Println(roledata)
+		matrixreq := &models.UserMatrixReq{}
+		json.NewDecoder(r.Body).Decode(matrixreq)
+		fmt.Println(matrixreq)
 
-		rlRes, err := commonfuncs.RoleFetch(app, w, r, roledata)
+		matxRes, err := commonfuncs.UserMatrixFetch(app, w, r, matrixreq)
 		if err != nil {
 			return
 		}
 
+		datosend.Listmatrix = matxRes
+		datosend.Resptype = matrixreq.Optype
+
 		status := "SUCCESS"
 		lgmsg := "Role Fetch successful"
-		ssd := map[string]interface{}{"message": lgmsg, "roledata": rlRes}
+		ssd := map[string]interface{}{"message": lgmsg, "matrixdata": datosend}
 		cc := httpresponse.SlugResponse{
 			RespWriter: w,
 			Request:    r,
 			Data:       ssd,
 			Status:     status,
-			SlugCode:   "ROLE-FETCH",
+			SlugCode:   "USRMATRIX-FETCH",
 			LogMsg:     lgmsg,
 		}
 		cc.HttpRespond()
 	}
 }
 
-func SaveRoles(app *application.Application) http.HandlerFunc {
+func SaveUserMatrix(app *application.Application) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("-------------------\n Save Role Start \n-------------------")
 		var rlRes *models.RoleResp
@@ -95,10 +99,10 @@ func SaveRoles(app *application.Application) http.HandlerFunc {
 	}
 }
 
-func DoGet(app *application.Application) http.HandlerFunc {
-	return mymiddleware.Chain(FetchRoles(app))
+func DoGetmatrix(app *application.Application) http.HandlerFunc {
+	return mymiddleware.Chain(FetchUserMatrix(app))
 }
 
-func DoSave(app *application.Application) http.HandlerFunc {
-	return mymiddleware.Chain(SaveRoles(app))
+func DoSavematrix(app *application.Application) http.HandlerFunc {
+	return mymiddleware.Chain(SaveUserMatrix(app))
 }

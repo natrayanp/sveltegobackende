@@ -50,6 +50,17 @@ func (s SlugResponse) ErrorType() ErrorType {
 func (s SlugResponse) HttpRespond() {
 	fmt.Println(s.Err)
 	fmt.Println(s.Err != nil)
+
+	if s.Userinfo.Session == "" {
+		fmt.Println("Inside session ops - session nill")
+		userinfo, errs := FetchUserinfoFromcontext(s.RespWriter, s.Request, "PACKAGE-CHKCTX")
+		if errs != nil {
+			s.Err = errs
+		}
+
+		s.Userinfo.Session = userinfo.Session
+	}
+
 	if s.Err != nil {
 		log.GetLogEntry(s.Request).WithError(s.Err).WithField("error-slug", map[string]interface{}{"error": s.Data, "slugcode": s.SlugCode}).Warn(s.LogMsg)
 		if s.Status == "" {
@@ -58,6 +69,7 @@ func (s SlugResponse) HttpRespond() {
 	} else {
 		log.GetLogEntry(s.Request).WithField("slugcode", s.SlugCode).Info(s.LogMsg)
 	}
+
 	fmt.Println(s)
 	fmt.Println("s.Status")
 	fmt.Println(s.Status)
@@ -132,4 +144,31 @@ func structToMap(item interface{}) map[string]interface{} {
 	fmt.Println("return from println")
 	fmt.Println(res)
 	return res
+}
+
+func FetchUserinfoFromcontext(w http.ResponseWriter, r *http.Request, slugcode string) (*fireauth.User, error) {
+
+	ctx := r.Context()
+	userinfo, ok := ctx.Value(fireauth.GetUserCtxKey()).(fireauth.User)
+
+	//data := "Technical Error.  Please contact support"
+
+	if !ok {
+		err := fmt.Errorf("Empty context")
+		/*
+			dd := SlugResponse{
+				Err:        err,
+				ErrType:    ErrorTypeDatabase,
+				RespWriter: w,
+				Request:    r,
+				Data:       map[string]interface{}{"message": data},
+				SlugCode:   slugcode,
+				LogMsg:     "Context fetch error",
+			}
+			//dd.HttpRespond()
+		*/
+		return &fireauth.User{}, err
+	}
+	return &userinfo, nil
+
 }

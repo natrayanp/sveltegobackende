@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/sveltegobackend/cmd/api/models"
 	"github.com/sveltegobackend/pkg/application"
 	"github.com/sveltegobackend/pkg/db/dbtran"
 	"github.com/sveltegobackend/pkg/fireauth"
@@ -37,6 +36,7 @@ func SessionOps(app *application.Application, w http.ResponseWriter, r *http.Req
 
 		currentTime := time.Now().String()
 		mysess := getHash(userinfo.UUID+currentTime, "")
+		fmt.Println("----------------printing session------------------")
 		fmt.Println(mysess)
 
 		var myc dbtran.Resultset
@@ -75,13 +75,19 @@ func SessionOps(app *application.Application, w http.ResponseWriter, r *http.Req
 		//TODO check if session exists is it valid if not return error
 		fmt.Println("else loop")
 
-		qry3 := `SELECT count(1) FROM ac.loginh 
+		qry3 := `SELECT sessionid FROM ac.loginh 
 		WHERE userid = $1
 		AND companyid = $2
 		AND logoutime IS NULL
 		AND sessionid = $3`
 
-		var myc3 []models.ResultCount
+		//var myc3 []models.ResultCount
+
+		type SessionResult struct {
+			Sessionid *string
+		}
+
+		var myc3 []SessionResult
 
 		stmts := []*dbtran.PipelineStmt{
 			dbtran.NewPipelineStmt("select", qry3, &myc3, userinfo.UUID, userinfo.Companyid, userinfo.Session),
@@ -91,18 +97,21 @@ func SessionOps(app *application.Application, w http.ResponseWriter, r *http.Req
 			err := dbtran.RunPipeline(ctx, typ, db, ttx, stmts...)
 			return err
 		})
-		fmt.Println(err)
-		fmt.Println(myc3)
 		res := false
 		if err != nil {
 			res = true
 		}
-		if myc3[0].Count == 0 {
+		if len(myc3) == 1 {
+			res = true
+
+			if *(myc3[0].Sessionid) == userinfo.Session {
+				res = false
+			}
+		} else {
 			res = true
 		}
 
 		if res {
-			//		dd := errors.SlugError{
 			fmt.Println("going inside error")
 			var ds map[string]interface{}
 			var lms string

@@ -30,7 +30,7 @@ func getRefdata(app *application.Application) http.HandlerFunc {
 			Refs: p,
 		}
 
-		fmt.Println("-------------------\n fetchCompany Start 1 \n-------------------")
+		fmt.Println("-------------------\n fetchCompany Start 1 ref \n-------------------")
 
 		if err := commonfuncs.RefDataFetch1(app, w, r, &ddf); err != nil {
 			return
@@ -49,7 +49,7 @@ func getRefdata(app *application.Application) http.HandlerFunc {
 			LogMsg:     lgmsg,
 		}
 		cc.HttpRespond()
-		fmt.Println("-------------------\n fetchCompany Stop 1\n-------------------")
+		fmt.Println("-------------------\n fetchCompany Stop 1 ref\n-------------------")
 
 	}
 }

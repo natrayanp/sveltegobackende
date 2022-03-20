@@ -204,3 +204,51 @@ type Roleauditval struct {
 	Packid        string
 	Allowedopsval []bool
 }
+
+type Usermatrix struct {
+	Userid       string
+	Firstname    string
+	Lastname     string
+	Department   string
+	Designation  string
+	Gender       string
+	Addressline1 string
+	Addressline2 string
+	City         string
+	State        string
+	Country      string
+	Pincode      string
+	Dob          string
+	Mobile       *string
+	Email        *string
+	Joiningdate  string
+	Lastdate     string
+	Taxid        string
+	Companyid    string
+	Imagelink    *string
+	Userstatus   string
+	FullDetails  bool
+	Accessmatrix *[]Usermatrix_accessmatrix
+}
+
+type Usermatrix_accessmatrix struct {
+	Branchid   string
+	Branchname string
+	Roleaccess *[]Usermatrix_roleaccess
+}
+
+type Usermatrix_roleaccess struct {
+	Rolemasterid  string
+	Rmdisplayname string
+}
+
+type UserMatrixReq struct {
+	Optype       string //fetch,save,update
+	Companyid    string
+	Matrixuserid []string
+}
+
+type UserMatrixResp struct {
+	Resptype   string
+	Listmatrix *[]Usermatrix
+}
