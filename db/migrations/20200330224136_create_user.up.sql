@@ -405,6 +405,22 @@ INSERT INTO ac.refdata values (DEFAULT,'currency','currency','EUR','iso currency
 INSERT INTO ac.refdata values (DEFAULT,'finyear','Financial year','JAN-DEC','financial year',ARRAY[NULL],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 INSERT INTO ac.refdata values (DEFAULT,'finyear','Financial year','APR-MAR','financial year',ARRAY[NULL],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 
+INSERT INTO ac.refdata values (DEFAULT,'gender','gender','Male','Gender value',ARRAY[NULL],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'gender','gender','Female','Gender value',ARRAY[NULL],'A',2,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'gender','gender','Other','Gender value',ARRAY[NULL],'A',3,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+
+INSERT INTO ac.refdata values (DEFAULT,'dept','department','Marketing','Department value',ARRAY[NULL],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'dept','department','HR','Department value',ARRAY[NULL],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'dept','department','Delivery','Department value',ARRAY[NULL],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'dept','department','Store','Department value',ARRAY[NULL],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'dept','department','Frontdesk','Department value',ARRAY[NULL],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+
+INSERT INTO ac.refdata values (DEFAULT,'designa','designation','Junior officer','Company designation values',ARRAY[NULL],'A',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'designa','designation','Senior officer','Company designation values',ARRAY[NULL],'A',2,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'designa','designation','Assitant Vice President - Band 1','Company designation values',ARRAY[NULL],'A',3,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'designa','designation','Assitant Vice President - Band 2','Company designation values',ARRAY[NULL],'A',4,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'designa','designation','Senior Vice President - Band 5','Company designation values',ARRAY[NULL],'A',5,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
+INSERT INTO ac.refdata values (DEFAULT,'designa','designation','Senior Vice President - Band 4','Company designation values',ARRAY[NULL],'A',6,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
 
 ---
 CREATE TABLE ac.company (
